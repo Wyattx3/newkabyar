@@ -1,0 +1,358 @@
+---
+description: Kay AI (Kabyar) - Complete Project Memory & Guidelines
+globs: 
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.css"
+alwaysApply: true
+---
+
+# Kay AI (Kabyar) - Project Memory
+
+## 🎯 Project Overview
+
+**Kay AI (Kabyar)** သည် AI-powered learning platform ဖြစ်ပြီး GED, IGCSE, OTHM နှင့် အခြား ကျောင်းသားများအတွက် ဖန်တီးထားသည်။
+
+### Mission
+ကျောင်းသားများအတွက် AI technology ကို အသုံးပြု၍ ပညာရေးဆိုင်ရာ tools များ ဖန်တီးပေးခြင်း။
+
+---
+
+## 📁 Project Structure
+
+```
+newkabyar/
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── seed.ts                # Database seeder
+├── src/
+│   ├── app/
+│   │   ├── (auth)/            # Auth pages (login, register, reset-password)
+│   │   ├── (dashboard)/       # Dashboard pages (protected routes)
+│   │   │   └── dashboard/
+│   │   │       ├── rag/       # RAG & Document tools
+│   │   │       ├── research/  # Research & Search tools
+│   │   │       ├── media/     # Audio/Video tools
+│   │   │       ├── visual/    # Visual & Diagram tools
+│   │   │       └── writing/   # Writing helper tools
+│   │   ├── api/               # API routes
+│   │   │   ├── ai/            # AI generation routes
+│   │   │   ├── auth/          # Auth routes
+│   │   │   ├── tools/         # Tool-specific routes
+│   │   │   └── user/          # User management
+│   │   ├── blog/              # Blog pages
+│   │   ├── tools/             # Public tool landing pages
+│   │   └── page.tsx           # Landing page
+│   ├── components/
+│   │   ├── ads/               # Ad components
+│   │   ├── ai/                # AI-related components
+│   │   ├── auth/              # Auth components
+│   │   ├── dashboard/         # Dashboard components
+│   │   ├── layout/            # Layout (Sidebar)
+│   │   ├── slides/            # Presentation components
+│   │   ├── tools/             # Tool shared components
+│   │   └── ui/                # shadcn/ui components
+│   ├── hooks/                 # Custom React hooks
+│   ├── lib/
+│   │   ├── ai-providers/      # AI provider integrations
+│   │   ├── auth.ts            # NextAuth configuration
+│   │   ├── credits.ts         # Credits system
+│   │   ├── prisma.ts          # Prisma client
+│   │   ├── prompts.ts         # AI system prompts
+│   │   ├── tools-registry.ts  # All 25 tools metadata
+│   │   └── utils.ts           # Utility functions
+│   └── types/                 # TypeScript definitions
+```
+
+---
+
+## 🛠 Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Framework | **Next.js 16** (App Router) |
+| Language | **TypeScript** |
+| Styling | **Tailwind CSS** + **shadcn/ui** |
+| Database | **PostgreSQL** (Supabase) + **Prisma ORM** |
+| Authentication | **NextAuth.js v5** |
+| State | **Zustand** |
+| AI Providers | OpenAI, Anthropic Claude, Google Gemini, Grok |
+
+---
+
+## 🎨 Design Guidelines
+
+### Colors - CRITICAL
+- **Primary**: Blue (`#2563eb`, `bg-blue-600`)
+- **Background**: White (`#ffffff`)
+- **Text**: Gray scale (`text-gray-900`, `text-gray-600`, `text-gray-400`)
+- **⚠️ NO GRADIENTS** - Solid colors only
+- **⚠️ NO AI-like generic UI** - Premium custom design only
+- **⚠️ NO COLOR CARDS behind icons** - Use plain icons without colored backgrounds
+
+### Component Patterns
+
+```tsx
+// Card Pattern
+<div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+  <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+    <span className="font-medium text-gray-900 text-sm">Title</span>
+  </div>
+  <div className="p-4">
+    {content}
+  </div>
+</div>
+
+// Button Pattern
+<Button className="bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/20">
+  Generate <ArrowRight className="ml-2 h-4 w-4" />
+</Button>
+```
+
+### Fonts
+- Sans: **Outfit**
+- Mono: **JetBrains Mono**
+
+---
+
+## 🧰 25 AI Tools (5 Categories)
+
+### Category 1: RAG & Documents (`/dashboard/rag/`)
+| Tool | Slug | Credits |
+|------|------|---------|
+| PDF Q&A Sniper | `pdf-qa` | 4 |
+| Quiz Generator | `quiz-generator` | 3 |
+| Past Paper Analyzer | `past-paper` | 8 |
+| Flashcard Maker | `flashcard-maker` | 3 |
+| Resume/CV Tailor | `resume-tailor` | 5 |
+
+### Category 2: Research & Search (`/dashboard/research/`)
+| Tool | Slug | Credits |
+|------|------|---------|
+| Academic Consensus | `academic-consensus` | 5 |
+| Research Gap Finder | `research-gap` | 5 |
+| Job Description Matcher | `job-matcher` | 3 |
+
+### Category 3: Audio & Video (`/dashboard/media/`)
+| Tool | Slug | Credits |
+|------|------|---------|
+| YouTube Summarizer | `youtube-summarizer` | 3 |
+| PDF to Podcast | `pdf-podcast` | 8 |
+| Lecture Organizer | `lecture-organizer` | 5 |
+| Viva Simulator | `viva-simulator` | 2 |
+
+### Category 4: Visual & Diagrams (`/dashboard/visual/`)
+| Tool | Slug | Credits |
+|------|------|---------|
+| Mind Map Generator | `mind-map` | 3 |
+| Interactive Timeline | `timeline` | 3 |
+| Text to Flowchart | `flowchart` | 3 |
+| Lab Report Generator | `lab-report` | 5 |
+
+### Category 5: Writing & Helpers (`/dashboard/writing/`)
+| Tool | Slug | Credits |
+|------|------|---------|
+| Image to Solution | `image-solve` | 5 |
+| Roast My Assignment | `roast-assignment` | 4 |
+| Safe Paraphraser | `paraphraser` | 3 |
+| Content Humanizer | `humanizer` | 5 |
+| AI Detector | `ai-detector` | 3 |
+| Code Logic Visualizer | `code-visualizer` | 3 |
+| Explain Error | `explain-error` | 3 |
+| Devil's Advocate | `devils-advocate` | 3 |
+| Vocabulary Upgrader | `vocabulary-upgrader` | 3 |
+| Cold Email Generator | `cold-email` | 3 |
+
+---
+
+## 💎 Credits System
+
+### Daily Credits
+- **Free users**: 50 credits/day
+- **Pro users**: 3500 credits/day
+- **Unlimited users**: No limit
+
+### Credit Calculation
+- Base: 3 credits per 1000 words (minimum 3)
+- Pro-smart model: 5 credits minimum
+- Super-smart: Free for Pro/Unlimited users
+
+### Reset Logic
+- Credits reset every 24 hours (UTC-based)
+- Automatic reset on first API call after 24 hours
+
+---
+
+## 🤖 AI Provider System
+
+### Model Tiers
+| Tier | Provider | Model | Credits |
+|------|----------|-------|---------|
+| super-smart | Gemini | gemini-2.5-pro-preview | 0 (Pro only) |
+| pro-smart | Gemini | gemini-2.5-flash-preview | 5 |
+| normal | Grok | grok-3-mini | 3 |
+| fast | Grok | grok-4-fast | 3 |
+
+### Fallback Logic
+- If Grok is blocked (403/429), automatically fallback to Gemini
+
+---
+
+## 🔐 Authentication
+
+### NextAuth v5 Configuration
+- **Providers**: Credentials, Google OAuth
+- **Session**: JWT strategy (30 days)
+- **Adapter**: Prisma Adapter
+
+### Protected Routes
+- All `/dashboard/*` routes require authentication
+- Redirects to `/login` if unauthenticated
+
+---
+
+## 📝 Key Code Patterns
+
+### Adding a New Tool
+
+1. Add tool metadata to `src/lib/tools-registry.ts`
+2. Create page at `src/app/(dashboard)/dashboard/[category]/[slug]/page.tsx`
+3. Create API route at `src/app/api/tools/[slug]/route.ts`
+4. Tool will auto-appear in sidebar
+
+### Streaming AI Response
+
+```ts
+const stream = await streamWithTier(modelTier, systemPrompt, userMessage, userId);
+return new Response(stream, {
+  headers: {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Transfer-Encoding": "chunked",
+  },
+});
+```
+
+### Credit Check Flow
+
+```ts
+// 1. Check credits
+const check = await checkCredits(userId, tier, words);
+if (!check.allowed) return { error: check.error, status: 402 };
+
+// 2. Deduct BEFORE streaming
+await deductCredits(userId, amount, feature, model);
+
+// 3. Stream response
+const stream = await streamWithTier(messages, tier);
+```
+
+### Custom Hook - Persisted State
+
+```ts
+// Persists across page navigation
+const [value, setValue, clearValue] = usePersistedState("key", defaultValue);
+```
+
+---
+
+## 🌍 Multi-Language Support
+
+Supported languages in AI responses:
+- `en` - English
+- `my` - Myanmar/Burmese
+- `zh` - Chinese (Simplified)
+- `th` - Thai
+- `ko` - Korean
+- `ja` - Japanese
+
+---
+
+## 🗄 Database Schema (Prisma)
+
+### Main Models
+- **User**: User accounts with credits, profile
+- **Account**: OAuth accounts
+- **Session**: User sessions
+- **Usage**: Feature usage tracking
+- **Conversation**: Chat conversations
+- **Message**: Chat messages
+- **Document**: Uploaded documents
+- **DocumentChunk**: Vector chunks for RAG
+
+---
+
+## 🚨 Common Issues & Fixes
+
+### Credits Not Updating
+- Check `credits-updated` event is dispatched
+- Verify sidebar listens to the event
+- Check UTC time for reset logic
+
+### AI Detection Score Too High
+- Review prompts in `prompts.ts`
+- Ensure humanizer uses basic vocabulary
+- Check banned phrases list
+
+### Authentication Issues
+- Verify `AUTH_SECRET` is set
+- Check database connection
+- Review session strategy in `auth.ts`
+
+---
+
+## 📋 Development Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Database commands
+npm run db:push      # Push schema to database
+npm run db:seed      # Seed database
+npm run db:reset     # Reset and reseed database
+```
+
+---
+
+## 🌐 Environment Variables
+
+```env
+# Database
+DATABASE_URL="postgresql://..."
+
+# NextAuth
+AUTH_SECRET="..."
+NEXTAUTH_URL="http://localhost:3000"
+
+# AI API Keys
+OPENAI_API_KEY="sk-..."
+ANTHROPIC_API_KEY="sk-ant-..."
+GOOGLE_AI_API_KEY="..."
+GROK_API_KEY="..."
+
+# Google OAuth
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+```
+
+---
+
+## ⚡ Performance Notes
+
+- Use `streamWithTier()` for AI responses (not blocking)
+- Deduct credits BEFORE streaming
+- Emit `credits-updated` event for sidebar refresh
+- Use `usePersistedState` for form data persistence
+
+---
+
+**Last Updated**: January 2026
+**Version**: 0.1.0

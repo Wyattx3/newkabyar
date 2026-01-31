@@ -1,0 +1,119 @@
+---
+description: Kay AI (Kabyar) Project Rules - AI-powered learning platform
+globs: ["**/*.ts", "**/*.tsx", "**/*.css"]
+alwaysApply: true
+---
+
+# Kay AI (Kabyar) Project Rules
+
+## Project Overview
+- **Name**: Kay AI (Kabyar) - AI-powered learning platform
+- **Purpose**: Educational AI tools for GED, IGCSE, OTHM students
+- **Tech Stack**: Next.js 16, TypeScript, Tailwind CSS, Prisma, NextAuth v5
+
+## Core Architecture
+
+### Directory Structure
+- `src/app/(auth)/` - Authentication pages (login, register)
+- `src/app/(dashboard)/` - Protected dashboard pages
+- `src/app/api/` - API routes
+- `src/components/` - React components
+- `src/lib/` - Utilities and configurations
+- `src/hooks/` - Custom React hooks
+
+### AI Providers (src/lib/ai-providers/)
+- OpenAI, Claude, Gemini, Grok integrations
+- Model tiers: super-smart, pro-smart, normal, fast
+- Default provider: Grok
+
+### Database (Prisma)
+- PostgreSQL with Supabase
+- Models: User, Account, Session, Usage, Conversation, Message
+- Credits system with daily limits
+
+## 8 Core Features
+1. Essay Writer - Academic essay generation with auto-humanize
+2. AI Detector - Detect AI-generated content
+3. Humanizer - Transform AI text to human-like writing
+4. Answer Finder - Q&A with step-by-step explanations
+5. Homework Helper - Assignment assistance
+6. Study Guide - Comprehensive study material generation
+7. Presentation Maker - Slide outline generation
+8. AI Tutor - Personalized tutoring sessions
+
+## Coding Standards
+
+### UI/UX Rules
+- DO NOT use gradient colors - use white and blue only
+- Use modern, premium custom designs (not AI-generated looking)
+- Use card-based layouts with smooth animations
+- Follow shadcn/ui component patterns
+
+### Component Patterns
+```tsx
+// Use "use client" for interactive components
+"use client";
+
+// Import pattern
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+```
+
+### API Route Pattern
+```ts
+// Always check authentication first
+const session = await auth();
+if (!session?.user?.id) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+// Check credits before AI calls
+const creditCheck = await checkCredits(userId, modelTier, wordCount);
+if (!creditCheck.allowed) {
+  return NextResponse.json({ error: creditCheck.error }, { status: 402 });
+}
+
+// Deduct credits BEFORE streaming
+await deductCredits(userId, amount, feature, model);
+```
+
+### State Management
+- Use `usePersistedState` for form data that survives navigation
+- Emit custom events for cross-component communication:
+  - `credits-updated` - After credit deduction
+  - `profile-updated` - After profile changes
+
+### Error Handling
+- 401: Unauthorized - redirect to login
+- 402: Insufficient credits - show credits dialog
+- 500: Server error - show toast notification
+
+## AI Prompt Guidelines (src/lib/prompts.ts)
+- Include accuracy rules to prevent hallucination
+- Add AI detection bypass patterns for essay generation
+- Support multi-language responses (en, my, zh, th, ko, ja)
+- Use basic English vocabulary for humanization
+
+## Credits System (src/lib/credits.ts)
+- Free users: 50 credits/day
+- Pro users: 3500 credits/day
+- Unlimited users: No limits
+- Reset every 24 hours (UTC-based)
+
+## Authentication (src/lib/auth.ts)
+- NextAuth v5 with JWT strategy
+- Providers: Credentials, Google OAuth
+- 30-day session duration
+
+## Important Files Reference
+- `src/lib/auth.ts` - NextAuth configuration
+- `src/lib/credits.ts` - Credits logic
+- `src/lib/prompts.ts` - All AI system prompts
+- `src/lib/ai-providers/index.ts` - AI provider management
+- `src/components/layout/sidebar.tsx` - Dashboard sidebar
+- `prisma/schema.prisma` - Database schema
+
+## Language Preference
+- Always respond in Burmese when communicating with user
+- AI responses support multiple languages based on user selection
