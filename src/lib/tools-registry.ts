@@ -192,22 +192,6 @@ export const TOOLS: Tool[] = [
     requiresUpload: false,
     status: 'active',
   },
-  {
-    id: 'job-matcher',
-    slug: 'job-matcher',
-    name: 'Job Description Matcher',
-    description: 'Compare your skills and experience against job requirements. Get a match score and improvement suggestions.',
-    shortDescription: 'Match your skills to job requirements',
-    category: 'research',
-    icon: 'Target',
-    color: 'emerald',
-    apiEndpoint: '/api/tools/job-match',
-    credits: 3,
-    features: ['Skill matching', 'Gap analysis', 'Score calculation', 'Improvement tips'],
-    requiresUpload: false,
-    status: 'active',
-  },
-
   // ========================================
   // Category 3: Audio/Video & Speech
   // ========================================

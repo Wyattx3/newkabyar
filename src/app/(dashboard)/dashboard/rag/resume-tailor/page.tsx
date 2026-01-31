@@ -22,14 +22,13 @@ import {
   Copy,
   RefreshCw,
   BarChart3,
-  MessageSquare,
-  Award,
   TrendingUp,
   ChevronRight,
-  Star,
   FileDown,
   Mail,
   HelpCircle,
+  Briefcase,
+  GraduationCap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
@@ -47,6 +46,13 @@ interface BulletImprovement {
   reason: string;
 }
 
+interface ExperienceEducation {
+  matches: boolean;
+  details: string;
+  yearsRequired?: string;
+  yearsHave?: string;
+}
+
 interface ResumeResult {
   overallScore: number;
   atsScore: number;
@@ -56,24 +62,14 @@ interface ResumeResult {
   bulletImprovements: BulletImprovement[];
   skillsToAdd: string[];
   atsWarnings: string[];
-}
-
-interface MatchResult {
-  matchScore: number;
-  verdict: string;
-  matchedSkills: { skill: string; level: string; evidence?: string }[];
-  missingSkills: { skill: string; level: string }[];
-  experience: { matches: boolean; details: string };
-  education: { matches: boolean; details: string };
-  suggestions: string[];
-  interviewTips: string[];
+  experience?: ExperienceEducation;
+  education?: ExperienceEducation;
 }
 
 const focusOptions = [
   { value: "optimize", label: "Optimize", icon: Zap, desc: "Quick improvements" },
   { value: "rewrite", label: "Rewrite", icon: FileText, desc: "Major overhaul" },
   { value: "keywords", label: "ATS Focus", icon: Key, desc: "Keyword optimization" },
-  { value: "match", label: "Quick Match", icon: Target, desc: "Job fit analysis" },
 ];
 
 export default function ResumeTailorPage() {
@@ -84,9 +80,8 @@ export default function ResumeTailorPage() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ResumeResult | null>(null);
-  const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"analysis" | "improve" | "cover" | "interview" | "match">("analysis");
+  const [activeTab, setActiveTab] = useState<"analysis" | "improve" | "cover" | "interview">("analysis");
   const [generatingCover, setGeneratingCover] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
@@ -157,58 +152,30 @@ export default function ResumeTailorPage() {
 
     setIsLoading(true);
     setResult(null);
-    setMatchResult(null);
 
     try {
-      // If Quick Match mode, call job-match API
-      if (focus === "match") {
-        const matchResponse = await fetch("/api/tools/job-match", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            resume,
-            jobDescription,
-            model: selectedModel,
-            language: typeof aiLanguage === "string" ? aiLanguage : (aiLanguage as any)?.language || "en",
-          }),
-        });
+      const response = await fetch("/api/tools/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resume,
+          jobDescription,
+          focus,
+          model: selectedModel,
+          language: typeof aiLanguage === "string" ? aiLanguage : (aiLanguage as any)?.language || "en",
+        }),
+      });
 
-        if (!matchResponse.ok) {
-          if (matchResponse.status === 402) {
-            toast({ title: "Insufficient credits", variant: "destructive" });
-            return;
-          }
-          throw new Error("Failed");
+      if (!response.ok) {
+        if (response.status === 402) {
+          toast({ title: "Insufficient credits", variant: "destructive" });
+          return;
         }
-
-        const matchData = await matchResponse.json();
-        setMatchResult(matchData);
-        setActiveTab("match");
-      } else {
-        // Regular resume analysis
-        const response = await fetch("/api/tools/resume", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            resume,
-            jobDescription,
-            focus,
-            model: selectedModel,
-            language: typeof aiLanguage === "string" ? aiLanguage : (aiLanguage as any)?.language || "en",
-          }),
-        });
-
-        if (!response.ok) {
-          if (response.status === 402) {
-            toast({ title: "Insufficient credits", variant: "destructive" });
-            return;
-          }
-          throw new Error("Failed");
-        }
-
-        const data = await response.json();
-        setResult(data);
+        throw new Error("Failed");
       }
+
+      const data = await response.json();
+      setResult(data);
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });
@@ -487,7 +454,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                 </div>
               </div>
             </motion.div>
-          ) : (result || matchResult) ? (
+          ) : (
             /* Results Mode */
             <motion.div
               key="results"
@@ -497,127 +464,68 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
             >
               {/* Scores Header */}
               <div className="grid grid-cols-4 gap-3 mb-4 shrink-0">
-                {matchResult ? (
-                  <>
-                    <div className={`rounded-xl border p-4 ${getScoreBg(matchResult.matchScore)}`}>
-                      <p className="text-xs text-gray-500 mb-1">Match Score</p>
-                      <p className={`text-3xl font-bold ${getScoreColor(matchResult.matchScore)}`}>{matchResult.matchScore}%</p>
+                <div className={`rounded-xl border p-4 ${getScoreBg(result.overallScore)}`}>
+                  <p className="text-xs text-gray-500 mb-1">Overall Match</p>
+                  <p className={`text-3xl font-bold ${getScoreColor(result.overallScore)}`}>{result.overallScore}%</p>
+                </div>
+                <div className={`rounded-xl border p-4 ${getScoreBg(result.atsScore)}`}>
+                  <p className="text-xs text-gray-500 mb-1">ATS Score</p>
+                  <p className={`text-3xl font-bold ${getScoreColor(result.atsScore)}`}>{result.atsScore}%</p>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="text-xs text-gray-500 mb-1">Keywords Matched</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {result.keywordMatches.filter(k => k.found).length}/{result.keywordMatches.length}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Actions</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setResult(null)}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                        title="New analysis"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={exportAnalysis}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                        title="Export"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                      <p className="text-xs text-gray-500 mb-1">Matched Skills</p>
-                      <p className="text-3xl font-bold text-green-600">{matchResult.matchedSkills.length}</p>
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                      <p className="text-xs text-gray-500 mb-1">Missing Skills</p>
-                      <p className="text-3xl font-bold text-red-600">{matchResult.missingSkills.length}</p>
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Actions</p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => { setMatchResult(null); setResult(null); }}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                            title="New analysis"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : result ? (
-                  <>
-                    <div className={`rounded-xl border p-4 ${getScoreBg(result.overallScore)}`}>
-                      <p className="text-xs text-gray-500 mb-1">Overall Match</p>
-                      <p className={`text-3xl font-bold ${getScoreColor(result.overallScore)}`}>{result.overallScore}%</p>
-                    </div>
-                    <div className={`rounded-xl border p-4 ${getScoreBg(result.atsScore)}`}>
-                      <p className="text-xs text-gray-500 mb-1">ATS Score</p>
-                      <p className={`text-3xl font-bold ${getScoreColor(result.atsScore)}`}>{result.atsScore}%</p>
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-white p-4">
-                      <p className="text-xs text-gray-500 mb-1">Keywords Matched</p>
-                      <p className="text-3xl font-bold text-blue-600">
-                        {result.keywordMatches.filter(k => k.found).length}/{result.keywordMatches.length}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Actions</p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => { setResult(null); setMatchResult(null); }}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                            title="New analysis"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={exportAnalysis}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                            title="Export"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : null}
+                  </div>
+                </div>
               </div>
 
               {/* Feature Tabs */}
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl mb-4 shrink-0">
-                {matchResult ? (
-                  /* Match Result Tabs */
-                  <>
-                    {[
-                      { id: "match", label: "Match Analysis", icon: Target },
-                      { id: "interview", label: "Interview Tips", icon: HelpCircle },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
-                          activeTab === tab.id
-                            ? "bg-white text-gray-900 shadow-sm"
-                            : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
-                      </button>
-                    ))}
-                  </>
-                ) : (
-                  /* Resume Result Tabs */
-                  <>
-                    {[
-                      { id: "analysis", label: "Analysis", icon: BarChart3 },
-                      { id: "improve", label: "Improvements", icon: TrendingUp },
-                      { id: "cover", label: "Cover Letter", icon: Mail },
-                      { id: "interview", label: "Interview Prep", icon: HelpCircle },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => {
-                          setActiveTab(tab.id as any);
-                          if (tab.id === "cover" && !coverLetter) generateCoverLetter();
-                          if (tab.id === "interview" && interviewQuestions.length === 0) generateInterviewQuestions();
-                        }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
-                          activeTab === tab.id
-                            ? "bg-white text-gray-900 shadow-sm"
-                            : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
-                      </button>
-                    ))}
-                  </>
-                )}
+                {[
+                  { id: "analysis", label: "Analysis", icon: BarChart3 },
+                  { id: "improve", label: "Improvements", icon: TrendingUp },
+                  { id: "cover", label: "Cover Letter", icon: Mail },
+                  { id: "interview", label: "Interview Prep", icon: HelpCircle },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id as any);
+                      if (tab.id === "cover" && !coverLetter) generateCoverLetter();
+                      if (tab.id === "interview" && interviewQuestions.length === 0) generateInterviewQuestions();
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
               {/* Tab Content */}
@@ -630,6 +538,61 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                       <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <h3 className="text-sm font-medium text-gray-900 mb-2">Summary</h3>
                         <p className="text-sm text-gray-600">{result.summary}</p>
+                      </div>
+
+                      {/* Experience & Education Check */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className={`rounded-xl border p-4 ${
+                          result.experience?.matches !== false
+                            ? "bg-green-50 border-green-200" 
+                            : "bg-red-50 border-red-200"
+                        }`}>
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              result.experience?.matches !== false ? "bg-green-100" : "bg-red-100"
+                            }`}>
+                              <Briefcase className={`w-5 h-5 ${result.experience?.matches !== false ? "text-green-600" : "text-red-600"}`} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Experience</p>
+                              <p className={`text-xs ${result.experience?.matches !== false ? "text-green-600" : "text-red-600"}`}>
+                                {result.experience?.matches !== false ? "Meets requirements" : "Gap identified"}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600">
+                            {result.experience?.details || 
+                              (result.overallScore >= 70 
+                                ? "Your experience aligns well with the job requirements." 
+                                : "Consider highlighting more relevant experience.")}
+                          </p>
+                        </div>
+
+                        <div className={`rounded-xl border p-4 ${
+                          result.education?.matches !== false
+                            ? "bg-green-50 border-green-200" 
+                            : "bg-red-50 border-red-200"
+                        }`}>
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              result.education?.matches !== false ? "bg-green-100" : "bg-red-100"
+                            }`}>
+                              <GraduationCap className={`w-5 h-5 ${result.education?.matches !== false ? "text-green-600" : "text-red-600"}`} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Education</p>
+                              <p className={`text-xs ${result.education?.matches !== false ? "text-green-600" : "text-red-600"}`}>
+                                {result.education?.matches !== false ? "Meets requirements" : "Gap identified"}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600">
+                            {result.education?.details || 
+                              (result.overallScore >= 70 
+                                ? "Your educational background is suitable for this role." 
+                                : "Consider adding relevant certifications or coursework.")}
+                          </p>
+                        </div>
                       </div>
 
                       {/* Keywords */}

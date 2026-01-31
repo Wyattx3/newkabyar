@@ -16,7 +16,6 @@ const toolMapping: Record<string, { slug: string; name: string; category: string
   // Research
   "academic-consensus": { slug: "academic-consensus", name: "Academic Consensus", category: "research" },
   "research-gap": { slug: "research-gap", name: "Research Gap Finder", category: "research" },
-  "job-matcher": { slug: "job-matcher", name: "Job Description Matcher", category: "research" },
   
   // Media
   "youtube-summarizer": { slug: "youtube-summarizer", name: "YouTube Summarizer", category: "media" },

@@ -99,7 +99,6 @@ const toolCategories = [
     tools: [
       { name: "Academic Consensus", slug: "academic-consensus" },
       { name: "Research Gap Finder", slug: "research-gap" },
-      { name: "Job Matcher", slug: "job-matcher" },
     ],
   },
   {

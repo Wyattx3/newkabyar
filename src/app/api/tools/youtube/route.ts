@@ -14,31 +14,17 @@ const youtubeSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:POST_ENTRY',message:'YouTube API called',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-
     const session = await auth();
     if (!session?.user?.id) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:AUTH_FAIL',message:'Unauthorized',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-      // #endregion
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const validatedData = youtubeSchema.parse(body);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:VALIDATED',message:'Request validated',data:{url:validatedData.url.slice(0,50),summaryType:validatedData.summaryType},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
-
     const creditsNeeded = 3;
     const creditCheck = await checkToolCredits(session.user.id, creditsNeeded);
     if (!creditCheck.hasCredits) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:NO_CREDITS',message:'Insufficient credits',data:{remaining:creditCheck.remaining},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H4'})}).catch(()=>{});
-      // #endregion
       return NextResponse.json(
         { error: "Insufficient credits", creditsNeeded, creditsRemaining: creditCheck.remaining },
         { status: 402 }
@@ -50,18 +36,8 @@ export async function POST(request: NextRequest) {
     // Get YouTube transcript
     let video;
     try {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:TRANSCRIPT_START',message:'Fetching transcript',data:{url:url.slice(0,50)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
       video = await getTranscript(url);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:TRANSCRIPT_SUCCESS',message:'Transcript fetched',data:{videoId:video.videoId,textLength:video.fullText?.length||0,method:video.transcriptionMethod||'youtube-captions'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:TRANSCRIPT_FAIL',message:'Transcript fetch failed',data:{error:String(error).slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-      // #endregion
-      // Pass through the specific error message
       const errorMessage = error instanceof Error ? error.message : "Could not fetch transcript. The video may not have captions available.";
       return NextResponse.json(
         { error: errorMessage },
@@ -102,30 +78,30 @@ Your output MUST be valid JSON with this structure:
 
 Return ONLY valid JSON.`;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:AI_CALL_START',message:'Calling AI model',data:{model,transcriptLength:video.fullText?.length||0},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-
     const result = await chatWithTier(
       model,
       systemPrompt,
-      `Summarize this video transcript:\n\n${video.fullText.slice(0, 15000)}`, // Limit transcript length
+      `Summarize this video transcript:\n\n${video.fullText.slice(0, 15000)}`,
       session.user.id
     );
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:AI_CALL_SUCCESS',message:'AI response received',data:{responseLength:result?.length||0,responsePreview:result?.slice(0,100)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-
-    // Parse the response
+    // Parse the response with robust JSON handling
     let summary;
     try {
       const jsonMatch = result.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        summary = JSON.parse(jsonMatch[0]);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:PARSE_SUCCESS',message:'JSON parsed successfully',data:{hasTitle:!!summary.title,hasKeyMoments:!!summary.keyMoments},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion
+        let jsonStr = jsonMatch[0];
+        // Fix unescaped newlines and tabs
+        jsonStr = jsonStr.replace(/\n/g, '\\n').replace(/\t/g, '\\t');
+        try {
+          summary = JSON.parse(jsonStr);
+        } catch {
+          // More aggressive cleanup
+          jsonStr = jsonMatch[0]
+            .replace(/[\x00-\x1F\x7F]/g, ' ')
+            .replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
+          summary = JSON.parse(jsonStr);
+        }
         // Add timestamp links
         if (summary.keyMoments) {
           summary.keyMoments = summary.keyMoments.map((moment: any) => ({
@@ -137,14 +113,13 @@ Return ONLY valid JSON.`;
       } else {
         throw new Error("Invalid response format");
       }
-    } catch (parseError) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:PARSE_FAIL',message:'JSON parse failed',data:{error:String(parseError).slice(0,100)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
-      // #endregion
-      console.error("Parse error:", parseError);
+    } catch {
+      // Fallback: extract what we can
+      const titleMatch = result.match(/"title"\s*:\s*"([^"]+)"/);
+      const summaryMatch = result.match(/"summary"\s*:\s*"([\s\S]*?)(?:"|$)/);
       summary = {
-        title: "Video Summary",
-        summary: result,
+        title: titleMatch ? titleMatch[1] : "Video Summary",
+        summary: summaryMatch ? summaryMatch[1].replace(/\\n/g, '\n') : result.replace(/```json|```/g, '').trim(),
         keyMoments: [],
         topics: [],
         takeaways: [],
@@ -153,19 +128,12 @@ Return ONLY valid JSON.`;
 
     await deductCredits(session.user.id, creditsNeeded, "youtube-summarizer");
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:SUCCESS',message:'Summary complete',data:{videoId:video.videoId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-
     return NextResponse.json({
       videoId: video.videoId,
       transcriptionMethod: video.transcriptionMethod || 'youtube-captions',
       ...summary,
     });
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/094d5be5-28f2-4361-897e-ed72c06b5dc1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'youtube/route.ts:CATCH_ERROR',message:'Unhandled error',data:{error:String(error).slice(0,200)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
     console.error("YouTube summarizer error:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors }, { status: 400 });
