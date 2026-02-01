@@ -5,14 +5,24 @@ import { checkToolCredits, deductCredits } from "@/lib/credits";
 import { chatWithTier } from "@/lib/ai-providers";
 
 const vivaSchema = z.object({
-  topic: z.string().min(10, "Topic must be at least 10 characters"),
+  topic: z.string().min(1, "Topic is required"),
+  content: z.string().optional(),
   answer: z.string().optional(),
   questionHistory: z.array(z.object({
     question: z.string(),
     answer: z.string(),
-    feedback: z.string().optional(),
+    feedback: z.union([
+      z.string(),
+      z.object({
+        score: z.number().optional(),
+        strengths: z.array(z.string()).optional(),
+        improvements: z.array(z.string()).optional(),
+        explanation: z.string().optional(),
+      }),
+    ]).optional(),
   })).optional(),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
+  examinerStyle: z.string().optional(),
   subject: z.string().optional(),
   model: z.string().default("fast"),
   language: z.string().default("en"),
@@ -37,7 +47,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { topic, answer, questionHistory, difficulty, subject, model, language } = validatedData;
+    const { topic, content, answer, questionHistory, difficulty, examinerStyle, subject, model, language } = validatedData;
+    
+    // Use content if provided, otherwise topic
+    const vivaContent = content || topic;
 
     const difficultyGuide = {
       beginner: "Ask foundational questions, be encouraging, give detailed explanations",
@@ -62,9 +75,13 @@ export async function POST(request: NextRequest) {
 Topic: ${topic}
 ${subject ? `Subject: ${subject}` : ""}
 Difficulty: ${difficulty} - ${difficultyGuide[difficulty]}
+${examinerStyle ? `Style: ${examinerStyle}` : ""}
 ${languageInstructions}
 
-Generate the first question to start the viva examination.
+Content/Material to examine:
+${vivaContent.slice(0, 3000)}
+
+Generate the first question to start the viva examination based on the content above.
 
 Your response MUST be valid JSON:
 {
@@ -84,7 +101,11 @@ Make the question clear and appropriate for the difficulty level. Return ONLY va
 Topic: ${topic}
 ${subject ? `Subject: ${subject}` : ""}
 Difficulty: ${difficulty} - ${difficultyGuide[difficulty]}
+${examinerStyle ? `Style: ${examinerStyle}` : ""}
 ${languageInstructions}
+
+Content/Material being examined:
+${vivaContent.slice(0, 2000)}
 
 Evaluate the student's answer and provide feedback, then ask a follow-up question.
 

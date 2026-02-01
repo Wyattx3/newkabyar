@@ -26,28 +26,6 @@ const languageNames: Record<string, string> = {
   id: "Indonesian",
 };
 
-// Split text into smaller chunks for translation
-function splitIntoChunks(text: string, maxChunkSize: number = 800): string[] {
-  const sentences = text.split(/(?<=[.!?။])\s+/);
-  const chunks: string[] = [];
-  let currentChunk = '';
-
-  for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > maxChunkSize && currentChunk) {
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
-    } else {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
-    }
-  }
-
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks.length > 0 ? chunks : [text];
-}
-
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -69,31 +47,30 @@ export async function POST(request: NextRequest) {
 
     const langName = languageNames[targetLanguage] || targetLanguage;
 
-    // Split text into chunks for better translation
-    const chunks = splitIntoChunks(text, 800);
-    const translatedChunks: string[] = [];
+    // Use fast model (groq) - split by sentences for better context
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
 
-    for (const chunk of chunks) {
-      const systemPrompt = `You are a professional translator. Translate to ${langName}.
+    const systemPrompt = `You are a language translator. Your ONLY job is to translate text from English to ${langName}.
 
-RULES:
-1. Translate the ENTIRE text completely
-2. Do NOT stop in the middle
-3. Do NOT summarize or shorten
-4. Return ONLY the translation, nothing else
-5. Preserve paragraph structure`;
+CRITICAL RULES:
+1. Output ONLY the translated text - nothing else
+2. If the input is a QUESTION, translate the QUESTION itself - do NOT answer it
+3. Do NOT provide explanations, examples, or answers
+4. Keep the same sentence structure as the original
 
-      const result = await chatWithTier(
-        "powerful", // Use powerful model for better translation
-        systemPrompt,
-        chunk,
-        session.user.id
-      );
+Example:
+Input: "What is competitive advantage?"
+Correct output: "ပြိုင်ဆိုင်မှုအားသာချက်ဆိုတာ ဘာလဲ?"
+Wrong output: "Competitive advantage means..." (This is answering, not translating)`;
 
-      translatedChunks.push(result.trim());
-    }
+    const translateSentence = async (sentence: string): Promise<string> => {
+      const result = await chatWithTier("fast", systemPrompt, sentence.trim(), session.user.id);
+      return result.trim().replace(/^["']|["']$/g, '');
+    };
 
-    const fullTranslation = translatedChunks.join('\n\n');
+    // Translate sentences in parallel
+    const translatedSentences = await Promise.all(sentences.map(translateSentence));
+    const fullTranslation = translatedSentences.join(' ');
 
     await deductCredits(session.user.id, creditsNeeded, "youtube-translate");
 
