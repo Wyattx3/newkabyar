@@ -465,6 +465,16 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
       });
 
       if (!response.ok) {
+        if (response.status === 402) {
+          // Insufficient credits
+          setChatMessages(prev => [...prev, {
+            role: "assistant",
+            content: "⚠️ Credits မလုံလောက်ပါ။ Credits ထပ်ဖြည့်ပြီး ထပ်စမ်းကြည့်ပါ။\n\n(Insufficient credits. Please top up your credits to continue chatting.)",
+            timestamp: new Date(),
+          }]);
+          window.dispatchEvent(new Event("credits-updated"));
+          return;
+        }
         throw new Error("Failed to get response");
       }
 
@@ -485,6 +495,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
         content: assistantContent || "I apologize, I couldn't generate a response. Please try again.",
         timestamp: new Date(),
       }]);
+      window.dispatchEvent(new Event("credits-updated"));
     } catch (error) {
       console.error("Chat error:", error);
       setChatMessages(prev => [...prev, {

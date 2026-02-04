@@ -85,10 +85,70 @@ IMPORTANT: Return ONLY the Mermaid code, no explanations or markdown code blocks
       .replace(/```\n?/g, "")
       .trim();
 
+    // Comprehensive mermaid code sanitization
+    mermaidCode = mermaidCode
+      // Remove YAML front-matter (---)
+      .replace(/^---[\s\S]*?---\s*\n?/, '')
+      // Remove any standalone --- lines (not part of arrows)
+      .replace(/^---+\s*$/gm, '')
+      // Remove HTML comments
+      .replace(/<!--[\s\S]*?-->/g, '')
+      // Remove %% comments
+      .replace(/%%.*$/gm, '')
+      // Fix various prefixes to "flowchart"
+      .replace(/^chart\s+(TD|TB|BT|RL|LR)/im, `flowchart $1`)
+      .replace(/^Chart\s+(TD|TB|BT|RL|LR)/im, `flowchart $1`)
+      .replace(/^graph\s+(TD|TB|BT|RL|LR)/im, `flowchart $1`)
+      .replace(/^Graph\s+(TD|TB|BT|RL|LR)/im, `flowchart $1`)
+      // Remove empty lines at start
+      .replace(/^\s*\n+/, '')
+      .trim();
+
     // Ensure it starts with flowchart
-    if (!mermaidCode.startsWith("flowchart")) {
+    if (!/^flowchart\s+(TD|TB|BT|RL|LR)/im.test(mermaidCode)) {
+      // Remove any invalid prefix and add correct one
+      mermaidCode = mermaidCode.replace(/^[A-Za-z]+\s+(TD|TB|BT|RL|LR)\s*\n/im, '');
       mermaidCode = `flowchart ${direction}\n` + mermaidCode;
     }
+
+    // Process line by line for better sanitization
+    const lines = mermaidCode.split('\n');
+    const sanitizedLines = lines.map((line, index) => {
+      // Keep first line (flowchart declaration) as is
+      if (index === 0 && /^flowchart\s+(TD|TB|BT|RL|LR)/i.test(line)) {
+        return line;
+      }
+      
+      // Skip empty lines
+      if (!line.trim()) return '';
+      
+      // Sanitize edge labels: |text|
+      let sanitizedLine = line.replace(/\|([^|]*)\|/g, (match, label) => {
+        const sanitized = label
+          .replace(/[()[\]{}%#&<>]/g, '')
+          .replace(/[^\w\s,.!?:;'-]/g, '')
+          .trim();
+        if (!sanitized) return '';
+        return `|${sanitized}|`;
+      });
+      
+      // Fix double pipes that might remain
+      sanitizedLine = sanitizedLine.replace(/\|\|/g, '');
+      
+      // Sanitize node labels
+      sanitizedLine = sanitizedLine.replace(/(\[+|\{|\(\[)([^\]\}]+)(\]+|\}|\]\))/g, (match, open, label, close) => {
+        const sanitized = label
+          .replace(/%/g, ' percent')
+          .replace(/[#&<>]/g, '')
+          .replace(/"/g, "'")
+          .trim();
+        return `${open}${sanitized}${close}`;
+      });
+      
+      return sanitizedLine;
+    });
+    
+    mermaidCode = sanitizedLines.filter(line => line.trim()).join('\n');
 
     await deductCredits(session.user.id, creditsNeeded, "flowchart");
 

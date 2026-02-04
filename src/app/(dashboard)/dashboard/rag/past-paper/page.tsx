@@ -67,6 +67,9 @@ interface PaperEntry {
   id: string;
   year: string;
   content: string;
+  fileName?: string;
+  fileSize?: number;
+  isFromFile?: boolean;
 }
 
 export default function PastPaperPage() {
@@ -94,8 +97,8 @@ export default function PastPaperPage() {
   const handleFileUpload = async (paperId: string, file: File) => {
     if (!file) return;
 
-    const fileName = file.name.toLowerCase();
-    if (!fileName.endsWith(".pdf") && !fileName.endsWith(".txt")) {
+    const fileNameLower = file.name.toLowerCase();
+    if (!fileNameLower.endsWith(".pdf") && !fileNameLower.endsWith(".txt")) {
       toast({ title: "Only PDF and TXT files are supported", variant: "destructive" });
       return;
     }
@@ -116,7 +119,14 @@ export default function PastPaperPage() {
       }
 
       const data = await response.json();
-      updatePaper(paperId, "content", data.text);
+      // Update paper with content and file info
+      setPapers(papers.map(p => p.id === paperId ? { 
+        ...p, 
+        content: data.text,
+        fileName: file.name,
+        fileSize: file.size,
+        isFromFile: true
+      } : p));
       toast({ 
         title: "File uploaded", 
         description: `${data.characterCount.toLocaleString()} characters extracted` 
@@ -127,6 +137,24 @@ export default function PastPaperPage() {
     } finally {
       setUploadingId(null);
     }
+  };
+
+  // Clear file and switch to text mode
+  const clearFile = (paperId: string) => {
+    setPapers(papers.map(p => p.id === paperId ? { 
+      ...p, 
+      content: "",
+      fileName: undefined,
+      fileSize: undefined,
+      isFromFile: false
+    } : p));
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const addPaper = () => {
@@ -204,9 +232,13 @@ export default function PastPaperPage() {
       ]);
       setPracticeQuestions(questions);
       setGeneratingQuestions(false);
+      setShowPracticePanel(true); // Show the practice panel
       toast({ title: "Practice questions generated!" });
     }, 1000);
   };
+  
+  // State for practice questions panel
+  const [showPracticePanel, setShowPracticePanel] = useState(false);
 
   // Export Analysis
   const exportAnalysis = () => {
@@ -324,14 +356,20 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                           <button
                             onClick={() => fileInputRefs.current[paper.id]?.click()}
                             disabled={uploadingId === paper.id}
-                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                            className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg transition-colors disabled:opacity-50 ${
+                              paper.isFromFile 
+                                ? "text-green-600 bg-green-50 hover:bg-green-100" 
+                                : "text-blue-600 hover:bg-blue-50"
+                            }`}
                           >
                             {uploadingId === paper.id ? (
                               <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : paper.isFromFile ? (
+                              <RefreshCw className="w-3 h-3" />
                             ) : (
                               <Upload className="w-3 h-3" />
                             )}
-                            PDF
+                            {paper.isFromFile ? "Change" : "PDF"}
                           </button>
                           <input
                             ref={(el) => { fileInputRefs.current[paper.id] = el; }}
@@ -350,22 +388,68 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                           )}
                         </div>
                       </div>
-                      <textarea
-                        placeholder="Paste questions from this year's paper..."
-                        value={paper.content}
-                        onChange={(e) => updatePaper(paper.id, "content", e.target.value)}
-                        className="w-full min-h-[80px] p-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-blue-400"
-                      />
-                      {paper.content && (
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
-                            {paper.content.length.toLocaleString()} chars
-                          </p>
-                          {paper.content.length > 50 && (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          )}
+                      {/* Show file preview or textarea */}
+                      {paper.isFromFile && paper.fileName ? (
+                        // File Preview Card
+                        <div className="p-4 bg-white rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-300 transition-colors">
+                          <div className="flex items-center gap-4">
+                            {/* File Icon */}
+                            <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+                              <FileText className="w-7 h-7 text-blue-600" />
+                            </div>
+                            
+                            {/* File Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{paper.fileName}</p>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                                  <FileText className="w-3 h-3" />
+                                  {paper.fileSize ? formatFileSize(paper.fileSize) : ""}
+                                </span>
+                                <span className="text-xs text-gray-500">•</span>
+                                <span className="text-xs text-gray-500">
+                                  {paper.content.length.toLocaleString()} chars extracted
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 text-xs rounded-full">
+                                  <CheckCircle className="w-3 h-3" />
+                                  Ready for analysis
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Remove Button */}
+                            <button
+                              onClick={() => clearFile(paper.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Remove file"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
+                      ) : (
+                        // Text Input Mode
+                        <>
+                          <textarea
+                            placeholder="Paste questions from this year's paper..."
+                            value={paper.content}
+                            onChange={(e) => updatePaper(paper.id, "content", e.target.value)}
+                            className="w-full min-h-[80px] p-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-blue-400"
+                          />
+                          {paper.content && (
+                            <div className="flex items-center justify-between mt-2">
+                              <p className="text-xs text-gray-400 flex items-center gap-1">
+                                <FileText className="w-3 h-3" />
+                                {paper.content.length.toLocaleString()} chars
+                              </p>
+                              {paper.content.length > 50 && (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}
@@ -416,10 +500,17 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                   <div className="space-y-2">
                     {papers.map((p, i) => (
                       <div key={p.id} className="flex items-center justify-between text-xs">
-                        <span className="text-gray-600">{p.year || `Paper ${i + 1}`}</span>
+                        <div className="flex items-center gap-1.5 text-gray-600">
+                          {p.isFromFile && (
+                            <FileText className="w-3 h-3 text-blue-500" />
+                          )}
+                          <span className="truncate max-w-[100px]">
+                            {p.year || (p.isFromFile && p.fileName ? p.fileName.slice(0, 15) + "..." : `Paper ${i + 1}`)}
+                          </span>
+                        </div>
                         {p.content.length > 50 ? (
                           <span className="text-green-600 flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Ready
+                            <CheckCircle className="w-3 h-3" /> {p.isFromFile ? "PDF" : "Text"}
                           </span>
                         ) : (
                           <span className="text-gray-400 flex items-center gap-1">
@@ -508,12 +599,28 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     {generatingQuestions ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                     Practice Questions
                   </button>
-                  <button
-                    onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    {viewMode === "grid" ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
-                  </button>
+                  {practiceQuestions.length > 0 && (
+                    <button
+                      onClick={() => setShowPracticePanel(!showPracticePanel)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                        showPracticePanel 
+                          ? "bg-purple-600 text-white" 
+                          : "bg-purple-50 text-purple-600 hover:bg-purple-100"
+                      }`}
+                    >
+                      <BookOpen className="w-3 h-3" />
+                      {practiceQuestions.length} Questions
+                    </button>
+                  )}
+                  {activeTab === "topics" && (
+                    <button
+                      onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                      title={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
+                    >
+                      {viewMode === "grid" ? <List className="w-4 h-4" /> : <Grid3X3 className="w-4 h-4" />}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -777,6 +884,70 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                   </div>
                 )}
               </div>
+
+              {/* Floating Practice Questions Panel */}
+              <AnimatePresence>
+                {showPracticePanel && practiceQuestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="fixed bottom-4 right-4 w-96 max-h-[60vh] bg-white rounded-2xl shadow-2xl border border-purple-200 overflow-hidden z-50"
+                  >
+                    <div className="px-4 py-3 bg-purple-50 border-b border-purple-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        <span className="font-medium text-purple-800">Practice Questions</span>
+                        <span className="px-1.5 py-0.5 bg-purple-200 text-purple-700 text-xs rounded-full">
+                          {practiceQuestions.length}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setShowPracticePanel(false)}
+                        className="p-1 text-purple-400 hover:text-purple-600 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="p-4 max-h-[calc(60vh-60px)] overflow-y-auto">
+                      <div className="space-y-3">
+                        {practiceQuestions.map((q, i) => (
+                          <div 
+                            key={i} 
+                            className="p-3 bg-purple-50 rounded-xl border border-purple-100 hover:border-purple-200 transition-colors"
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className="w-6 h-6 rounded-full bg-purple-200 text-purple-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                {i + 1}
+                              </span>
+                              <p className="text-sm text-purple-900 flex-1">{q}</p>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2 ml-9">
+                              <button 
+                                onClick={() => copyToClipboard(q)} 
+                                className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                              >
+                                <Copy className="w-3 h-3" /> Copy
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-purple-100">
+                        <button
+                          onClick={() => {
+                            const allQuestions = practiceQuestions.join("\n\n");
+                            copyToClipboard(allQuestions);
+                          }}
+                          className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <Copy className="w-4 h-4" /> Copy All Questions
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>

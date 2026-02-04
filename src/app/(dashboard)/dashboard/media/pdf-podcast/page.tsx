@@ -246,7 +246,7 @@ export default function PDFPodcastPage() {
     }
 
     const line = dialogues[index];
-    setCurrentLineIndex(index);
+    // Show "generating" state but don't update transcript yet
     setActiveSpeaker(line.speaker);
     setIsGeneratingLine(true);
 
@@ -256,6 +256,8 @@ export default function PDFPodcastPage() {
     setIsGeneratingLine(false);
 
     if (audioUrl && audioRef.current) {
+      // NOW update transcript index when audio is ready to play
+      setCurrentLineIndex(index);
       setAllDialogues((prev) =>
         prev.map((d, i) => (i === index ? { ...d, audioUrl, isPlaying: true } : { ...d, isPlaying: false }))
       );
@@ -269,6 +271,8 @@ export default function PDFPodcastPage() {
         playLine(index + 1);
       });
     } else {
+      // If no audio, still update transcript and move on
+      setCurrentLineIndex(index);
       setTimeout(() => playLine(index + 1), 2000);
     }
   }, []);
@@ -425,7 +429,7 @@ export default function PDFPodcastPage() {
   const hasResults = script && allDialogues.length > 0;
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       <audio ref={audioRef} className="hidden" />
 
       {/* Header */}
@@ -453,7 +457,7 @@ export default function PDFPodcastPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {hasResults ? (
           /* ===== 3 COLUMN LAYOUT ===== */
           <div className="h-full grid grid-cols-3 gap-3">

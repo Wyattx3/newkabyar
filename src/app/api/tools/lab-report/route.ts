@@ -11,7 +11,7 @@ const labReportSchema = z.object({
   procedure: z.string().optional(),
   rawData: z.string().min(20, "Data must be at least 20 characters"),
   observations: z.string().optional(),
-  subject: z.enum(["chemistry", "physics", "biology", "general"]).default("general"),
+  subject: z.enum(["chemistry", "physics", "biology", "environmental", "biochemistry", "microbiology", "general"]).default("general"),
   model: z.string().default("fast"),
   language: z.string().default("en"),
 });
@@ -46,41 +46,23 @@ export async function POST(request: NextRequest) {
 Subject: ${subject}
 ${languageInstructions}
 
-Your response MUST be valid JSON:
+Your response MUST be valid JSON with these EXACT fields (all string values):
 {
   "title": "Full experiment title",
-  "abstract": "Brief summary of the experiment and findings (100-150 words)",
-  "introduction": {
-    "background": "Scientific background and context",
-    "hypothesis": "The hypothesis being tested"
-  },
-  "materialsAndMethods": {
-    "materials": ["Material 1", "Material 2"],
-    "procedure": ["Step 1", "Step 2", "Step 3"]
-  },
-  "results": {
-    "dataAnalysis": "Analysis of the raw data with calculations",
-    "tables": [
-      {
-        "title": "Table title",
-        "headers": ["Column 1", "Column 2"],
-        "rows": [["Value 1", "Value 2"]]
-      }
-    ],
-    "keyFindings": ["Finding 1", "Finding 2"]
-  },
-  "discussion": {
-    "interpretation": "What the results mean",
-    "comparison": "How results compare to expected outcomes",
-    "limitations": ["Limitation 1", "Limitation 2"],
-    "improvements": ["Improvement suggestion 1"]
-  },
-  "conclusion": "Final conclusion summarizing the experiment and whether hypothesis was supported",
-  "references": ["Suggested reference format 1"]
+  "abstract": "Brief summary of the experiment, methodology, and key findings (100-150 words)",
+  "introduction": "Scientific background, context, and purpose of the experiment (150-200 words)",
+  "hypothesis": "Clear statement of the hypothesis being tested and expected outcomes",
+  "methods": "Detailed description of materials used and step-by-step procedure followed",
+  "results": "Presentation and analysis of the raw data with any calculations performed",
+  "analysis": "Statistical analysis, error calculations, and interpretation of the data",
+  "discussion": "Interpretation of results, comparison with expected outcomes, limitations, and suggestions for improvement",
+  "conclusion": "Final conclusion summarizing whether the hypothesis was supported and key takeaways",
+  "references": "List of suggested references in proper citation format"
 }
 
-Follow IMRaD format. Be scientifically accurate and use proper terminology.
-Return ONLY valid JSON.`;
+Follow IMRaD format. Be scientifically accurate and use proper terminology for ${subject}.
+Each field should contain detailed, well-written paragraphs (not bullet points unless appropriate).
+Return ONLY valid JSON with all 10 fields as strings.`;
 
     const context = `
 Experiment Title: ${experimentTitle}
@@ -109,10 +91,18 @@ ${observations ? `Observations: ${observations}` : ""}
       }
     } catch (parseError) {
       console.error("Parse error:", parseError);
+      // Fallback structure matching expected interface
       report = {
         title: experimentTitle,
-        abstract: "Report generation failed",
-        content: result,
+        abstract: "Unable to parse AI response. Raw output saved in introduction.",
+        introduction: result,
+        hypothesis: objective,
+        methods: materials || procedure || "Not provided",
+        results: rawData,
+        analysis: "Analysis could not be generated.",
+        discussion: observations || "No observations provided.",
+        conclusion: "Please try regenerating the report.",
+        references: "No references generated.",
       };
     }
 

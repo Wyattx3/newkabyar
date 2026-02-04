@@ -1,0 +1,319 @@
+---
+description: Kay AI (Kabyar) - Complete Project Memory & Development Guidelines
+globs: 
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.css"
+  - "**/*.prisma"
+alwaysApply: true
+---
+
+# Kay AI (Kabyar) - Complete Project Memory
+
+## Project Overview
+
+**Kay AI (Kabyar)** သည် AI-powered educational platform ဖြစ်ပြီး GED, IGCSE, OTHM နှင့် အခြား ကျောင်းသားများအတွက် ဖန်တီးထားသည်။
+
+**Repository**: https://github.com/Wyattx3/newkabyar.git
+
+---
+
+## Tech Stack
+
+| Category | Technology | Version |
+|----------|------------|---------|
+| Framework | Next.js (App Router) | 16.x |
+| Language | TypeScript | 5.7+ |
+| Styling | Tailwind CSS + shadcn/ui | 3.4+ |
+| Database | PostgreSQL (Supabase) | - |
+| ORM | Prisma | 6.1+ |
+| Auth | NextAuth.js v5-beta | - |
+| State | Zustand | 4.5+ |
+| AI SDK | Vercel AI SDK | 6.0+ |
+
+### AI Providers
+- **Gemini**: gemini-2.5-pro, gemini-2.5-flash (Super-smart, Pro-smart)
+- **Grok**: grok-3-mini (Normal tier)
+- **Groq**: kimi-k2 (Fast tier)
+- **OpenAI/Claude**: Available but not primary
+
+---
+
+## Directory Structure (Key Paths)
+
+```
+src/
+├── app/
+│   ├── (auth)/           # Login, Register, Password Reset
+│   ├── (dashboard)/      # Protected dashboard (25 AI tools)
+│   │   └── dashboard/
+│   │       ├── rag/      # PDF Q&A, Quiz, Flashcard, etc.
+│   │       ├── research/ # Academic Consensus, Research Gap
+│   │       ├── media/    # YouTube, Podcast, Viva
+│   │       ├── visual/   # Mind Map, Timeline, Flowchart
+│   │       └── writing/  # Humanizer, AI Detector, etc.
+│   ├── api/
+│   │   ├── ai/           # Chat, Essay, Humanize, Detect
+│   │   ├── tools/        # Tool-specific APIs
+│   │   └── user/         # Profile, Credits
+│   └── blog/, tools/     # Public pages
+├── components/
+│   ├── ads/              # AdSense, Rewarded ads
+│   ├── ai/               # FileInput, ModelSelector
+│   ├── premium/          # Premium UI components
+│   ├── tools/            # Tool shared components
+│   └── ui/               # shadcn/ui components
+├── hooks/                # usePersistedState, useChatHistory
+└── lib/
+    ├── ai-providers/     # OpenAI, Claude, Gemini, Grok, Groq
+    ├── auth.ts           # NextAuth config
+    ├── credits.ts        # Credits system
+    ├── prompts.ts        # AI system prompts
+    └── tools-registry.ts # All 25 tools metadata
+```
+
+---
+
+## 25 AI Tools
+
+### RAG & Documents (5)
+| ID | Name | Credits |
+|----|------|---------|
+| pdf-qa | PDF Q&A Sniper | 4 |
+| quiz-generator | Quiz Generator | 3 |
+| past-paper | Past Paper Analyzer | 8 |
+| flashcard-maker | Flashcard Maker | 3 |
+| resume-tailor | Resume/CV Tailor | 5 |
+
+### Research (2)
+| ID | Name | Credits |
+|----|------|---------|
+| academic-consensus | Academic Consensus | 5 |
+| research-gap | Research Gap Finder | 5 |
+
+### Media (4)
+| ID | Name | Credits |
+|----|------|---------|
+| youtube-summarizer | YouTube Summarizer | 3 |
+| pdf-podcast | PDF to Podcast | 8 |
+| lecture-organizer | Lecture Organizer | 5 |
+| viva-simulator | Viva Simulator | 2 |
+
+### Visual (4)
+| ID | Name | Credits |
+|----|------|---------|
+| mind-map | Mind Map Generator | 3 |
+| timeline | Interactive Timeline | 3 |
+| flowchart | Text to Flowchart | 3 |
+| lab-report | Lab Report Generator | 5 |
+
+### Writing (10)
+| ID | Name | Credits |
+|----|------|---------|
+| image-solve | Image to Solution | 5 |
+| roast-assignment | Roast My Assignment | 4 |
+| paraphraser | Safe Paraphraser | 3 |
+| humanizer | Content Humanizer | 5 |
+| ai-detector | AI Detector | 3 |
+| code-visualizer | Code Logic Visualizer | 3 |
+| explain-error | Explain Error | 3 |
+| devils-advocate | Devil's Advocate | 3 |
+| vocabulary-upgrader | Vocabulary Upgrader | 3 |
+| cold-email | Cold Email Generator | 3 |
+
+---
+
+## Credits System
+
+### Daily Credits
+| Plan | Credits | Features |
+|------|---------|----------|
+| Free | 50/day | Basic tools, Ads shown |
+| Pro | 3500/day | All tools, No ads, Super-smart |
+| Unlimited | ∞ | Everything unlimited |
+
+### Model Tiers
+| Tier | Model | Provider | Credits |
+|------|-------|----------|---------|
+| super-smart | gemini-2.5-pro-preview | Gemini | 0 (Pro only) |
+| pro-smart | gemini-2.5-flash-preview | Gemini | 5 |
+| normal | grok-3-mini | Grok | 3 |
+| fast | kimi-k2 | Groq | 2 |
+
+### Credit Calculation
+```typescript
+// Base: 3 credits per 1000 words (min 3)
+const wordCredits = Math.max(3, Math.ceil(wordCount / 1000) * 3);
+```
+
+---
+
+## Design Rules (CRITICAL)
+
+### Colors
+- **Primary**: Blue (`#2563eb`, `bg-blue-600`)
+- **Background**: White (`#ffffff`)
+- **Text**: Gray scale (gray-900, gray-600, gray-400)
+
+### BANNED
+- ❌ NO GRADIENTS - Solid colors only
+- ❌ NO AI-like generic UI
+- ❌ NO colored backgrounds behind icons
+
+### Component Pattern
+```tsx
+// Premium Card
+<div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+  <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+    <span className="font-medium text-gray-900 text-sm">Title</span>
+  </div>
+  <div className="p-4">{content}</div>
+</div>
+
+// Primary Button
+<Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20">
+  Generate <ArrowRight className="ml-2 h-4 w-4" />
+</Button>
+```
+
+---
+
+## Key Code Patterns
+
+### 1. Adding New Tool
+1. Add to `src/lib/tools-registry.ts`
+2. Create page: `src/app/(dashboard)/dashboard/[category]/[slug]/page.tsx`
+3. Create API: `src/app/api/tools/[slug]/route.ts`
+4. Tool auto-appears in sidebar
+
+### 2. Streaming AI Response
+```typescript
+import { streamWithTier } from "@/lib/ai-providers";
+import { checkCredits, deductCredits } from "@/lib/credits";
+
+// Check credits first
+const check = await checkCredits(userId, model, words);
+if (!check.allowed) return Response.json({ error: check.error }, { status: 402 });
+
+// Deduct BEFORE streaming
+await deductCredits(userId, check.creditsNeeded!, "tool-name", model);
+
+// Stream response
+const stream = await streamWithTier(model, SYSTEM_PROMPT, content);
+return new Response(stream, {
+  headers: { "Content-Type": "text/plain; charset=utf-8" },
+});
+```
+
+### 3. Credit Update Event
+```typescript
+window.dispatchEvent(new Event("credits-updated"));
+```
+
+### 4. Persisted State Hook
+```typescript
+const [value, setValue, clearValue] = usePersistedState("key", defaultValue);
+```
+
+---
+
+## Database Schema (Key Models)
+
+```prisma
+model User {
+  id               String @id @default(cuid())
+  email            String @unique
+  dailyCredits     Int    @default(50)
+  dailyCreditsUsed Int    @default(0)
+  plan             String @default("free") // free, pro, unlimited
+  // Profile fields...
+}
+
+model Document {
+  id       String @id
+  userId   String
+  filename String
+  vectorId String?
+  chunks   DocumentChunk[]
+}
+
+model Conversation {
+  id       String @id
+  userId   String
+  feature  String
+  messages Message[]
+}
+```
+
+---
+
+## API Routes Quick Reference
+
+### AI: `/api/ai/`
+- `chat` - Chat responses
+- `essay` - Essay generation
+- `detect` - AI detection
+- `humanize-diff` - Humanize with diff
+
+### Tools: `/api/tools/`
+- `pdf-qa`, `quiz`, `flashcard`, `past-paper`
+- `youtube`, `podcast`, `lecture`, `viva`
+- `mindmap`, `timeline`, `flowchart`
+- `image-solve`, `roast`, `paraphrase`
+- `consensus`, `research-gap`, `email`
+
+### User: `/api/user/`
+- `profile` - GET/PUT
+- `credits` - GET
+- `credits/reward` - POST (ad reward)
+
+---
+
+## Environment Variables
+
+```env
+DATABASE_URL="postgresql://..."
+AUTH_SECRET="..."
+NEXTAUTH_URL="http://localhost:3000"
+OPENAI_API_KEY="sk-..."
+ANTHROPIC_API_KEY="sk-ant-..."
+GOOGLE_AI_API_KEY="AIza..."
+GROK_API_KEY="xai-..."
+GROQ_API_KEY="gsk_..."
+```
+
+---
+
+## Common Issues & Fixes
+
+| Issue | Fix |
+|-------|-----|
+| Credits not updating | Dispatch `credits-updated` event |
+| AI detection high | Use basic vocabulary in prompts |
+| Grok blocked (403) | Auto-fallback to Gemini works |
+| Auth issues | Check AUTH_SECRET & DB |
+
+---
+
+## Development Commands
+
+```bash
+npm install          # Install deps
+npm run dev          # Dev server
+npm run build        # Production build
+npm run db:push      # Push schema
+npm run db:seed      # Seed database
+npm run db:reset     # Reset & reseed
+```
+
+---
+
+## Multi-Language Support
+
+`en`, `my` (Myanmar), `zh`, `th`, `ko`, `ja`
+
+---
+
+**Last Updated**: February 2026
