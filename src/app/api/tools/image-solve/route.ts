@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
 import { checkToolCredits, deductCredits } from "@/lib/credits";
-import OpenAI from "openai";
 import Groq from "groq-sdk";
 
 const solveSchema = z.object({
@@ -13,10 +12,6 @@ const solveSchema = z.object({
   detailLevel: z.enum(["brief", "detailed", "comprehensive"]).default("detailed"),
   model: z.string().default("fast"),
   language: z.string().default("en"),
-});
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
 });
 
 const groq = new Groq({
@@ -63,36 +58,53 @@ export async function POST(request: NextRequest) {
     };
 
     const detailGuide: Record<string, string> = {
-      brief: "Provide a concise answer with key steps only.",
-      detailed: "Provide a comprehensive solution with explanations.",
-      comprehensive: "Break down the solution into numbered steps with clear explanations for each step.",
+      brief: "Provide a solution with at least 4-5 clear steps.",
+      detailed: "Provide a comprehensive solution with at least 6-8 detailed steps. Each step should thoroughly explain the reasoning and calculations.",
+      comprehensive: "Break down the solution into at least 8-12 numbered steps. Each step should have detailed explanations, show all intermediate calculations, and explain WHY each operation is performed.",
     };
 
     const languageInstructions = language && language !== "en" 
       ? `Provide the solution in ${language} language.` 
       : "";
 
-    const systemPrompt = `You are an expert tutor helping students solve problems.
+    const systemPrompt = `You are an expert tutor who explains problems thoroughly. Your goal is to help students UNDERSTAND, not just get the answer.
 
-Subject Context: ${subjectGuide[subject]}
+Subject: ${subjectGuide[subject]}
 Detail Level: ${detailGuide[detailLevel]}
 ${languageInstructions}
 
-Your response MUST be valid JSON with this EXACT structure:
+CRITICAL INSTRUCTIONS:
+1. Break the solution into MANY small, digestible steps (minimum 6 steps, ideally 8-12 for complex problems)
+2. Each step should explain WHAT you're doing and WHY
+3. Show ALL intermediate calculations - never skip steps
+4. Use clear, educational language like you're teaching a student
+5. Include the mathematical reasoning behind each operation
+
+Use LaTeX notation for ALL mathematical expressions:
+- Inline math: $...$  (e.g., "We have $x = 5$")
+- Display math: $$...$$ (e.g., "$$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$")
+
+Your response MUST be valid JSON with this structure:
 {
-  "problemType": "Type of problem identified (e.g., Algebra, Calculus, Physics - Kinematics)",
-  "givenInfo": ["Given information 1", "Given information 2"],
+  "problemType": "Problem type (e.g., Quadratic Equation, Calculus)",
+  "givenInfo": ["$x^2 + 5x + 6 = 0$", "Find the roots of this equation"],
   "steps": [
-    {"step": 1, "title": "Step title", "content": "Detailed explanation and work"},
-    {"step": 2, "title": "Step title", "content": "Detailed explanation and work"}
+    {"step": 1, "title": "Identify the Problem Type", "content": "Looking at this equation, we can see it's in the form $ax^2 + bx + c = 0$. This is called a quadratic equation because the highest power of $x$ is 2."},
+    {"step": 2, "title": "Extract Coefficients", "content": "Let's identify our coefficients by comparing with the standard form: $a = 1$ (the number before $x^2$), $b = 5$ (the number before $x$), $c = 6$ (the constant term)."},
+    {"step": 3, "title": "Choose a Method", "content": "We can solve quadratic equations using: factoring, completing the square, or the quadratic formula. Let's try factoring first since it's often quickest."},
+    {"step": 4, "title": "Factor the Expression", "content": "We need two numbers that multiply to give $c = 6$ and add to give $b = 5$. Those numbers are 2 and 3 because $2 \\times 3 = 6$ and $2 + 3 = 5$."},
+    {"step": 5, "title": "Write in Factored Form", "content": "Using these numbers, we can write: $$x^2 + 5x + 6 = (x + 2)(x + 3)$$"},
+    {"step": 6, "title": "Apply Zero Product Property", "content": "If $(x + 2)(x + 3) = 0$, then either $(x + 2) = 0$ or $(x + 3) = 0$. This is because if a product equals zero, at least one factor must be zero."},
+    {"step": 7, "title": "Solve Each Factor", "content": "From $(x + 2) = 0$: subtract 2 from both sides → $x = -2$. From $(x + 3) = 0$: subtract 3 from both sides → $x = -3$."},
+    {"step": 8, "title": "Verify Solutions", "content": "Check $x = -2$: $(-2)^2 + 5(-2) + 6 = 4 - 10 + 6 = 0$ ✓. Check $x = -3$: $(-3)^2 + 5(-3) + 6 = 9 - 15 + 6 = 0$ ✓. Both solutions are correct!"}
   ],
-  "finalAnswer": "The final answer clearly stated",
-  "concepts": ["Concept 1 used", "Concept 2 used"],
-  "tips": ["Helpful tip for similar problems"],
-  "explanation": "Brief explanation of why this answer is correct"
+  "finalAnswer": "The solutions are $x = -2$ and $x = -3$",
+  "concepts": ["Quadratic Equation", "Factoring", "Zero Product Property"],
+  "tips": ["Always verify your solutions by substituting back", "If factoring is difficult, use the quadratic formula as backup"],
+  "explanation": "This quadratic equation was solved by factoring, which is the simplest method when the equation factors nicely."
 }
 
-Return ONLY valid JSON.`;
+Return ONLY valid JSON. Use LaTeX for all math. Provide DETAILED explanations in each step.`;
 
     let result: string;
     let executedCode: string | null = null;
@@ -100,143 +112,123 @@ Return ONLY valid JSON.`;
 
     // Handle image vs text input differently
     if (inputType === "image" && image) {
-      // Use OpenAI GPT-4o for image analysis
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Solve this problem:" },
-              {
-                type: "image_url",
-                image_url: {
-                  url: image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}`,
-                  detail: "high",
-                },
-              },
-            ],
-          },
-        ],
-        max_tokens: 2000,
-      });
-      result = response.choices[0]?.message?.content || "";
-    } else {
-      // Use Groq compound model with code execution for math/programming problems
-      const isMathOrProgramming = ["math", "physics", "statistics", "programming"].includes(subject);
-      
-      if (isMathOrProgramming) {
-        try {
-          // Use Groq compound for code execution
-          const compoundResponse = await groq.chat.completions.create({
-            model: "groq/compound",
-            messages: [
-              { 
-                role: "system", 
-                content: `You are an expert tutor. For math/physics/statistics problems, use Python code execution to verify your calculations. Always show your work step by step.
-
-${languageInstructions}
-
-After solving, format your response as JSON:
-{
-  "problemType": "Type of problem",
-  "givenInfo": ["Given info 1", "Given info 2"],
-  "steps": [
-    {"step": 1, "title": "Step title", "content": "Explanation with calculation"}
-  ],
-  "finalAnswer": "The answer",
-  "concepts": ["Concept 1"],
-  "tips": ["Tip 1"],
-  "explanation": "Why this is correct",
-  "codeUsed": "Python code if used",
-  "codeOutput": "Output from code execution"
-}` 
-              },
-              { role: "user", content: `Solve this ${subject} problem step by step. Use code execution to verify calculations:\n\n${text}` }
-            ],
-            max_tokens: 4000,
-          });
-          
-          result = compoundResponse.choices[0]?.message?.content || "";
-          
-          // Extract code execution info if present
-          const codeMatch = result.match(/```python([\s\S]*?)```/);
-          if (codeMatch) {
-            executedCode = codeMatch[1].trim();
-          }
-        } catch (groqError) {
-          console.error("Groq compound error, falling back:", groqError);
-          // Fallback to regular Groq
-          const fallbackResponse = await groq.chat.completions.create({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: `Solve this problem:\n\n${text}` }
-            ],
-            max_tokens: 2000,
-          });
-          result = fallbackResponse.choices[0]?.message?.content || "";
-        }
-      } else {
-        // Use regular Groq for non-math subjects
+      try {
+        // Use Groq's Llama 4 Scout vision model for image analysis
         const response = await groq.chat.completions.create({
-          model: "llama-3.3-70b-versatile",
+          model: "meta-llama/llama-4-scout-17b-16e-instruct", // Groq Llama 4 vision model
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Solve this problem:\n\n${text}` }
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Solve this problem step by step with detailed explanations:" },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}`,
+                  },
+                },
+              ],
+            },
           ],
-          max_tokens: 2000,
+          max_tokens: 4000,
+          temperature: 0.2,
         });
         result = response.choices[0]?.message?.content || "";
+      } catch (groqError) {
+        
+        // Check if it's an API key issue
+        const errorMsg = String(groqError);
+        if (errorMsg.includes('401') || errorMsg.includes('API key')) {
+          return NextResponse.json(
+            { error: "Groq API key is invalid. Please check your GROQ_API_KEY." },
+            { status: 401 }
+          );
+        }
+        throw groqError;
       }
+    } else {
+      // Use Groq's best model for accurate math solving
+      const response = await groq.chat.completions.create({
+        model: "llama-3.3-70b-versatile", // Best Groq model for reasoning
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Solve this ${subject} problem with MANY detailed steps (at least 6-8 steps). Explain each step thoroughly like you're teaching a student. Show all intermediate calculations and explain WHY each operation is done. Use LaTeX for all math:\n\n${text}` }
+        ],
+        max_tokens: 6000,
+        temperature: 0.2, // Slightly higher for more detailed explanations
+      });
+      result = response.choices[0]?.message?.content || "";
     }
 
-    // Parse the response
+    // Parse the response - find the outermost JSON object
     let solution;
     try {
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      // Clean the result - remove markdown code blocks if present
+      let cleanResult = result;
+      if (result.includes('```json')) {
+        cleanResult = result.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      } else if (result.includes('```')) {
+        cleanResult = result.replace(/```\s*/g, '');
+      }
+      
+      // Find JSON object - be more precise with matching
+      const jsonMatch = cleanResult.match(/\{[\s\S]*\}/);
+      
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        // Normalize the structure to match frontend expectations
+        let parsed;
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch {
+          // Fix LaTeX escape sequences that break JSON parsing
+          // The regex matches backslashes NOT followed by valid JSON escape chars or another backslash
+          const fixedJson = jsonMatch[0]
+            .replace(/\\([^"\\/bfnrtu\\])/g, '\\\\$1'); // Double-escape invalid escape sequences
+          
+          try {
+            parsed = JSON.parse(fixedJson);
+          } catch (e2) {
+            throw e2;
+          }
+        }
+        
+        // Validate steps structure
+        const validSteps = Array.isArray(parsed.steps) ? parsed.steps.map((s: { step?: number; title?: string; content?: string }, idx: number) => ({
+          step: s.step || idx + 1,
+          title: s.title || `Step ${idx + 1}`,
+          content: typeof s.content === 'string' ? s.content : JSON.stringify(s.content || '')
+        })) : [];
+        
         solution = {
           problemType: parsed.problemType || "Problem",
-          givenInfo: parsed.givenInfo || [],
-          steps: parsed.steps || (parsed.solution?.steps?.map((s: any, i: number) => ({
-            step: s.number || i + 1,
-            title: s.description || `Step ${i + 1}`,
-            content: s.work || s.content || ""
-          })) || []),
-          finalAnswer: parsed.finalAnswer || parsed.solution?.finalAnswer || "See solution above",
-          concepts: parsed.concepts || [],
-          tips: parsed.tips || [],
-          explanation: parsed.explanation || parsed.solution?.explanation || "",
-          codeUsed: parsed.codeUsed || executedCode || null,
-          codeOutput: parsed.codeOutput || codeOutput || null,
+          givenInfo: Array.isArray(parsed.givenInfo) ? parsed.givenInfo : [],
+          steps: validSteps,
+          finalAnswer: parsed.finalAnswer || "See solution above",
+          concepts: Array.isArray(parsed.concepts) ? parsed.concepts : [],
+          tips: Array.isArray(parsed.tips) ? parsed.tips : [],
+          explanation: parsed.explanation || "",
         };
+        
       } else {
-        throw new Error("Invalid response format");
+        throw new Error("No JSON found in response");
       }
     } catch (parseError) {
       console.error("Parse error:", parseError);
-      // Try to extract steps from plain text
-      const lines = result.split('\n').filter(l => l.trim());
-      const steps = lines.map((line, i) => ({
-        step: i + 1,
-        title: `Step ${i + 1}`,
-        content: line.replace(/^\d+[\.\)]\s*/, '').trim()
-      })).filter(s => s.content.length > 10).slice(0, 10);
+      // Fallback: try to extract meaningful content without JSON
+      const cleanContent = result
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/^\{[\s\S]*\}$/g, '') // Remove if entire thing is JSON
+        .trim();
       
       solution = {
-        problemType: "Analysis",
+        problemType: "Solution",
         givenInfo: [],
-        steps: steps.length > 0 ? steps : [{ step: 1, title: "Solution", content: result }],
+        steps: [{ step: 1, title: "Solution", content: cleanContent || "Unable to parse solution. Please try again." }],
         finalAnswer: "See solution above",
         concepts: [],
         tips: [],
         explanation: "",
-        codeUsed: executedCode,
-        codeOutput: codeOutput,
       };
     }
 

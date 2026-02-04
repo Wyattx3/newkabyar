@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,41 @@ import {
   Camera, Loader2, Sparkles, Upload, X, Clipboard, Lightbulb, CheckCircle,
   BookOpen, Calculator, Beaker, FileText, Link2, Type, Mic, History,
   Download, Share2, MessageSquare, RefreshCw, ChevronDown, Send, Copy,
-  Check, Zap, Code, Globe, Atom, PenTool, BarChart3, Brain, ChevronRight
+  Check, Zap, Code, Globe, Atom, PenTool, BarChart3, Brain, ChevronRight,
+  Bookmark, BookmarkCheck, Volume2, Printer, ThumbsUp, ThumbsDown, RotateCcw,
+  Eye, EyeOff, HelpCircle, Star, ChevronUp
 } from "lucide-react";
+import "katex/dist/katex.min.css";
+import katex from "katex";
+
+// Math renderer component
+function MathText({ text }: { text: string }) {
+  const rendered = useMemo(() => {
+    if (!text) return "";
+    
+    // Process display math first ($$...$$)
+    let result = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
+      try {
+        return `<div class="my-3 overflow-x-auto">${katex.renderToString(math.trim(), { displayMode: true, throwOnError: false })}</div>`;
+      } catch {
+        return `<code>${math}</code>`;
+      }
+    });
+    
+    // Process inline math ($...$)
+    result = result.replace(/\$([^$]+)\$/g, (_, math) => {
+      try {
+        return katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
+      } catch {
+        return `<code>${math}</code>`;
+      }
+    });
+    
+    return result;
+  }, [text]);
+
+  return <span dangerouslySetInnerHTML={{ __html: rendered }} />;
+}
 
 interface SolutionStep {
   step: number;
@@ -29,8 +62,6 @@ interface Solution {
   concepts: string[];
   tips: string[];
   explanation?: string;
-  codeUsed?: string | null;
-  codeOutput?: string | null;
 }
 
 interface SolveHistory {
@@ -91,6 +122,14 @@ export default function MultiInputSolverPage() {
   const [isGeneratingSimilar, setIsGeneratingSimilar] = useState(false);
   const [similarProblems, setSimilarProblems] = useState<string[]>([]);
   
+  // New feature states
+  const [bookmarked, setBookmarked] = useState(false);
+  const [rating, setRating] = useState<"up" | "down" | null>(null);
+  const [showHints, setShowHints] = useState(true);
+  const [expandedSteps, setExpandedSteps] = useState<number[]>([]);
+  const [activeStepQuestion, setActiveStepQuestion] = useState<number | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -98,7 +137,13 @@ export default function MultiInputSolverPage() {
   const aiLanguage = useAILanguage();
 
   useEffect(() => setMounted(true), []);
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
+  useEffect(() => {
+    // Scroll chat container only, not the page
+    const chatContainer = chatEndRef.current?.parentElement;
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [chatMessages]);
 
   // Handle paste for images
   useEffect(() => {
@@ -200,6 +245,15 @@ export default function MultiInputSolverPage() {
           toast({ title: "Insufficient credits", variant: "destructive" });
           return;
         }
+        if (response.status === 401 || response.status === 503) {
+          const errorData = await response.json().catch(() => ({}));
+          toast({ 
+            title: "Image analysis unavailable", 
+            description: errorData.error || "Please try text input instead",
+            variant: "destructive" 
+          });
+          return;
+        }
         throw new Error("Failed");
       }
 
@@ -298,6 +352,94 @@ export default function MultiInputSolverPage() {
     }
   };
 
+  // Feature: Ask about specific step
+  const askAboutStep = async (stepIndex: number) => {
+    if (!solution) return;
+    const step = solution.steps[stepIndex];
+    setActiveStepQuestion(stepIndex);
+    setShowChat(true);
+    const question = `Please explain Step ${step.step} "${step.title}" in more detail`;
+    setChatInput("");
+    setChatMessages(prev => [...prev, { role: "user", content: question }]);
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: `You are a patient tutor explaining step ${step.step} of solving a ${solution.problemType} problem. The step is: "${step.title}" with content: "${step.content}". Explain this step in simple terms, why we do it, and common mistakes to avoid.` },
+            { role: "user", content: question }
+          ],
+          feature: "answer",
+          model: "fast",
+          language: aiLanguage || "en",
+        }),
+      });
+      if (!response.ok) throw new Error("Failed");
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader");
+      let content = "";
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        content += decoder.decode(value, { stream: true });
+      }
+      setChatMessages(prev => [...prev, { role: "assistant", content }]);
+    } catch {
+      setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, I couldn't explain this step." }]);
+    } finally {
+      setIsChatLoading(false);
+      setActiveStepQuestion(null);
+    }
+  };
+
+  // Feature: Text to Speech
+  const speakSolution = () => {
+    if (!solution || typeof window === "undefined") return;
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    const text = `The answer is ${solution.finalAnswer}. Here are the steps: ${solution.steps.map(s => `Step ${s.step}, ${s.title}. ${s.content}`).join(". ")}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  };
+
+  // Feature: Print solution
+  const printSolution = () => {
+    if (!solution) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html><head><title>Solution</title>
+      <style>body{font-family:system-ui;padding:40px;max-width:800px;margin:0 auto}
+      h1{color:#16a34a}h2{color:#2563eb;margin-top:24px}
+      .step{margin:16px 0;padding:16px;background:#f9fafb;border-radius:8px}
+      .step-num{display:inline-block;width:24px;height:24px;background:#2563eb;color:white;border-radius:50%;text-align:center;margin-right:8px}</style>
+      </head><body>
+      <h1>Answer: ${solution.finalAnswer}</h1>
+      <p><strong>Problem Type:</strong> ${solution.problemType}</p>
+      <h2>Solution Steps</h2>
+      ${solution.steps.map(s => `<div class="step"><span class="step-num">${s.step}</span><strong>${s.title}</strong><p>${s.content}</p></div>`).join("")}
+      </body></html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  // Feature: Toggle step expansion
+  const toggleStepExpand = (stepIndex: number) => {
+    setExpandedSteps(prev => 
+      prev.includes(stepIndex) ? prev.filter(i => i !== stepIndex) : [...prev, stepIndex]
+    );
+  };
+
   const copySolution = () => {
     if (!solution) return;
     let text = `Problem Type: ${solution.problemType}\n\n`;
@@ -335,10 +477,43 @@ export default function MultiInputSolverPage() {
 
   const hasResult = !!solution;
 
+  // Prevent parent scrolling for fit-view
+  useEffect(() => {
+    const parent = document.querySelector('main > div') as HTMLElement;
+    const html = document.documentElement;
+    const body = document.body;
+    
+    // Store original values
+    const origHtmlOverflow = html.style.overflow;
+    const origBodyOverflow = body.style.overflow;
+    const origParentClass = parent?.className;
+    
+    // Set overflow hidden on all levels with !important to override Tailwind
+    html.style.setProperty('overflow', 'hidden', 'important');
+    body.style.setProperty('overflow', 'hidden', 'important');
+    if (parent) {
+      // Remove overflow-y-auto class and add overflow-hidden
+      parent.classList.remove('overflow-y-auto');
+      parent.classList.add('overflow-hidden', 'p-0');
+      parent.style.setProperty('overflow', 'hidden', 'important');
+      parent.style.setProperty('padding', '0', 'important');
+    }
+    
+    return () => {
+      html.style.overflow = origHtmlOverflow;
+      body.style.overflow = origBodyOverflow;
+      if (parent && origParentClass) {
+        parent.className = origParentClass;
+        parent.style.removeProperty('overflow');
+        parent.style.removeProperty('padding');
+      }
+    };
+  }, []);
+
   if (!mounted) return null;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50/50 overflow-hidden">
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
       {/* INITIAL STATE - Fit View */}
       {!hasResult ? (
         <div className="h-full flex overflow-hidden">
@@ -582,128 +757,254 @@ Solve for x: 2x + 5 = 13"
           )}
         </div>
       ) : (
-        /* RESULTS STATE - Facebook-like Simple Text */
-        <div className="h-full flex bg-gray-50 overflow-hidden">
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Toolbar */}
-            <div className="h-11 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
-              <div className="flex items-center gap-2">
-                <button onClick={reset} className="text-sm text-blue-600 font-medium hover:underline">
-                  ← New Problem
-                </button>
+        /* RESULTS STATE - 3-Column Fit View Layout */
+        <div className="h-full flex bg-white overflow-hidden">
+          {/* LEFT SIDEBAR - Info */}
+          <div className="w-60 bg-white border-r border-gray-200 flex flex-col shrink-0 overflow-hidden">
+            {/* Answer Card */}
+            <div className="p-3 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <CheckCircle className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-[10px] font-medium text-gray-400">ANSWER</p>
               </div>
-              <div className="flex items-center gap-1">
-                <button onClick={copySolution} className="p-1.5 hover:bg-gray-100 rounded">
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+              <div className="text-base font-bold text-gray-900 leading-tight">
+                <MathText text={solution.finalAnswer} />
+              </div>
+              <div className="flex items-center gap-1 mt-2">
+                <button 
+                  onClick={() => setRating(rating === "up" ? null : "up")}
+                  className={cn("p-1 rounded-lg", rating === "up" ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:bg-gray-100")}
+                >
+                  <ThumbsUp className="w-3 h-3" />
                 </button>
-                <button onClick={exportSolution} className="p-1.5 hover:bg-gray-100 rounded">
-                  <Download className="w-4 h-4 text-gray-500" />
-                </button>
-                <button onClick={() => setShowChat(!showChat)} className={cn("p-1.5 rounded", showChat && "bg-blue-100")}>
-                  <MessageSquare className="w-4 h-4 text-gray-500" />
+                <button 
+                  onClick={() => setRating(rating === "down" ? null : "down")}
+                  className={cn("p-1 rounded-lg", rating === "down" ? "text-red-500 bg-red-50" : "text-gray-400 hover:bg-gray-100")}
+                >
+                  <ThumbsDown className="w-3 h-3" />
                 </button>
               </div>
             </div>
 
-            {/* Content - Single Card Like Facebook Post */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="max-w-xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
-                {/* Header */}
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="font-semibold text-gray-900">{solution.problemType}</p>
-                </div>
-                
-                {/* Body - Plain Text Solution */}
-                <div className="px-4 py-4">
-                  {/* Answer */}
-                  <div className="mb-4 pb-4 border-b border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Answer</p>
-                    <p className="text-base text-gray-900 font-medium">{solution.finalAnswer}</p>
-                  </div>
-                  
-                  {/* Steps as Plain Text */}
-                  <div className="space-y-4">
-                    {solution.steps.map((step, i) => (
-                      <div key={i} className={cn(stepByStep && i > currentStep && "opacity-30")}>
-                        <p className="text-sm text-gray-900">
-                          <span className="font-semibold">Step {step.step}: {step.title}</span>
-                        </p>
-                        <p className="text-sm text-gray-700 mt-0.5">{step.content}</p>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Given Info */}
+              {solution.givenInfo.length > 0 && (
+                <div className="p-3 border-b border-gray-100">
+                  <p className="text-[10px] font-medium text-gray-400 mb-1">GIVEN</p>
+                  <div className="space-y-1">
+                    {solution.givenInfo.map((info, i) => (
+                      <div key={i} className="text-[11px] text-gray-700 py-1 px-2 bg-gray-50 border border-gray-100 rounded-lg">
+                        <MathText text={info} />
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
 
-                  {stepByStep && currentStep < solution.steps.length - 1 && (
-                    <button
-                      onClick={() => setCurrentStep(currentStep + 1)}
-                      className="mt-4 w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-medium"
+              {/* Concepts */}
+              {solution.concepts.length > 0 && (
+                <div className="p-3 border-b border-gray-100">
+                  <p className="text-[10px] font-medium text-gray-400 mb-1">CONCEPTS</p>
+                  <div className="flex flex-wrap gap-1">
+                    {solution.concepts.map((c, i) => (
+                      <span key={i} className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded-lg text-[10px]">{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tips */}
+              {solution.tips.length > 0 && (
+                <div className="p-3">
+                  <p className="text-[10px] font-medium text-gray-400 mb-1 flex items-center gap-1">
+                    <Lightbulb className="w-2.5 h-2.5 text-amber-500" /> TIPS
+                  </p>
+                  <ul className="space-y-1">
+                    {solution.tips.map((t, i) => (
+                      <li key={i} className="text-[10px] text-gray-600 leading-relaxed">{t}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="p-2 border-t border-gray-100 shrink-0">
+              <div className="grid grid-cols-4 gap-1">
+                <button onClick={() => setBookmarked(!bookmarked)} className={cn("flex flex-col items-center gap-0.5 p-1 rounded-lg", bookmarked ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100 text-gray-500")}>
+                  {bookmarked ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
+                  <span className="text-[8px]">Save</span>
+                </button>
+                <button onClick={speakSolution} className={cn("flex flex-col items-center gap-0.5 p-1 rounded-lg", isSpeaking ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100 text-gray-500")}>
+                  <Volume2 className="w-3 h-3" />
+                  <span className="text-[8px]">Speak</span>
+                </button>
+                <button onClick={printSolution} className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+                  <Printer className="w-3 h-3" />
+                  <span className="text-[8px]">Print</span>
+                </button>
+                <button onClick={copySolution} className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+                  {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                  <span className="text-[8px]">Copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* CENTER - Steps */}
+          <div className="flex-1 bg-white flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="h-10 border-b border-gray-100 flex items-center justify-between px-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <button onClick={reset} className="p-1 hover:bg-gray-100 rounded-lg">
+                  <RotateCcw className="w-3 h-3 text-gray-500" />
+                </button>
+                <p className="font-medium text-gray-900 text-sm">{solution.problemType}</p>
+                <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-lg">{solution.steps.length} steps</span>
+              </div>
+              <button
+                onClick={() => setStepByStep(!stepByStep)}
+                className={cn("text-[10px] px-2 py-0.5 rounded-lg", stepByStep ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600")}
+              >
+                {stepByStep ? "All" : "Step by Step"}
+              </button>
+            </div>
+
+            {/* Steps */}
+            <div className="flex-1 overflow-y-auto p-2">
+              <div className="space-y-2">
+                {solution.steps.map((step, i) => (
+                  <div
+                    key={i}
+                    className={cn("bg-white border border-gray-200 rounded-xl transition-all hover:border-blue-200", stepByStep && i > currentStep && "opacity-30")}
+                  >
+                    <div 
+                      className="p-3 flex items-start gap-3 cursor-pointer"
+                      onClick={() => toggleStepExpand(i)}
                     >
-                      Show Next Step
-                    </button>
-                  )}
-                </div>
-
-                {/* Footer - Actions */}
-                <div className="px-4 py-2 border-t border-gray-100 flex items-center justify-between">
-                  <button
-                    onClick={() => setStepByStep(!stepByStep)}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    {stepByStep ? "Show All Steps" : "Step by Step Mode"}
-                  </button>
-                  <button
-                    onClick={generateSimilarProblems}
-                    disabled={isGeneratingSimilar}
-                    className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                  >
-                    {isGeneratingSimilar && <Loader2 className="w-3 h-3 animate-spin" />}
-                    Practice Similar
-                  </button>
-                </div>
+                      <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        {step.step}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-gray-900 text-sm">{step.title}</p>
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); askAboutStep(i); }}
+                              className="p-1 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600"
+                            >
+                              {activeStepQuestion === i ? <Loader2 className="w-3 h-3 animate-spin" /> : <HelpCircle className="w-3 h-3" />}
+                            </button>
+                            {expandedSteps.includes(i) ? <ChevronUp className="w-3 h-3 text-gray-400" /> : <ChevronDown className="w-3 h-3 text-gray-400" />}
+                          </div>
+                        </div>
+                        <div className={cn("text-xs text-gray-600 leading-relaxed mt-1", !expandedSteps.includes(i) && "line-clamp-2")}>
+                          <MathText text={step.content} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Similar Problems - Separate Card */}
-              {similarProblems.length > 0 && (
-                <div className="max-w-xl mx-auto mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <p className="text-sm font-semibold text-gray-900 mb-3">Practice Problems</p>
-                  {similarProblems.map((p, i) => (
-                    <p key={i} className="text-sm text-gray-700 mb-2">{i + 1}. {p}</p>
-                  ))}
-                </div>
+              {stepByStep && currentStep < solution.steps.length - 1 && (
+                <button
+                  onClick={() => setCurrentStep(currentStep + 1)}
+                  className="w-full mt-2 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-1"
+                >
+                  Next <ChevronRight className="w-3 h-3" />
+                </button>
               )}
             </div>
           </div>
 
-          {/* Chat */}
-          {showChat && (
-            <div className="w-72 bg-white border-l border-gray-200 flex flex-col shrink-0">
-              <div className="h-11 border-b border-gray-200 flex items-center justify-between px-3 shrink-0">
-                <span className="text-sm font-medium">Ask AI</span>
-                <button onClick={() => setShowChat(false)}><X className="w-4 h-4 text-gray-400" /></button>
+          {/* RIGHT SIDEBAR - Chat & Practice */}
+          <div className="w-64 bg-white border-l border-gray-200 flex flex-col shrink-0 overflow-hidden">
+            {/* Practice Problems */}
+            <div className="p-2 border-b border-gray-100 shrink-0">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-medium text-gray-400">PRACTICE</p>
+                <button
+                  onClick={generateSimilarProblems}
+                  disabled={isGeneratingSimilar}
+                  className="text-[10px] text-blue-600 flex items-center gap-0.5"
+                >
+                  {isGeneratingSimilar ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <><RefreshCw className="w-2.5 h-2.5" /> Generate</>}
+                </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {similarProblems.length > 0 ? (
+                <div className="space-y-1 max-h-20 overflow-y-auto">
+                  {similarProblems.map((p, i) => (
+                    <div key={i} className="p-1.5 bg-white border border-gray-100 rounded-lg text-[10px] text-gray-700">
+                      <span className="font-bold text-blue-600">{i+1}.</span> <MathText text={p} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] text-gray-400 text-center py-2">Click to generate</p>
+              )}
+            </div>
+
+            {/* AI Chat */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="px-2 py-1.5 border-b border-gray-100 flex items-center gap-2 shrink-0">
+                <div className="w-5 h-5 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <Sparkles className="w-2.5 h-2.5 text-white" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium text-gray-900">AI Tutor</p>
+                  <p className="text-[9px] text-green-500">Click ? on step</p>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {chatMessages.length === 0 && (
+                  <div className="space-y-1">
+                    {["Why this formula?", "Explain step 1", "Different approach?"].map((q, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setChatInput(q)}
+                        className="w-full text-left px-2 py-1 bg-white rounded-lg border border-gray-200 text-[10px] text-gray-600 hover:border-blue-300"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {chatMessages.map((msg, i) => (
-                  <div key={i} className={cn("max-w-[90%] p-2 rounded-lg text-sm", msg.role === "user" ? "ml-auto bg-blue-600 text-white" : "bg-gray-100 text-gray-800")}>
-                    {msg.content}
+                  <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                    <div className={cn("max-w-[90%] px-2 py-1 rounded-xl text-[11px]", msg.role === "user" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border border-gray-200")}>
+                      <MathText text={msg.content} />
+                    </div>
                   </div>
                 ))}
-                {isChatLoading && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                {isChatLoading && (
+                  <div className="bg-white px-2 py-1 rounded-xl border border-gray-200 w-fit">
+                    <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
+                  </div>
+                )}
                 <div ref={chatEndRef} />
               </div>
-              <div className="p-3 border-t border-gray-200 shrink-0 flex gap-2">
-                <Input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask..."
-                  onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
-                  className="text-sm h-8"
-                />
-                <Button onClick={handleChatSubmit} size="sm" className="h-8 px-2 bg-blue-600">
-                  <Send className="w-4 h-4" />
-                </Button>
+              
+              <div className="p-2 border-t border-gray-100 bg-white shrink-0">
+                <div className="flex gap-1">
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask..."
+                    onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
+                    className="rounded-xl text-[11px] h-7"
+                  />
+                  <Button onClick={handleChatSubmit} size="sm" className="rounded-xl w-7 h-7 p-0 bg-blue-600">
+                    <Send className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
