@@ -42,6 +42,7 @@
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "diff-match-patch": "^1.0.5",
     "eventsource-parser": "^3.0.6",
     "framer-motion": "^12.29.0",
     "groq-sdk": "^0.37.0",
@@ -72,6 +73,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/diff-match-patch": "^1.0.36",
     "@types/node": "^22.10.2",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.0.2",

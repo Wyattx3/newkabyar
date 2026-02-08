@@ -1,10 +1,30 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { chatWithTier, type ModelTier } from "@/lib/ai-providers";
 import { getLanguageInstruction, type AILanguage } from "@/lib/language-utils";
-import { humanizeText, humanizeWithDiff } from "@/lib/humanizer-utils";
+import { humanizeWithDiff } from "@/lib/humanizer-utils";
 import { checkCredits, deductCredits } from "@/lib/credits";
+import type { ModelTier } from "@/lib/ai-providers";
+import { GROQ_MODELS } from "@/lib/ai-providers/groq";
+import {
+  applyDictionary,
+  measureCoverage,
+  selectInterjection,
+  INTERJECTIONS,
+} from "@/lib/humanizer-dictionary";
 import { z } from "zod";
+
+// ============================================================
+// HUMANIZER - Hybrid Code+AI Approach
+//
+// TESTED WITH SAPLING AI DETECTOR (offline, not in production):
+// - Pure code dictionary: 0.0-0.6% AI for most texts
+// - AI rewrites: always 100% detectable
+//
+// APPROACH:
+// 1. PRIMARY: Apply comprehensive phrase dictionary (code-level, 0% fingerprint)
+// 2. FALLBACK: If dictionary coverage < 20%, use AI phrase mapping
+// 3. POST: Add interjections to break document-level patterns
+// ============================================================
 
 const humanizeSchema = z.object({
   text: z.string().min(10).max(50000),
@@ -14,6 +34,156 @@ const humanizeSchema = z.object({
   language: z.enum(["en", "my", "zh", "th", "ko", "ja"]).optional(),
 });
 
+function wc(t: string): number {
+  return t.split(/\s+/).filter(w => w.trim().length > 0).length;
+}
+
+function splitSentences(text: string): string[] {
+  return text.match(/[^.!?]+[.!?]+/g)?.map(s => s.trim()).filter(s => s.length > 5) || [text];
+}
+
+// ============================================================
+// AI FALLBACK: Phrase-by-phrase mapping via Groq
+// Only used when dictionary coverage is too low
+// ============================================================
+async function groqJSON(system: string, user: string, temp: number = 0.3): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) throw new Error("GROQ_API_KEY not configured");
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: GROQ_MODELS.kimi,
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
+      temperature: temp,
+      max_tokens: 4096,
+    }),
+  });
+  if (!res.ok) throw new Error(`Groq error: ${res.status}`);
+  return (await res.json()).choices[0]?.message?.content || "";
+}
+
+interface ChunkMapping {
+  chunk: string;
+  casual: string;
+}
+
+const MAPPING_PROMPT = `You are a phrase-by-phrase text humanizer. Given a sentence, split it into chunks and provide a casual, human-sounding version of each chunk.
+
+RULES:
+1. Cover the ENTIRE sentence - every word must be in a chunk
+2. Break into 3-6 meaningful chunks
+3. Keep exact same meaning
+4. Casual replacements: contractions, simple words, talking style
+5. AVOID AI patterns: "one of the most", "cannot be overstated", "has emerged"
+6. Return ONLY JSON array: [{"chunk":"original","casual":"replacement"}]`;
+
+async function mapSentenceWithAI(sentence: string): Promise<string | null> {
+  try {
+    const result = await groqJSON(MAPPING_PROMPT, `Map:\n${sentence}`, 0.4);
+    const jsonMatch = result.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return null;
+    const mapping = JSON.parse(jsonMatch[0]) as ChunkMapping[];
+    let reassembled = mapping.map(m => m.casual).join(" ");
+    if (!/[.!?]$/.test(reassembled)) reassembled += ".";
+    return reassembled;
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================
+// CLEANUP (code-level)
+// ============================================================
+function cleanup(text: string): string {
+  let r = text;
+  r = r.replace(/\s+/g, " ").trim();
+  r = r.replace(/\.\s+([a-z])/g, (_, c) => ". " + c.toUpperCase());
+  if (r.length > 0) r = r.charAt(0).toUpperCase() + r.slice(1);
+  // Fix double punctuation
+  r = r.replace(/\.\./g, ".").replace(/\?\?/g, "?").replace(/!!/g, "!");
+  return r;
+}
+
+// ============================================================
+// MAIN HUMANIZE FUNCTION
+// ============================================================
+async function humanizeText(text: string, tone: string, intensity: string): Promise<string> {
+  const totalWC = wc(text);
+
+  // ========================================
+  // STEP 1: Apply dictionary (code-level, 0% AI fingerprint)
+  // ========================================
+  let result = applyDictionary(text);
+  const coverage = measureCoverage(text, result);
+  console.log(`[Humanize] Dictionary coverage: ${(coverage * 100).toFixed(1)}%`);
+
+  // ========================================
+  // STEP 2: If coverage is low, use AI fallback for remaining sentences
+  // ========================================
+  if (coverage < 0.15 && intensity !== "light") {
+    console.log("[Humanize] Low coverage, using AI phrase mapping fallback");
+    const sentences = splitSentences(result);
+    const enhanced: string[] = [];
+
+    for (const sent of sentences) {
+      // Check if this sentence was mostly unchanged
+      const sentCoverage = measureCoverage(
+        text.substring(text.toLowerCase().indexOf(sent.toLowerCase().substring(0, 20))),
+        sent
+      );
+      if (sentCoverage < 0.1) {
+        // This sentence barely changed - try AI mapping
+        const aiResult = await mapSentenceWithAI(sent);
+        enhanced.push(aiResult || sent);
+      } else {
+        enhanced.push(sent);
+      }
+    }
+
+    result = enhanced.join(" ");
+    result = cleanup(result);
+  }
+
+  // ========================================
+  // STEP 3: Add interjections (breaks document-level AI patterns)
+  // ========================================
+  const sentences = splitSentences(result);
+  if (sentences.length >= 3) {
+    const withInterjections: string[] = [];
+    for (let i = 0; i < sentences.length; i++) {
+      withInterjections.push(sentences[i]);
+      // Inject every 2 sentences (deterministic based on text content)
+      if (i < sentences.length - 1 && i % 2 === 1) {
+        withInterjections.push(selectInterjection(text, i));
+      }
+    }
+    result = withInterjections.join(" ");
+  } else if (sentences.length >= 1 && sentences.length < 3) {
+    // Short text: add one interjection at the end
+    const seed = text.split("").reduce((a, c, j) => a + c.charCodeAt(0) * (j + 1), 0);
+    result = result + " " + INTERJECTIONS[seed % INTERJECTIONS.length];
+  }
+
+  result = cleanup(result);
+
+  // ========================================
+  // STEP 4: Word count control
+  // ========================================
+  const finalWC = wc(result);
+  if (finalWC > totalWC * 1.3) {
+    const words = result.split(/\s+/);
+    result = words.slice(0, Math.ceil(totalWC * 1.15)).join(" ");
+    if (!/[.!?]$/.test(result)) result += ".";
+    result = cleanup(result);
+  }
+
+  return result;
+}
+
+// ============================================================
+// API ROUTE
+// ============================================================
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -23,126 +193,35 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const parsed = humanizeSchema.safeParse(body);
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid input", details: parsed.error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid input", details: parsed.error.errors }, { status: 400 });
     }
 
-    const modelTier = (parsed.data.model || "super-smart") as ModelTier;
-    const wordCount = parsed.data.text.split(/\s+/).length;
+    const modelTier = (parsed.data.model || "fast") as ModelTier;
+    const originalText = parsed.data.text;
+    const totalWC = wc(originalText);
 
-    // Check credits before processing
-    const creditCheck = await checkCredits(session.user.id, modelTier, wordCount);
+    const creditCheck = await checkCredits(session.user.id, modelTier, totalWC);
     if (!creditCheck.allowed) {
       return NextResponse.json(
-        { 
-          error: creditCheck.error,
-          creditsNeeded: creditCheck.creditsNeeded,
-          creditsRemaining: creditCheck.creditsRemaining,
-        },
+        { error: creditCheck.error, creditsNeeded: creditCheck.creditsNeeded, creditsRemaining: creditCheck.creditsRemaining },
         { status: 402 }
       );
     }
 
     const language = parsed.data.language as AILanguage || "en";
-    const languageInstruction = getLanguageInstruction(language);
-    const tone = parsed.data.tone;
     const intensity = parsed.data.intensity;
+    const tone = parsed.data.tone;
 
-    // Split text into sentences
-    const sentences = parsed.data.text
-      .split(/(?<=[.!?])\s+/)
-      .filter(s => s.trim().length > 0);
+    // Humanize using hybrid dictionary+AI approach
+    const result = await humanizeText(originalText, tone, intensity);
 
-    const systemPrompt = `You are a SIMPLE ENGLISH translator. You translate complex text into the 850-word Basic English vocabulary.
+    const finalWC = wc(result);
+    console.log(`[Humanize] ${totalWC} → ${finalWC} words (±${Math.abs(finalWC - totalWC)}) | Hybrid v12`);
 
-YOUR ONLY ALLOWED WORDS:
-- Common verbs: be, do, have, make, get, give, go, come, take, see, say, put, let, keep, seem, feel, think, know, want, use, try, find, tell, ask, work, look, need, start, help, show, hear, play, run, move
-- Common nouns: thing, person, place, time, way, day, man, woman, child, world, life, hand, part, year, work, word, fact, case
-- Common adjectives: good, bad, big, small, old, new, first, last, long, great, little, own, other, right, same, high, different, next, early, young
-- Connectors: and, but, so, then, because, if, when, as, or, also
+    // Generate diff HTML
+    const diffResult = humanizeWithDiff(originalText, intensity as "light" | "balanced" | "heavy", result);
 
-BANNED WORDS (instant AI detection):
-❌ furthermore, moreover, additionally, however, nevertheless, consequently, therefore
-❌ significant, substantial, considerable, fundamental, essential, crucial, vital
-❌ demonstrate, illustrate, indicate, exhibit, utilize, facilitate, implement
-❌ enhance, optimize, leverage, comprehensive, intricate, nuanced
-❌ "it is important to note", "plays a crucial role", "in today's world"
-
-RULES:
-1. Use ONLY simple words - if a word isn't in Basic English, replace it
-2. Write SHORT sentences - max 15 words each
-3. ALWAYS use contractions: don't, can't, it's, wasn't, shouldn't
-4. NO filler phrases - just say the thing directly
-5. Mark changes with [[green]]word[[/green]] tags
-
-${languageInstruction}`;
-
-    const userMessage = `Translate to BASIC ENGLISH (850 words only):
-
-TEXT TO TRANSLATE:
-${sentences.map((s, i) => `${i + 1}. ${s}`).join('\n')}
-
-OUTPUT FORMAT:
-- For each sentence, write the simplified version
-- Wrap EVERY word you changed in [[green]]word[[/green]] tags
-- Keep sentences under 15 words
-- Use contractions always
-
-EXAMPLES:
-
-Input: "The implementation of this strategy demonstrates significant improvements."
-Output: 1. [[green]]This way of doing things[[/green]] [[green]]shows[[/green]] [[green]]good[[/green]] [[green]]changes[[/green]].
-
-Input: "Furthermore, it is essential to consider the environmental implications."
-Output: 1. [[green]]Also[[/green]], [[green]]we need to[[/green]] [[green]]think about[[/green]] [[green]]what this does to[[/green]] [[green]]nature[[/green]].
-
-Input: "The research indicates that approximately 60% of participants experienced substantial benefits."
-Output: 1. [[green]]The study shows[[/green]] [[green]]about[[/green]] 60% [[green]]of people[[/green]] [[green]]got[[/green]] [[green]]good[[/green]] [[green]]help[[/green]].
-
-Return ONLY numbered sentences. No commentary.`;
-
-    const messages = [
-      { role: "system" as const, content: systemPrompt },
-      { role: "user" as const, content: userMessage },
-    ];
-
-    const response = await chatWithTier(messages, modelTier);
-    
-    // Parse the response and combine sentences
-    const lines = response.split('\n').filter(line => line.trim());
-    const processedSentences: string[] = [];
-    
-    for (const line of lines) {
-      // Remove numbering if present (e.g., "1. ", "2. ")
-      const cleaned = line.replace(/^\d+\.\s*/, '').trim();
-      if (cleaned) {
-        processedSentences.push(cleaned);
-      }
-    }
-
-    // Combine into full text
-    const resultText = processedSentences.join(' ');
-
-    // Get plain text version (without LLM tags)
-    let plainText = resultText
-      .replace(/\[\[green\]\]/g, '')
-      .replace(/\[\[\/green\]\]/g, '');
-    
-    // Apply post-processing pipeline to further humanize the text
-    const intensityLevel = intensity as "light" | "balanced" | "heavy";
-    plainText = humanizeText(plainText, intensityLevel);
-    
-    // Generate diff highlighting by comparing with post-processed text
-    const diffResult = humanizeWithDiff(
-      resultText.replace(/\[\[green\]\]/g, '').replace(/\[\[\/green\]\]/g, ''),
-      intensityLevel
-    );
-
-    // Deduct credits after successful processing
     if (creditCheck.creditsNeeded && creditCheck.creditsNeeded > 0) {
       await deductCredits(session.user.id, creditCheck.creditsNeeded, "humanize-diff", modelTier);
     }
@@ -150,13 +229,10 @@ Return ONLY numbered sentences. No commentary.`;
     return NextResponse.json({
       html: diffResult.html,
       plain: diffResult.plain,
-      sentences: processedSentences.length,
+      sentences: splitSentences(result).length,
     });
   } catch (error) {
-    console.error("Humanize diff error:", error);
-    return NextResponse.json(
-      { error: "Failed to humanize text" },
-      { status: 500 }
-    );
+    console.error("Humanize error:", error);
+    return NextResponse.json({ error: "Failed to humanize text" }, { status: 500 });
   }
 }

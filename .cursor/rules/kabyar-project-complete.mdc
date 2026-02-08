@@ -1,0 +1,91 @@
+---
+description: Kabyar (Kay AI) - Complete project memory and architecture guide
+alwaysApply: true
+---
+
+# Kabyar (Kay AI) - AI-Powered Educational Platform
+
+## Project Overview
+- **Name**: Kabyar (ကဗျာ) / Kay AI
+- **Purpose**: AI-powered learning platform for students (GED, IGCSE, OTHM, A-Levels, IB, University)
+- **Live**: Deployed on Vercel
+- **Language**: Myanmar (Burmese) mascot greetings, English UI
+
+## Tech Stack
+- **Framework**: Next.js 16 (App Router, `src/app/`)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui (Radix UI) + Framer Motion
+- **Database**: PostgreSQL (Supabase) via Prisma ORM
+- **Auth**: NextAuth v5 (JWT strategy, Google OAuth + Credentials)
+- **AI Providers**: OpenAI, Claude, Gemini, Grok, Groq (5 providers)
+- **Vector DB**: Pinecone (for RAG features)
+- **Search**: Tavily API, Exa API (academic search)
+- **State**: Zustand + custom hooks (`usePersistedState`)
+
+## Architecture
+
+### Route Groups
+- `(auth)` - Login, Register, Forgot/Reset Password
+- `(dashboard)` - All dashboard pages (protected by middleware)
+- Public pages: Landing, About, Blog, Contact, Privacy, Terms, Tools
+
+### 5 Tool Categories (25 tools total)
+1. **RAG & Documents** (`/dashboard/rag/`): PDF Q&A, Quiz Generator, Past Paper Analyzer, Flashcard Maker, Resume Tailor
+2. **Research & Search** (`/dashboard/research/`): Academic Consensus, Research Gap Finder
+3. **Audio & Video** (`/dashboard/media/`): YouTube Summarizer, PDF to Podcast, Lecture Organizer, Viva Simulator
+4. **Visual & Diagrams** (`/dashboard/visual/`): Mind Map, Timeline, Flowchart, Lab Report Generator
+5. **Writing & Helpers** (`/dashboard/writing/`): Image to Solution, Roast Assignment, Paraphraser, Humanizer, AI Detector, Code Visualizer, Explain Error, Devil's Advocate, Vocabulary Upgrader, Cold Email
+
+### AI Model Tiers
+- `super-smart`: Gemini 2.5 Pro (Pro/Unlimited only, 0 credits)
+- `pro-smart`: Gemini 2.5 Flash (5 credits)
+- `normal`: Grok 3 Mini (3 credits)
+- `fast`: Groq Kimi K2 (2 credits)
+- Auto-fallback: Grok/Groq → Gemini on 403/429
+
+### Credits System
+- Free: 50 daily credits (24h UTC reset)
+- Pro: 3500 daily credits
+- Unlimited: No limits
+- Credits deducted before streaming
+
+## Key Files
+- `src/lib/ai-providers/index.ts` - AI provider routing, model tiers, streaming
+- `src/lib/credits.ts` - Credit check/deduct logic
+- `src/lib/prompts.ts` - All AI system prompts
+- `src/lib/tools-registry.ts` - Tool definitions (25 tools metadata)
+- `src/lib/tools-data.ts` - Landing page tool data (8 tools)
+- `src/lib/auth.ts` - NextAuth config (JWT + Google OAuth)
+- `src/components/layout/sidebar.tsx` - Dashboard sidebar with favorites
+- `src/components/premium/` - Mascot, GlassCard, animations
+- `prisma/schema.prisma` - Database schema (User, Account, Session, Usage, Conversation, Message, Document, DocumentChunk)
+
+## Design Rules
+- **Colors**: White + Blue primary (`bg-blue-600`), NO gradients
+- **Cards**: `bg-white rounded-xl border border-gray-100 shadow-sm`
+- **Buttons**: `bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/20`
+- **Premium UI**: Framer Motion animations, glass cards, mascot character
+- **Fonts**: Outfit (sans), JetBrains Mono (mono), Great Vibes (handwriting)
+
+## Patterns
+```ts
+// Streaming AI response pattern
+const stream = await streamWithTier(messages, modelTier);
+return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+
+// Credit check pattern
+const check = await checkCredits(userId, tier, words);
+if (!check.allowed) return NextResponse.json({ error: check.error }, { status: 402 });
+await deductCredits(userId, amount, feature, model);
+
+// Tool page routing
+// Route: /dashboard/{category}/{tool-slug}
+// API: /api/tools/{tool-endpoint}
+```
+
+## Adding New Features
+1. Add tool metadata to `src/lib/tools-registry.ts`
+2. Create page at `src/app/(dashboard)/dashboard/{category}/{slug}/page.tsx`
+3. Create API route at `src/app/api/tools/{slug}/route.ts`
+4. Add system prompt to `src/lib/prompts.ts`
+5. Icon automatically mapped in sidebar via `ICON_MAP`

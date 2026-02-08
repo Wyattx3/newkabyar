@@ -3,18 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { cn } from "@/lib/utils";
 import { 
   RefreshCw, Loader2, Sparkles, Copy, Check, Wand2, ChevronDown,
-  FileText, History, Download, Languages, BookOpen, Mic, MicOff,
-  MessageSquare, Send, X, RotateCcw, ArrowLeftRight, Zap,
-  Volume2, VolumeX, Bookmark, BookmarkCheck, SplitSquareVertical,
-  FileUp, Hash, AlignLeft, Clock, Gauge, Shield, ChevronRight,
-  Lightbulb, PenTool, Brain, Printer, Share2, Eye
+  FileText, Download, Mic, MicOff,
+  RotateCcw, SplitSquareVertical,
+  FileUp, Hash, AlignLeft, Gauge, Shield
 } from "lucide-react";
 
 interface ParaphraseHistory {
@@ -45,14 +42,6 @@ const LANGUAGES = [
   { id: "th", label: "Thai", flag: "🇹🇭" },
 ];
 
-const QUICK_PROMPTS = [
-  "Make it more formal",
-  "Simplify this",
-  "Add more detail",
-  "Make it concise",
-  "Use active voice",
-];
-
 export default function ParaphraserPage() {
   const [mounted, setMounted] = useState(false);
   const [text, setText] = usePersistedState("paraphrase-text", "");
@@ -68,33 +57,17 @@ export default function ParaphraserPage() {
   const [showLangs, setShowLangs] = useState(false);
   
   const [history, setHistory] = usePersistedState<ParaphraseHistory[]>("paraphrase-history", []);
-  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const [variations, setVariations] = useState<string[]>([]);
-  const [isGeneratingVariations, setIsGeneratingVariations] = useState(false);
-  
   // New feature states
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [showCompare, setShowCompare] = useState(false);
-  const [showSentences, setShowSentences] = useState(false);
   const [sentenceMode, setSentenceMode] = useState(false);
   const [uniquenessScore, setUniquenessScore] = useState(0);
   const [formalityLevel, setFormalityLevel] = useState(0);
   
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
 
   useEffect(() => setMounted(true), []);
-  
-  useEffect(() => {
-    const chatContainer = chatEndRef.current?.parentElement;
-    if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
-  }, [chatMessages]);
 
   // Fit view
   useEffect(() => {
@@ -127,20 +100,20 @@ export default function ParaphraserPage() {
   const sentences = text.split(/[.!?]+/).filter(s => s.trim()).length;
   const resultWordCount = result.trim().split(/\s+/).filter(w => w).length;
 
-  // Calculate scores when result changes
-  useEffect(() => {
-    if (result && text) {
-      const words1 = text.toLowerCase().split(/\s+/);
-      const words2 = result.toLowerCase().split(/\s+/);
+  // Calculate scores - called once after streaming completes
+  const calculateScores = (originalText: string, resultText: string) => {
+    if (resultText && originalText) {
+      const words1 = originalText.toLowerCase().split(/\s+/);
+      const words2 = resultText.toLowerCase().split(/\s+/);
       const common = words1.filter(w => words2.includes(w));
       const unique = Math.max(0, 100 - Math.round((common.length / words1.length) * 100));
       setUniquenessScore(unique);
       
       const formalWords = ['therefore', 'however', 'furthermore', 'consequently', 'nevertheless', 'moreover'];
-      const formalCount = formalWords.filter(w => result.toLowerCase().includes(w)).length;
+      const formalCount = formalWords.filter(w => resultText.toLowerCase().includes(w)).length;
       setFormalityLevel(Math.min(100, formalCount * 20 + 40));
     }
-  }, [result, text]);
+  };
 
   const handleParaphrase = async () => {
     if (text.trim().length < 20) {
@@ -149,7 +122,6 @@ export default function ParaphraserPage() {
     }
     setIsLoading(true);
     setResult("");
-    setVariations([]);
 
     try {
       const response = await fetch("/api/tools/paraphrase", {
@@ -174,6 +146,7 @@ export default function ParaphraserPage() {
         setResult(output);
       }
 
+      calculateScores(text, output);
       setHistory(prev => [{ id: Date.now().toString(), original: text.substring(0, 80), paraphrased: output.substring(0, 80), style, timestamp: Date.now() }, ...prev.slice(0, 19)]);
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
@@ -181,74 +154,6 @@ export default function ParaphraserPage() {
       setIsLoading(false);
       window.dispatchEvent(new CustomEvent("credits-updated"));
     }
-  };
-
-  const generateVariations = async () => {
-    if (!text.trim()) return;
-    setIsGeneratingVariations(true);
-    try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: `Generate 3 different paraphrased versions. Number them 1, 2, 3. Only output paraphrased text.\n\nText:\n${text}` }],
-          feature: "answer", model: "fast", language: targetLang,
-        }),
-      });
-      if (!response.ok) throw new Error("Failed");
-      const reader = response.body?.getReader();
-      let content = "";
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader!.read();
-        if (done) break;
-        content += decoder.decode(value, { stream: true });
-      }
-      setVariations(content.split(/\d+\.\s+/).filter(p => p.trim()).slice(0, 3));
-    } catch { toast({ title: "Failed", variant: "destructive" }); }
-    finally { setIsGeneratingVariations(false); }
-  };
-
-  const handleChat = async (msg?: string) => {
-    const message = msg || chatInput;
-    if (!message.trim()) return;
-    setChatInput("");
-    setChatMessages(prev => [...prev, { role: "user", content: message }]);
-    setIsChatLoading(true);
-
-    try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: `You're a paraphrasing assistant. Original: "${text}". Current result: "${result}". Help refine.` },
-            ...chatMessages.map(m => ({ role: m.role, content: m.content })),
-            { role: "user", content: message }
-          ],
-          feature: "answer", model: "fast", language: aiLanguage || "en",
-        }),
-      });
-      if (!response.ok) throw new Error("Failed");
-      const reader = response.body?.getReader();
-      let content = "";
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader!.read();
-        if (done) break;
-        content += decoder.decode(value, { stream: true });
-      }
-      setChatMessages(prev => [...prev, { role: "assistant", content }]);
-    } catch { setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, couldn't process." }]); }
-    finally { setIsChatLoading(false); }
-  };
-
-  const speakResult = () => {
-    if (isSpeaking) { window.speechSynthesis.cancel(); setIsSpeaking(false); return; }
-    const utterance = new SpeechSynthesisUtterance(result);
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
   };
 
   const startListening = () => {
@@ -304,16 +209,7 @@ export default function ParaphraserPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const printResult = () => {
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Paraphrased</title><style>body{font-family:system-ui;max-width:700px;margin:40px auto;padding:20px;line-height:1.6}h1{color:#2563eb}h2{color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:8px}</style></head><body><h1>Paraphrased Text</h1><p><strong>Style:</strong> ${STYLES.find(s => s.id === style)?.label}</p><h2>Original</h2><p>${text}</p><h2>Paraphrased</h2><p>${result}</p></body></html>`);
-    w.document.close();
-    w.print();
-  };
-
-  const swapTexts = () => { const temp = text; setText(result); setResult(temp); };
-  const reset = () => { setResult(""); setVariations([]); setChatMessages([]); };
+  const reset = () => { setResult(""); };
 
   if (!mounted) return null;
 
@@ -480,12 +376,8 @@ export default function ParaphraserPage() {
               </div>
 
               {[
-                { icon: bookmarked ? BookmarkCheck : Bookmark, action: () => setBookmarked(!bookmarked), active: bookmarked },
-                { icon: isSpeaking ? VolumeX : Volume2, action: speakResult, active: isSpeaking },
-                { icon: showCompare ? Eye : SplitSquareVertical, action: () => setShowCompare(!showCompare), active: showCompare },
                 { icon: copied ? Check : Copy, action: copyResult, active: copied },
                 { icon: Download, action: () => exportResult("txt"), active: false },
-                { icon: Printer, action: printResult, active: false },
               ].map((btn, i) => (
                 <button key={i} onClick={btn.action} className={cn("p-2 rounded-lg", btn.active ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100 text-gray-500")}>
                   <btn.icon className="w-4 h-4" />
@@ -497,7 +389,7 @@ export default function ParaphraserPage() {
           {/* Main Content */}
           <div className="flex-1 flex overflow-hidden">
             {/* Left - Original */}
-            <div className="w-1/3 flex flex-col border-r border-gray-100 overflow-hidden">
+            <div className="flex-1 flex flex-col border-r border-gray-100 overflow-hidden">
               <div className="h-10 border-b border-gray-100 flex items-center px-4 shrink-0">
                 <span className="text-xs font-medium text-gray-500">Original</span>
                 <span className="ml-2 text-[10px] text-gray-400">{wordCount} words</span>
@@ -514,50 +406,15 @@ export default function ParaphraserPage() {
                   <span className="text-xs font-medium text-gray-900">Paraphrased</span>
                   <span className="text-[10px] text-gray-400">{resultWordCount} words</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={swapTexts} className="p-1 hover:bg-gray-100 rounded-lg" title="Swap">
-                    <ArrowLeftRight className="w-3.5 h-3.5 text-gray-400" />
-                  </button>
-                  <button onClick={generateVariations} disabled={isGeneratingVariations} className="p-1 hover:bg-gray-100 rounded-lg" title="Variations">
-                    {isGeneratingVariations ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-gray-400" />}
-                  </button>
-                </div>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto">
-                {showCompare ? (
-                  <div className="grid grid-cols-2 gap-3 h-full">
-                    <div className="bg-red-50 border border-red-100 rounded-xl p-3 overflow-y-auto">
-                      <p className="text-[10px] font-medium text-red-600 mb-2 flex items-center gap-1"><X className="w-3 h-3" />Original</p>
-                      <p className="text-xs text-gray-600 whitespace-pre-wrap">{text}</p>
-                    </div>
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-3 overflow-y-auto">
-                      <p className="text-[10px] font-medium text-green-600 mb-2 flex items-center gap-1"><Check className="w-3 h-3" />Paraphrased</p>
-                      <p className="text-xs text-gray-600 whitespace-pre-wrap">{result}</p>
-                    </div>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{result}</p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{result}</p>
-                    </div>
 
-                    {/* Variations */}
-                    {variations.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-gray-500 flex items-center gap-1"><Lightbulb className="w-3 h-3" />Alternative Versions</p>
-                        {variations.map((v, i) => (
-                          <div key={i} className="p-3 bg-gray-50 rounded-xl border border-gray-100 group">
-                            <p className="text-xs text-gray-700 mb-2">{v}</p>
-                            <button onClick={() => { setResult(v); setVariations([]); }} className="text-[10px] text-blue-600 opacity-0 group-hover:opacity-100">
-                              Use this
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* Re-paraphrase bar */}
@@ -568,51 +425,6 @@ export default function ParaphraserPage() {
               </div>
             </div>
 
-            {/* Right - Chat */}
-            <div className="w-72 bg-white flex flex-col border-l border-gray-100 shrink-0 overflow-hidden">
-              <div className="h-10 border-b border-gray-100 flex items-center px-3 gap-2 shrink-0">
-                <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <MessageSquare className="w-3 h-3 text-white" />
-                </div>
-                <span className="text-xs font-medium text-gray-900">Refine Assistant</span>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {chatMessages.length === 0 && (
-                  <div className="space-y-1.5">
-                    {QUICK_PROMPTS.map((q, i) => (
-                      <button key={i} onClick={() => handleChat(q)} className="w-full text-left px-2.5 py-2 bg-gray-50 rounded-lg text-[11px] text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
-                        <ChevronRight className="w-3 h-3 text-gray-400" />{q}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {chatMessages.map((m, i) => (
-                  <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-                    <div className={cn("max-w-[85%] px-3 py-2 rounded-2xl text-xs", m.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700")}>
-                      {m.content}
-                    </div>
-                  </div>
-                ))}
-                {isChatLoading && <div className="bg-gray-100 px-3 py-2 rounded-2xl w-fit"><Loader2 className="w-3 h-3 animate-spin" /></div>}
-                <div ref={chatEndRef} />
-              </div>
-
-              <div className="p-3 border-t border-gray-100 shrink-0">
-                <div className="flex gap-2">
-                  <Input
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Make it more..."
-                    onKeyDown={(e) => e.key === "Enter" && handleChat()}
-                    className="text-xs h-9 rounded-xl"
-                  />
-                  <Button onClick={() => handleChat()} size="sm" className="h-9 w-9 p-0 rounded-xl bg-blue-600 hover:bg-blue-700">
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}
