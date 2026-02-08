@@ -249,7 +249,7 @@ export default function MultiInputSolverPage() {
           const errorData = await response.json().catch(() => ({}));
           toast({ 
             title: "Image analysis unavailable", 
-            description: errorData.error || "Please try text input instead",
+            description: typeof errorData.error === "string" ? errorData.error : "Please try text input instead",
             variant: "destructive" 
           });
           return;

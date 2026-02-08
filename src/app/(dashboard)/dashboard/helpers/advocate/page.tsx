@@ -9,10 +9,9 @@ import { usePersistedState } from "@/hooks/use-persisted-state";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import {
-  Scale, Loader2, Sparkles, Copy, Check, FileText, Trash2, 
-  ThumbsDown, Lightbulb, X, History, MessageSquare, Send,
-  ArrowRight, RefreshCw, Shield, AlertTriangle, Target,
-  Swords, BookOpen, Zap, ChevronDown, BarChart3
+  Scale, Loader2, Copy, Check, FileText, Trash2, 
+  ThumbsDown, Lightbulb, ArrowRight, RefreshCw, Shield, AlertTriangle,
+  Swords, BookOpen, Zap, ChevronDown, ClipboardPaste
 } from "lucide-react";
 
 interface AdvocateHistory {
@@ -67,26 +66,43 @@ export default function DevilsAdvocatePage() {
   const [result, setResult] = useState<AdvocateResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedInput, setCopiedInput] = useState(false);
   
   // UI states
   const [activeTab, setActiveTab] = useState<"counter" | "strengthen">("counter");
   const [showSettings, setShowSettings] = useState(false);
-  
-  // Feature states
-  const [history, setHistory] = usePersistedState<AdvocateHistory[]>("advocate-history", []);
-  const [showHistory, setShowHistory] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [showIntensity, setShowIntensity] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
 
   useEffect(() => setMounted(true), []);
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
+
+  // Fit view
+  useEffect(() => {
+    const parent = document.querySelector('main > div') as HTMLElement;
+    const html = document.documentElement;
+    const body = document.body;
+    const origParentClass = parent?.className;
+    html.style.setProperty('overflow', 'hidden', 'important');
+    body.style.setProperty('overflow', 'hidden', 'important');
+    if (parent) {
+      parent.classList.remove('overflow-y-auto');
+      parent.classList.add('overflow-hidden', 'p-0');
+      parent.style.setProperty('overflow', 'hidden', 'important');
+      parent.style.setProperty('padding', '0', 'important');
+    }
+    return () => {
+      html.style.overflow = '';
+      body.style.overflow = '';
+      if (parent && origParentClass) {
+        parent.className = origParentClass;
+        parent.style.removeProperty('overflow');
+        parent.style.removeProperty('padding');
+      }
+    };
+  }, []);
 
   const wordCount = argument.split(/\s+/).filter(Boolean).length;
 
@@ -127,14 +143,6 @@ export default function DevilsAdvocatePage() {
       const data = await response.json();
       setResult(data);
 
-      // Save to history
-      const historyItem: AdvocateHistory = {
-        id: Date.now().toString(),
-        argumentPreview: argument.substring(0, 60) + "...",
-        intensity,
-        timestamp: Date.now(),
-      };
-      setHistory(prev => [historyItem, ...prev.slice(0, 19)]);
     } catch {
       toast({ title: "Challenge failed", variant: "destructive" });
     } finally {
@@ -143,43 +151,19 @@ export default function DevilsAdvocatePage() {
     }
   };
 
-  const handleChatSubmit = async () => {
-    if (!chatInput.trim()) return;
-    const userMessage = chatInput;
-    setChatInput("");
-    setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
-    setIsChatLoading(true);
+  const copyInputToClipboard = () => {
+    navigator.clipboard.writeText(argument);
+    setCopiedInput(true);
+    setTimeout(() => setCopiedInput(false), 2000);
+  };
 
+  const handlePaste = async () => {
     try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: `You are a devil's advocate and critical thinking expert. Help debate and strengthen arguments. Current argument: ${argument.substring(0, 300)}` },
-            ...chatMessages.map(m => ({ role: m.role, content: m.content })),
-            { role: "user", content: userMessage },
-          ],
-          feature: "answer",
-          model: "fast",
-          language: aiLanguage || "en",
-        }),
-      });
-      if (!response.ok) throw new Error("Failed");
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader");
-      let content = "";
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        content += decoder.decode(value, { stream: true });
-      }
-      setChatMessages(prev => [...prev, { role: "assistant", content }]);
+      const text = await navigator.clipboard.readText();
+      setArgument(text);
+      setResult(null);
     } catch {
-      setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, couldn't process your request." }]);
-    } finally {
-      setIsChatLoading(false);
+      toast({ title: "Failed to paste", variant: "destructive" });
     }
   };
 
@@ -206,125 +190,152 @@ export default function DevilsAdvocatePage() {
   const reset = () => {
     setArgument("");
     setResult(null);
-    setChatMessages([]);
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50/50">
-      {/* Top Bar */}
-      <div className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
-            <Scale className="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <h1 className="font-bold text-gray-900">Devil's Advocate</h1>
-            <p className="text-xs text-gray-500">Challenge and strengthen your arguments</p>
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
+      {/* Minimal Header */}
+      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-semibold text-gray-900">Devil's Advocate</h1>
+          <div className="h-4 w-px bg-gray-200" />
+          <div className="flex items-center gap-3">
+            {/* Intensity Selector */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowIntensity(!showIntensity); setShowSettings(false); }}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <span className="font-medium">{INTENSITY_LEVELS.find(i => i.value === intensity)?.label}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+              {showIntensity && (
+                <div className="absolute top-full mt-1 left-0 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-30 min-w-[200px]">
+                  {INTENSITY_LEVELS.map(i => (
+                    <button
+                      key={i.value}
+                      onClick={() => { setIntensity(i.value); setShowIntensity(false); }}
+                      className={cn(
+                        "w-full p-2.5 text-left hover:bg-gray-50 transition-colors rounded-lg",
+                        intensity === i.value && "bg-blue-50"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className={cn("text-sm font-medium", intensity === i.value && "text-blue-600")}>
+                          {i.label}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">{i.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Settings */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowSettings(!showSettings); setShowIntensity(false); }}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+              {showSettings && (
+                <div className="absolute top-full mt-1 right-0 bg-white rounded-lg shadow-lg border border-gray-200 py-2 px-3 z-30 min-w-[200px]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs text-gray-500">Type:</span>
+                    <select 
+                      value={argumentType} 
+                      onChange={(e) => setArgumentType(e.target.value)} 
+                      className="text-sm border border-gray-200 rounded-lg px-2 py-1 flex-1"
+                    >
+                      {ARGUMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Model:</span>
+                    <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)} className={cn("h-8 rounded-lg", showHistory && "bg-blue-50 text-blue-600")}>
-            <History className="w-4 h-4" />
+          <Button
+            onClick={handleChallenge}
+            disabled={isLoading || !argument.trim()}
+            className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-sm"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Swords className="w-4 h-4 mr-1.5" /> Challenge</>}
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setShowChat(!showChat)} className={cn("h-8 rounded-lg", showChat && "bg-blue-50 text-blue-600")}>
-            <MessageSquare className="w-4 h-4" />
-          </Button>
-          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-full flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> 5 credits
-          </span>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Side by Side */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left - Input */}
-        <div className="flex-1 flex flex-col border-r border-gray-100">
-          <div className="p-4 bg-white border-b border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-purple-500" />
-                <span className="text-sm font-medium text-gray-900">Your Argument</span>
+        <div className="flex-1 flex flex-col border-r border-gray-200 bg-white">
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Your Argument</span>
+              {argument && (
                 <span className="text-xs text-gray-400">{wordCount} words</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="h-7 px-2 rounded-lg">
-                  <FileText className="w-3.5 h-3.5" />
-                </Button>
-                <input ref={fileInputRef} type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
-                {argument && (
-                  <Button variant="ghost" size="sm" onClick={reset} className="h-7 px-2 rounded-lg text-gray-400">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
+            <div className="flex items-center gap-1">
+              {argument && (
+                <button
+                  onClick={copyInputToClipboard}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Copy input"
+                >
+                  {copiedInput ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                title="Upload file"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+              <input ref={fileInputRef} type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
+              {argument && (
+                <button
+                  onClick={reset}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Clear"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex-1 p-6 overflow-y-auto relative">
+            {!argument && (
+              <button
+                onClick={handlePaste}
+                className="absolute inset-0 flex items-center justify-center z-10 bg-white hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center transition-colors">
+                    <ClipboardPaste className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">Click to paste</span>
+                </div>
+              </button>
+            )}
             <Textarea
               value={argument}
               onChange={(e) => { setArgument(e.target.value); setResult(null); }}
-              placeholder="Enter the argument, thesis, or position you want challenged...
-
-Example:
-'Remote work is more productive than office work because employees have fewer distractions and can work during their peak hours.'"
-              className="min-h-[200px] resize-none border-gray-200 rounded-xl"
+              placeholder="Enter the argument, thesis, or position you want challenged..."
+              className="h-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:outline-none text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent transition-none"
+              style={{ transition: 'none' }}
             />
-          </div>
-
-          {/* Intensity Selector */}
-          <div className="p-4 bg-white border-b border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <Swords className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">Challenge Intensity</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {INTENSITY_LEVELS.map(level => (
-                <button
-                  key={level.value}
-                  onClick={() => setIntensity(level.value)}
-                  className={cn(
-                    "p-3 rounded-xl border text-left transition-all",
-                    intensity === level.value
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  )}
-                >
-                  <p className={cn("text-sm font-medium", intensity === level.value ? "text-purple-700" : "text-gray-900")}>{level.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{level.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Settings */}
-          <button onClick={() => setShowSettings(!showSettings)} className="p-4 bg-white border-b border-gray-100 flex items-center justify-between hover:bg-gray-50">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">Advanced Settings</span>
-            </div>
-            <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", showSettings && "rotate-180")} />
-          </button>
-          {showSettings && (
-            <div className="p-4 bg-white border-b border-gray-100 flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Type:</span>
-                <select value={argumentType} onChange={(e) => setArgumentType(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-2 py-1">
-                  {ARGUMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Model:</span>
-                <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex-1" />
-          <div className="p-4 bg-white border-t border-gray-100 flex items-center justify-end">
-            <Button onClick={handleChallenge} disabled={isLoading || !argument.trim()} className="h-10 px-6 rounded-xl bg-purple-600 hover:bg-purple-700">
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Swords className="w-4 h-4 mr-2" /> Challenge</>}
-            </Button>
           </div>
         </div>
 
@@ -359,54 +370,58 @@ Example:
               </div>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 p-6 overflow-y-auto">
             {result ? (
-              <div className="space-y-5">
+              <div className="space-y-6">
                 {activeTab === "counter" ? (
                   <>
                     {/* Summary */}
-                    <div className="p-4 bg-purple-50 rounded-xl border border-purple-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Scale className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm font-semibold text-purple-800">Analysis Summary</span>
+                    <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Scale className="w-4 h-4 text-gray-600" />
+                        <span className="text-sm font-semibold text-gray-900">Analysis Summary</span>
                       </div>
-                      <p className="text-sm text-purple-700">{result.summary}</p>
+                      <p className="text-sm text-gray-700 leading-relaxed">{result.summary}</p>
                     </div>
 
                     {/* Weaknesses */}
-                    <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                      <div className="flex items-center gap-2 mb-3">
-                        <AlertTriangle className="w-4 h-4 text-red-600" />
-                        <span className="text-sm font-semibold text-red-800">Key Weaknesses</span>
+                    <div className="p-5 bg-red-50 rounded-xl border border-red-200">
+                      <div className="flex items-center gap-2 mb-4">
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                        <span className="text-sm font-semibold text-red-800">Key Weaknesses ({result.weaknesses.length})</span>
                       </div>
-                      <ul className="space-y-2">
+                      <ul className="space-y-3">
                         {result.weaknesses.map((w, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-red-700">
-                            <ThumbsDown className="w-3 h-3 mt-1 shrink-0" />
-                            {w}
+                            <ThumbsDown className="w-4 h-4 mt-0.5 shrink-0" />
+                            <span>{w}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
                     {/* Counter Arguments */}
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div className="flex items-center gap-2">
-                        <Swords className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-semibold text-gray-800">Counter-Arguments</span>
+                        <Swords className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm font-semibold text-gray-900">Counter-Arguments ({result.counterArguments.length})</span>
                       </div>
                       {result.counterArguments.map((ca, i) => (
-                        <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                          <p className="text-sm font-semibold text-gray-900 mb-2">{ca.title}</p>
-                          <p className="text-sm text-gray-700 mb-2">{ca.argument}</p>
+                        <div key={i} className="p-5 bg-white rounded-xl border border-gray-200">
+                          <p className="text-sm font-semibold text-gray-900 mb-3">{ca.title}</p>
+                          <p className="text-sm text-gray-700 leading-relaxed mb-3">{ca.argument}</p>
                           {ca.evidence && (
-                            <p className="text-xs text-blue-600 mb-2 flex items-center gap-1">
-                              <BookOpen className="w-3 h-3" /> {ca.evidence}
-                            </p>
+                            <div className="p-3 bg-blue-50 rounded-lg mb-3">
+                              <p className="text-xs text-blue-700 flex items-center gap-2">
+                                <BookOpen className="w-3.5 h-3.5" /> 
+                                <span className="font-medium">Evidence:</span> {ca.evidence}
+                              </p>
+                            </div>
                           )}
-                          <div className="pt-2 border-t border-gray-200">
-                            <p className="text-xs text-gray-500 flex items-center gap-1">
-                              <Shield className="w-3 h-3" /> How to defend: {ca.weakness}
+                          <div className="pt-3 border-t border-gray-200">
+                            <p className="text-xs text-gray-600 flex items-start gap-2">
+                              <Shield className="w-3.5 h-3.5 mt-0.5 shrink-0" /> 
+                              <span><span className="font-medium">How to defend:</span> {ca.weakness}</span>
                             </p>
                           </div>
                         </div>
@@ -415,16 +430,16 @@ Example:
 
                     {/* Blind Spots */}
                     {result.blindSpots && result.blindSpots.length > 0 && (
-                      <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Lightbulb className="w-4 h-4 text-amber-600" />
-                          <span className="text-sm font-semibold text-amber-800">Blind Spots</span>
+                      <div className="p-5 bg-amber-50 rounded-xl border border-amber-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Lightbulb className="w-5 h-5 text-amber-600" />
+                          <span className="text-sm font-semibold text-amber-800">Blind Spots ({result.blindSpots.length})</span>
                         </div>
-                        <ul className="space-y-2">
+                        <ul className="space-y-3">
                           {result.blindSpots.map((b, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-amber-700">
-                              <ArrowRight className="w-3 h-3 mt-1 shrink-0" />
-                              {b}
+                              <ArrowRight className="w-4 h-4 mt-0.5 shrink-0" />
+                              <span>{b}</span>
                             </li>
                           ))}
                         </ul>
@@ -435,12 +450,12 @@ Example:
                   <>
                     {/* Strengthened Version */}
                     {result.strengthenedVersion && (
-                      <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Zap className="w-4 h-4 text-green-600" />
+                      <div className="p-5 bg-green-50 rounded-xl border border-green-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Zap className="w-5 h-5 text-green-600" />
                           <span className="text-sm font-semibold text-green-800">Strengthened Argument</span>
                         </div>
-                        <div className="text-sm text-green-700 prose prose-sm max-w-none">
+                        <div className="text-sm text-green-700 prose prose-sm max-w-none leading-relaxed">
                           <ReactMarkdown>{result.strengthenedVersion}</ReactMarkdown>
                         </div>
                       </div>
@@ -448,33 +463,33 @@ Example:
 
                     {/* Additional Considerations */}
                     {result.additionalConsiderations && result.additionalConsiderations.length > 0 && (
-                      <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <div className="flex items-center gap-2 mb-3">
-                          <BookOpen className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-blue-800">Additional Points to Consider</span>
+                      <div className="p-5 bg-blue-50 rounded-xl border border-blue-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <BookOpen className="w-5 h-5 text-blue-600" />
+                          <span className="text-sm font-semibold text-blue-800">Additional Points to Consider ({result.additionalConsiderations.length})</span>
                         </div>
-                        <ul className="space-y-2">
+                        <ul className="space-y-3">
                           {result.additionalConsiderations.map((c, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-blue-700">
-                              <ArrowRight className="w-3 h-3 mt-1 shrink-0" />
-                              {c}
+                              <ArrowRight className="w-4 h-4 mt-0.5 shrink-0" />
+                              <span>{c}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
                     )}
 
-                    {/* How to defend */}
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Shield className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-semibold text-gray-800">Defense Strategies</span>
+                    {/* Defense Strategies */}
+                    <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Shield className="w-5 h-5 text-gray-600" />
+                        <span className="text-sm font-semibold text-gray-900">Defense Strategies</span>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {result.counterArguments.map((ca, i) => (
-                          <div key={i} className="p-3 bg-white rounded-lg border border-gray-100">
-                            <p className="text-xs text-gray-500 mb-1">Against: {ca.title}</p>
-                            <p className="text-sm text-gray-700">{ca.weakness}</p>
+                          <div key={i} className="p-4 bg-white rounded-lg border border-gray-200">
+                            <p className="text-xs text-gray-500 mb-2 font-medium">Against: {ca.title}</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{ca.weakness}</p>
                           </div>
                         ))}
                       </div>
@@ -486,91 +501,23 @@ Example:
               <div className="h-full flex items-center justify-center">
                 {isLoading ? (
                   <div className="text-center">
-                    <Scale className="w-12 h-12 text-purple-500 mx-auto mb-4 animate-pulse" />
-                    <p className="text-gray-600 font-medium">Analyzing argument...</p>
-                    <p className="text-xs text-gray-400 mt-1">Finding counter-points</p>
+                    <Loader2 className="w-8 h-8 text-blue-500 mx-auto mb-3 animate-spin" />
+                    <p className="text-sm text-gray-600 font-medium">Analyzing argument...</p>
+                    <p className="text-xs text-gray-400 mt-1">Finding counter-points and weaknesses</p>
                   </div>
                 ) : (
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center max-w-sm">
+                    <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
                       <Scale className="w-8 h-8 text-gray-300" />
                     </div>
-                    <p className="text-gray-400">Enter argument and click Challenge</p>
-                    <p className="text-xs text-gray-300 mt-1">Get counter-arguments instantly</p>
+                    <p className="text-sm text-gray-500 font-medium">Analysis results will appear here</p>
+                    <p className="text-xs text-gray-400 mt-2">Enter your argument and click Challenge to get counter-arguments</p>
                   </div>
                 )}
               </div>
             )}
           </div>
         </div>
-
-        {/* History Panel */}
-        {showHistory && (
-          <div className="w-64 bg-white border-l border-gray-100 flex flex-col">
-            <div className="h-12 border-b border-gray-100 flex items-center justify-between px-4">
-              <span className="font-medium text-gray-900 text-sm">History</span>
-              <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {history.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">No history yet</p>
-              ) : (
-                history.map(h => (
-                  <div key={h.id} className="p-3 rounded-xl border border-gray-100 hover:bg-gray-50">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-purple-600 font-medium">{h.intensity}</span>
-                      <span className="text-xs text-gray-400">{new Date(h.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{h.argumentPreview}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Chat Panel */}
-        {showChat && (
-          <div className="w-72 bg-white border-l border-gray-100 flex flex-col">
-            <div className="h-12 border-b border-gray-100 flex items-center justify-between px-4">
-              <span className="font-medium text-gray-900 text-sm">Debate Assistant</span>
-              <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              {chatMessages.length === 0 && (
-                <div className="text-center py-8">
-                  <Scale className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-400 text-sm">Discuss your argument</p>
-                </div>
-              )}
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={cn("max-w-[90%] p-3 rounded-2xl text-sm", msg.role === "user" ? "ml-auto bg-purple-600 text-white" : "bg-gray-100 text-gray-700")}>
-                  {msg.content}
-                </div>
-              ))}
-              {isChatLoading && <div className="bg-gray-100 p-3 rounded-2xl w-fit"><Loader2 className="w-4 h-4 animate-spin" /></div>}
-              <div ref={chatEndRef} />
-            </div>
-            <div className="p-3 border-t border-gray-100">
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="How can I defend this?"
-                  onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <Button onClick={handleChatSubmit} size="sm" className="rounded-xl px-3 bg-purple-600 hover:bg-purple-700">
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

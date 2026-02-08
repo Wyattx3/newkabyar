@@ -1,22 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
-import { 
-  GraduationCap, 
-  Loader2, 
-  Sparkles,
-  Copy,
-  Check,
-  ArrowRight,
-  TrendingUp,
-  BookOpen,
-} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
-import Link from "next/link";
+import { cn } from "@/lib/utils";
+import {
+  GraduationCap, Loader2, Copy, Check, FileText, Trash2,
+  ChevronDown, ArrowRight, RefreshCw, Download,
+  ClipboardPaste, BookOpen, Eye, EyeOff
+} from "lucide-react";
 
 interface Replacement {
   original: string;
@@ -31,33 +26,68 @@ interface UpgradeResult {
   afterScore: number;
 }
 
-const levels = [
-  { value: "academic", label: "Academic", desc: "Scholarly writing" },
-  { value: "professional", label: "Professional", desc: "Business context" },
-  { value: "sophisticated", label: "Sophisticated", desc: "Elevated vocabulary" },
+const LEVELS = [
+  { value: "academic", label: "Academic", desc: "Scholarly writing", icon: "🎓" },
+  { value: "professional", label: "Professional", desc: "Business context", icon: "💼" },
+  { value: "sophisticated", label: "Sophisticated", desc: "Elevated vocabulary", icon: "✨" },
 ];
 
 export default function VocabularyUpgraderPage() {
+  const [mounted, setMounted] = useState(false);
+
+  // Form states
   const [text, setText] = usePersistedState("vocab-text", "");
   const [level, setLevel] = usePersistedState("vocab-level", "academic");
   const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("vocab-model", "fast");
-  
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Result states
   const [result, setResult] = useState<UpgradeResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showReplacements, setShowReplacements] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [copiedInput, setCopiedInput] = useState(false);
+
+  // UI states
+  const [showLevel, setShowLevel] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(true);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
 
   useEffect(() => setMounted(true), []);
+
+  // Fit view
+  useEffect(() => {
+    const parent = document.querySelector('main > div') as HTMLElement;
+    const html = document.documentElement;
+    const body = document.body;
+    const origParentClass = parent?.className;
+    html.style.setProperty('overflow', 'hidden', 'important');
+    body.style.setProperty('overflow', 'hidden', 'important');
+    if (parent) {
+      parent.classList.remove('overflow-y-auto');
+      parent.classList.add('overflow-hidden', 'p-0');
+      parent.style.setProperty('overflow', 'hidden', 'important');
+      parent.style.setProperty('padding', '0', 'important');
+    }
+    return () => {
+      html.style.overflow = '';
+      body.style.overflow = '';
+      if (parent && origParentClass) {
+        parent.className = origParentClass;
+        parent.style.removeProperty('overflow');
+        parent.style.removeProperty('padding');
+      }
+    };
+  }, []);
+
+  const wordCount = (str: string) => str.split(/\s+/).filter(Boolean).length;
 
   const handleUpgrade = async () => {
     if (text.trim().length < 20) {
       toast({ title: "Enter at least 20 characters", variant: "destructive" });
       return;
     }
-
     setIsLoading(true);
     setResult(null);
 
@@ -76,16 +106,23 @@ export default function VocabularyUpgraderPage() {
 
       if (!response.ok) {
         if (response.status === 402) {
-          toast({ title: "Insufficient credits", variant: "destructive" });
+          const data = await response.json();
+          toast({
+            title: "Insufficient Credits",
+            description: `You need ${data.creditsNeeded} credits but have ${data.creditsRemaining} remaining.`,
+            variant: "destructive",
+          });
           return;
         }
-        throw new Error("Failed");
+        const errorData = await response.json().catch(() => ({ error: "Failed" }));
+        const errMsg = typeof errorData.error === "string" ? errorData.error : "Something went wrong";
+        toast({ title: "Error", description: errMsg, variant: "destructive" });
+        return;
       }
 
       const data = await response.json();
       setResult(data);
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -93,176 +130,324 @@ export default function VocabularyUpgraderPage() {
     }
   };
 
-  const copyResult = () => {
-    if (result?.upgradedText) {
-      navigator.clipboard.writeText(result.upgradedText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = () => {
+    if (!result) return;
+    navigator.clipboard.writeText(result.upgradedText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyInputToClipboard = () => {
+    navigator.clipboard.writeText(text);
+    setCopiedInput(true);
+    setTimeout(() => setCopiedInput(false), 2000);
+  };
+
+  const handlePaste = async () => {
+    try {
+      const pasteText = await navigator.clipboard.readText();
+      setText(pasteText);
+      setResult(null);
+    } catch {
+      toast({ title: "Failed to paste", variant: "destructive" });
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "from-green-500 to-emerald-600";
-    if (score >= 60) return "from-blue-500 to-indigo-600";
-    if (score >= 40) return "from-amber-500 to-orange-500";
-    return "from-gray-400 to-gray-500";
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setText(ev.target?.result as string);
+      setResult(null);
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const exportResult = () => {
+    if (!result) return;
+    const content = `Original:\n${text}\n\n---\n\nUpgraded (${level}):\n${result.upgradedText}\n\n---\n\nReplacements:\n${result.replacements.map(r => `${r.original} → ${r.upgraded} (${r.reason})`).join("\n")}`;
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `vocab_upgraded_${Date.now()}.txt`;
+    a.click();
+  };
+
+  const reset = () => {
+    setText("");
+    setResult(null);
+  };
+
+  // Build highlighted upgraded text with replacements marked
+  const buildHighlightedHtml = (): string => {
+    if (!result || !result.replacements || result.replacements.length === 0) {
+      return result?.upgradedText || "";
+    }
+
+    let html = result.upgradedText;
+    // Sort by length descending to avoid partial replacements
+    const sorted = [...result.replacements].sort((a, b) => b.upgraded.length - a.upgraded.length);
+
+    for (const rep of sorted) {
+      const escaped = rep.upgraded.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escaped})`, "gi");
+      html = html.replace(regex, (match) => {
+        return `<mark class="bg-blue-100 text-blue-800 px-0.5 rounded cursor-help" title="${rep.original} → ${rep.upgraded}: ${rep.reason}">${match}</mark>`;
+      });
+    }
+
+    return html;
+  };
+
+
+  if (!mounted) return null;
+
   return (
-    <div className={`h-full flex flex-col transition-all duration-700 ${mounted ? "opacity-100" : "opacity-0"}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <GraduationCap className="w-7 h-7 text-rose-600" />
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">Vocabulary Upgrader</h1>
-            <p className="text-xs text-gray-500">Elevate your writing</p>
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
+      {/* Minimal Header */}
+      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-semibold text-gray-900">Vocabulary Upgrader</h1>
+          <div className="h-4 w-px bg-gray-200" />
+          <div className="flex items-center gap-3">
+            {/* Level Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLevel(!showLevel)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <span>{LEVELS.find(l => l.value === level)?.icon}</span>
+                <span className="font-medium">{LEVELS.find(l => l.value === level)?.label}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+              {showLevel && (
+                <div className="absolute top-full mt-1 left-0 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-30 min-w-[200px]">
+                  {LEVELS.map(l => (
+                    <button
+                      key={l.value}
+                      onClick={() => { setLevel(l.value); setShowLevel(false); }}
+                      className={cn(
+                        "w-full p-2.5 text-left hover:bg-gray-50 transition-colors",
+                        level === l.value && "bg-blue-50"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span>{l.icon}</span>
+                        <span className={cn("text-sm font-medium", level === l.value && "text-blue-600")}>{l.label}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 ml-6">{l.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Model Selector */}
+            <div className="px-2">
+              <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+            </div>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/writing" className="text-xs text-violet-600 hover:underline">Writing</Link>
-          <span className="px-2 py-1 bg-violet-50 text-violet-600 text-xs rounded-full flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />3 credits
-          </span>
+          <Button
+            onClick={handleUpgrade}
+            disabled={isLoading || text.trim().length < 20}
+            className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-sm"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><GraduationCap className="w-4 h-4 mr-1.5" /> Upgrade</>}
+          </Button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 min-h-0 flex flex-col gap-4">
-        {/* Score Cards */}
-        {result && (
-          <div className="flex items-center justify-center gap-8">
-            <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1">Before</p>
-              <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${getScoreColor(result.beforeScore)} flex items-center justify-center text-white`}>
-                <span className="text-2xl font-black">{result.beforeScore}</span>
-              </div>
+      {/* Main Content - Side by Side */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left - Input */}
+        <div className="flex-1 flex flex-col border-r border-gray-200 bg-white">
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Original Text</span>
+              {text && (
+                <span className="text-xs text-gray-400">{wordCount(text)} words</span>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-0.5 bg-gray-300" />
-              <TrendingUp className="w-6 h-6 text-green-500" />
-              <div className="w-8 h-0.5 bg-gray-300" />
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1">After</p>
-              <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${getScoreColor(result.afterScore)} flex items-center justify-center text-white shadow-lg`}>
-                <span className="text-2xl font-black">{result.afterScore}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Text Areas */}
-        <div className="flex-1 flex gap-4">
-          {/* Original */}
-          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <span className="font-medium text-gray-900 text-sm">Original Text</span>
-              <span className="text-xs text-gray-400">{text.split(/\s+/).filter(Boolean).length} words</span>
-            </div>
-            <Textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Enter text you want to upgrade to more sophisticated vocabulary..."
-              className="flex-1 resize-none border-0 focus:ring-0 p-4 text-gray-800"
-            />
-          </div>
-
-          {/* Controls */}
-          <div className="w-[180px] flex flex-col gap-3">
-            {/* Level */}
-            <div className="bg-white rounded-xl border border-gray-100 p-3">
-              <label className="text-xs font-medium text-gray-500 mb-2 block">Level</label>
-              <div className="space-y-1.5">
-                {levels.map((l) => (
-                  <button
-                    key={l.value}
-                    onClick={() => setLevel(l.value)}
-                    className={`w-full px-3 py-2 rounded-lg text-left transition-all ${
-                      level === l.value
-                        ? "bg-violet-100 text-violet-700"
-                        : "hover:bg-gray-50 text-gray-600"
-                    }`}
-                  >
-                    <span className="text-xs font-medium block">{l.label}</span>
-                    <span className="text-[10px] text-gray-400">{l.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 p-3">
-              <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-            </div>
-
-            <Button
-              onClick={handleUpgrade}
-              disabled={isLoading || text.trim().length < 20}
-              className="h-12 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 font-semibold"
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Upgrade<ArrowRight className="w-4 h-4 ml-2" /></>}
-            </Button>
-
-            {result && (
+            <div className="flex items-center gap-1">
+              {text && (
+                <button
+                  onClick={copyInputToClipboard}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Copy input"
+                >
+                  {copiedInput ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              )}
               <button
-                onClick={() => setShowReplacements(!showReplacements)}
-                className="text-xs text-violet-600 hover:underline text-center"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                title="Upload file"
               >
-                {showReplacements ? "Hide" : "Show"} replacements ({result.replacements.length})
+                <FileText className="w-4 h-4" />
               </button>
-            )}
-          </div>
-
-          {/* Upgraded */}
-          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            <div className="px-4 py-2.5 bg-violet-50 border-b border-violet-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-violet-600" />
-                <span className="font-medium text-violet-900 text-sm">Upgraded Text</span>
-              </div>
-              {result && (
-                <button onClick={copyResult} className="p-1.5 hover:bg-violet-100 rounded-lg">
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-violet-400" />}
+              <input ref={fileInputRef} type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
+              {text && (
+                <button
+                  onClick={reset}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Clear"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+          </div>
+          <div className="flex-1 p-6 overflow-y-auto relative">
+            {!text && (
+              <button
+                onClick={handlePaste}
+                className="absolute inset-0 flex items-center justify-center z-10 bg-white hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center transition-colors">
+                    <ClipboardPaste className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">Click to paste</span>
+                </div>
+              </button>
+            )}
+            <Textarea
+              value={text}
+              onChange={(e) => { setText(e.target.value); setResult(null); }}
+              placeholder="Enter text you want to upgrade to more sophisticated vocabulary..."
+              className="h-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:outline-none text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent transition-none"
+              style={{ transition: 'none' }}
+            />
+          </div>
+        </div>
+
+        {/* Right - Output */}
+        <div className="flex-1 flex flex-col bg-white">
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Upgraded Text</span>
+              {result && (
+                <>
+                  <span className="text-xs text-gray-400">{wordCount(result.upgradedText)} words</span>
+                  <span className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-1">
+                    <GraduationCap className="w-3 h-3" />
+                    {result.replacements.length} upgrades
+                  </span>
+                </>
+              )}
+            </div>
+            {result && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setShowHighlights(!showHighlights)}
+                  className={cn("p-1.5 rounded-lg transition-colors", showHighlights ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100 text-gray-500")}
+                  title={showHighlights ? "Hide highlights" : "Show highlights"}
+                >
+                  {showHighlights ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={copyToClipboard}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Copy"
+                >
+                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={exportResult}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Download"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleUpgrade}
+                  disabled={isLoading}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
+                  title="Re-upgrade"
+                >
+                  <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Upgraded Text Area */}
+            <div className="flex-1 p-6 overflow-y-auto">
               {result ? (
-                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{result.upgradedText}</p>
+                <div className="space-y-0">
+                  {/* Highlighted Text */}
+                  {showHighlights && result.replacements.length > 0 ? (
+                    <div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 pb-3 mb-4 border-b border-gray-100">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded">Upgraded words</span>
+                        <span className="text-gray-400">Hover to see original</span>
+                      </div>
+                      <div
+                        className="text-[15px] leading-relaxed text-gray-900 whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ __html: buildHighlightedHtml() }}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-[15px] leading-relaxed text-gray-900 whitespace-pre-wrap">{result.upgradedText}</p>
+                  )}
+                </div>
               ) : (
                 <div className="h-full flex items-center justify-center">
                   {isLoading ? (
                     <div className="text-center">
-                      <GraduationCap className="w-8 h-8 text-violet-500 mx-auto mb-3 animate-pulse" />
-                      <p className="text-gray-500 text-sm">Upgrading vocabulary...</p>
+                      <Loader2 className="w-8 h-8 text-blue-500 mx-auto mb-3 animate-spin" />
+                      <p className="text-sm text-gray-600 font-medium">Upgrading vocabulary...</p>
+                      <p className="text-xs text-gray-400 mt-1">Elevating your writing style</p>
                     </div>
                   ) : (
-                    <div className="text-center">
-                      <ArrowRight className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                      <p className="text-gray-400 text-sm">Upgraded text appears here</p>
+                    <div className="text-center max-w-sm">
+                      <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                        <GraduationCap className="w-8 h-8 text-gray-300" />
+                      </div>
+                      <p className="text-sm text-gray-500 font-medium">Upgraded text will appear here</p>
+                      <p className="text-xs text-gray-400 mt-2">Replaced words will be highlighted in <span className="text-blue-600 font-medium">blue</span></p>
                     </div>
                   )}
                 </div>
               )}
             </div>
+
+            {/* Replacements Panel - Bottom Section */}
+            {result && result.replacements.length > 0 && (
+              <div className="border-t border-gray-200 bg-gray-50 shrink-0">
+                <div className="px-6 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Word Replacements ({result.replacements.length})</span>
+                  </div>
+                </div>
+                <div className="px-6 pb-4 max-h-[180px] overflow-y-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {result.replacements.map((r, i) => (
+                      <div key={i} className="p-3 bg-white rounded-lg border border-gray-200 group hover:border-blue-200 transition-colors min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm text-gray-500 line-through truncate flex-shrink-0 max-w-[80px]">{r.original}</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                          <span className="text-sm text-blue-700 font-medium truncate min-w-0 flex-1">{r.upgraded}</span>
+                        </div>
+                        <div className="mt-1.5 text-xs text-gray-400 truncate" title={r.reason}>
+                          {r.reason}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Replacements Panel */}
-        {result && showReplacements && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Word Replacements</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {result.replacements.map((r, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-500 line-through">{r.original}</span>
-                  <ArrowRight className="w-3 h-3 text-violet-400 shrink-0" />
-                  <span className="text-sm text-violet-700 font-medium">{r.upgraded}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -138,7 +138,8 @@ const toolCategories = [
       { name: "Humanizer", slug: "humanizer" },
       { name: "Paraphraser", slug: "paraphraser" },
       { name: "Roast My Assignment", slug: "roast-assignment" },
-      { name: "Code Visualizer", slug: "code-visualizer" },
+      { name: "Assignment Worker", slug: "assignment-worker" },
+      { name: "Video Explainer", slug: "video-explainer" },
     ],
   },
 ];

@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import type { Components } from "react-markdown";
 
 const intensities = [
   { value: "gentle", label: "Gentle", icon: Snowflake, desc: "Constructive critique", color: "bg-blue-100 text-blue-700" },
@@ -51,12 +52,21 @@ export default function DevilsAdvocatePage() {
     setCounterArgument("");
 
     try {
+      // Map intensity values to API expected values
+      const intensityMap: Record<string, string> = {
+        gentle: "gentle",
+        balanced: "moderate",
+        moderate: "moderate",
+        aggressive: "aggressive",
+      };
+      const apiIntensity = intensityMap[intensity] || "moderate";
+
       const response = await fetch("/api/tools/advocate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           argument,
-          intensity,
+          intensity: apiIntensity,
           model: selectedModel,
           language: aiLanguage,
         }),
@@ -64,10 +74,21 @@ export default function DevilsAdvocatePage() {
 
       if (!response.ok) {
         if (response.status === 402) {
-          toast({ title: "Insufficient credits", variant: "destructive" });
+          const data = await response.json();
+          toast({ 
+            title: "Insufficient Credits", 
+            description: `You need ${data.creditsNeeded} credits but have ${data.creditsRemaining} remaining.`,
+            variant: "destructive" 
+          });
           return;
         }
-        throw new Error("Failed");
+        const errorData = await response.json().catch(() => ({ error: "Failed to generate counter-arguments" }));
+        toast({ 
+          title: "Error", 
+          description: typeof errorData.error === "string" ? errorData.error : "Something went wrong",
+          variant: "destructive" 
+        });
+        return;
       }
 
       const reader = response.body?.getReader();
@@ -94,6 +115,99 @@ export default function DevilsAdvocatePage() {
     navigator.clipboard.writeText(counterArgument);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Custom markdown components for better styling
+  const markdownComponents: Components = {
+    h1: ({ node, ...props }) => (
+      <h1 className="text-2xl font-bold text-gray-900 mt-8 mb-5 pb-3 border-b-2 border-gray-200" {...props} />
+    ),
+    h2: ({ node, ...props }) => (
+      <h2 className="text-xl font-semibold text-gray-900 mt-7 mb-4 flex items-center gap-3 group" {...props}>
+        <div className="w-1.5 h-7 bg-gradient-to-b from-red-500 to-red-400 rounded-full shadow-sm" />
+        <span className="flex-1">{props.children}</span>
+      </h2>
+    ),
+    h3: ({ node, ...props }) => (
+      <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3 pl-2 border-l-3 border-red-300" {...props} />
+    ),
+    p: ({ node, ...props }) => (
+      <p className="text-[15px] text-gray-700 leading-[1.8] mb-4 first:mt-0" {...props} />
+    ),
+    ul: ({ node, ...props }) => (
+      <ul className="space-y-3 mb-5 ml-0 list-none" {...props} />
+    ),
+    ol: ({ node, ...props }) => (
+      <ol className="space-y-3 mb-5 ml-6 list-decimal list-outside marker:text-red-500 marker:font-semibold" {...props} />
+    ),
+    li: ({ node, ...props }) => (
+      <li className="text-[15px] text-gray-700 leading-relaxed flex items-start gap-3 group" {...props}>
+        <span className="mt-2 w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 group-hover:bg-red-500 transition-colors" />
+        <span className="flex-1">{props.children}</span>
+      </li>
+    ),
+    strong: ({ node, ...props }) => (
+      <strong className="font-semibold text-gray-900 bg-yellow-50 px-1 rounded" {...props} />
+    ),
+    em: ({ node, ...props }) => (
+      <em className="italic text-gray-700" {...props} />
+    ),
+    code: ({ node, inline, className, children, ...props }: any) => {
+      return inline ? (
+        <code className="px-1.5 py-0.5 bg-gray-100 text-red-600 rounded text-sm font-mono border border-gray-200" {...props}>
+          {children}
+        </code>
+      ) : (
+        <div className="my-5 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+          <div className="bg-gray-800 px-4 py-2 flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+            </div>
+            <span className="text-xs text-gray-400 ml-auto font-mono">Code</span>
+          </div>
+          <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto">
+            <code className="text-sm font-mono leading-relaxed" {...props}>
+              {String(children).replace(/\n$/, "")}
+            </code>
+          </pre>
+        </div>
+      );
+    },
+    blockquote: ({ node, ...props }) => (
+      <blockquote className="border-l-4 border-red-400 pl-5 py-3 my-5 bg-gradient-to-r from-red-50 to-transparent rounded-r-lg italic text-gray-700 shadow-sm" {...props} />
+    ),
+    hr: ({ node, ...props }) => (
+      <div className="my-7 flex items-center gap-3">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+        <div className="w-2 h-2 rounded-full bg-red-400" />
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+      </div>
+    ),
+    a: ({ node, ...props }) => (
+      <a className="text-blue-600 hover:text-blue-700 underline underline-offset-2 decoration-2 decoration-blue-300 hover:decoration-blue-500 transition-colors" {...props} />
+    ),
+    table: ({ node, ...props }) => (
+      <div className="overflow-x-auto my-5 rounded-lg border border-gray-200 shadow-sm">
+        <table className="min-w-full border-collapse" {...props} />
+      </div>
+    ),
+    thead: ({ node, ...props }) => (
+      <thead className="bg-gradient-to-r from-gray-100 to-gray-50" {...props} />
+    ),
+    tbody: ({ node, ...props }) => (
+      <tbody className="bg-white divide-y divide-gray-200" {...props} />
+    ),
+    tr: ({ node, ...props }) => (
+      <tr className="hover:bg-gray-50 transition-colors" {...props} />
+    ),
+    th: ({ node, ...props }) => (
+      <th className="px-4 py-3 text-left font-semibold text-gray-900 text-sm border-b border-gray-200" {...props} />
+    ),
+    td: ({ node, ...props }) => (
+      <td className="px-4 py-3 text-gray-700 text-sm border-b border-gray-100" {...props} />
+    ),
   };
 
   return (
@@ -184,10 +298,15 @@ Example: 'Remote work is better than office work because it offers more flexibil
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-gray-50/30">
             {counterArgument ? (
-              <div className="prose prose-sm max-w-none prose-headings:text-red-900 prose-strong:text-red-800">
-                <ReactMarkdown>{counterArgument}</ReactMarkdown>
+              <div className="max-w-none prose prose-sm prose-headings:scroll-mt-6">
+                <ReactMarkdown 
+                  components={markdownComponents}
+                  className="markdown-content"
+                >
+                  {counterArgument}
+                </ReactMarkdown>
               </div>
             ) : (
               <div className="h-full flex items-center justify-center">

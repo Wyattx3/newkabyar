@@ -5,13 +5,16 @@ import { checkToolCredits, deductCredits } from "@/lib/credits";
 import { chatWithTier } from "@/lib/ai-providers";
 
 const emailSchema = z.object({
-  purpose: z.enum(["internship", "job", "networking", "professor", "followup"]),
-  recipientName: z.string().min(1),
+  purpose: z.string().min(5),
+  recipient: z.string().min(3).optional(),
+  recipientName: z.string().min(1).optional(),
   recipientRole: z.string().optional(),
   company: z.string().optional(),
-  yourBackground: z.string().min(10),
+  background: z.string().optional(),
+  yourBackground: z.string().optional(),
+  ask: z.string().optional(),
   specificAsk: z.string().optional(),
-  tone: z.enum(["professional", "friendly", "formal"]).default("professional"),
+  tone: z.string().default("professional"),
   model: z.string().default("fast"),
   language: z.string().default("en"),
 });
@@ -35,15 +38,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { purpose, recipientName, recipientRole, company, yourBackground, specificAsk, tone, model, language } = validatedData;
+    const { purpose, recipient, recipientName, recipientRole, company, background, yourBackground, ask, specificAsk, tone, model, language } = validatedData;
 
-    const purposeGuide: Record<string, string> = {
-      internship: "Requesting an internship opportunity. Show enthusiasm and relevant skills.",
-      job: "Applying for a job position. Highlight experience and value proposition.",
-      networking: "Building professional connections. Focus on mutual benefits.",
-      professor: "Contacting a professor for research/academic purposes. Be respectful and specific.",
-      followup: "Following up on a previous conversation. Be brief and action-oriented.",
-    };
+    // Support both old and new field names
+    const resolvedRecipient = recipient || recipientName || "the recipient";
+    const resolvedBackground = background || yourBackground || "";
+    const resolvedAsk = ask || specificAsk || "";
 
     const languageInstructions = language !== "en" 
       ? `Write the email in ${language} language.` 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt = `You are an expert at writing effective cold emails that get responses.
 
-Purpose: ${purposeGuide[purpose]}
+Purpose: ${purpose}
 Tone: ${tone}
 ${languageInstructions}
 
@@ -74,9 +74,9 @@ Email Guidelines:
 Return ONLY valid JSON.`;
 
     const context = `
-Recipient: ${recipientName}${recipientRole ? ` (${recipientRole})` : ""}${company ? ` at ${company}` : ""}
-About me: ${yourBackground}
-${specificAsk ? `Specific request: ${specificAsk}` : ""}
+Recipient: ${resolvedRecipient}${recipientRole ? ` (${recipientRole})` : ""}${company ? ` at ${company}` : ""}
+${resolvedBackground ? `About me: ${resolvedBackground}` : ""}
+${resolvedAsk ? `Specific request: ${resolvedAsk}` : ""}
 `;
 
     const result = await chatWithTier(
