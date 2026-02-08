@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
@@ -8,10 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { cn } from "@/lib/utils";
 import {
-  ShieldCheck, Loader2, AlertTriangle, CheckCircle2, Sparkles, Scan,
-  FileText, X, Trash2, Target, Lightbulb, Zap, Copy, Check, Download,
-  History, MessageSquare, Send, RefreshCw, Eye, BarChart3, Wand2
+  ShieldCheck, Loader2, AlertTriangle, CheckCircle2, Scan,
+  FileText, Trash2, Copy, Check, Download, RefreshCw, Wand2, TrendingUp, TrendingDown
 } from "lucide-react";
+// Highlighting using regex - no external library needed
 
 interface DetectionIndicator {
   text: string;
@@ -26,14 +26,6 @@ interface DetectionResult {
   suggestions?: string[];
 }
 
-interface DetectionHistory {
-  id: string;
-  preview: string;
-  aiScore: number;
-  humanScore: number;
-  timestamp: number;
-}
-
 export default function AIDetectorPage() {
   const [mounted, setMounted] = useState(false);
   
@@ -45,27 +37,112 @@ export default function AIDetectorPage() {
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  
-  // Feature states
-  const [history, setHistory] = usePersistedState<DetectionHistory[]>("detect-history", []);
-  const [showHistory, setShowHistory] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
   const [isHumanizing, setIsHumanizing] = useState(false);
-  const [showIndicators, setShowIndicators] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  // Highlighting helper
 
   useEffect(() => setMounted(true), []);
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
 
-  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  // Fit view
+  useEffect(() => {
+    const parent = document.querySelector('main > div') as HTMLElement;
+    const html = document.documentElement;
+    const body = document.body;
+    const origParentClass = parent?.className;
+    html.style.setProperty('overflow', 'hidden', 'important');
+    body.style.setProperty('overflow', 'hidden', 'important');
+    if (parent) {
+      parent.classList.remove('overflow-y-auto');
+      parent.classList.add('overflow-hidden', 'p-0');
+      parent.style.setProperty('overflow', 'hidden', 'important');
+      parent.style.setProperty('padding', '0', 'important');
+    }
+    return () => {
+      html.style.overflow = '';
+      body.style.overflow = '';
+      if (parent && origParentClass) {
+        parent.className = origParentClass;
+        parent.style.removeProperty('overflow');
+        parent.style.removeProperty('padding');
+      }
+    };
+  }, []);
+
+  const wordCount = (str: string) => str.split(/\s+/).filter(Boolean).length;
   const hasResult = !!result;
+
+  // Circle Chart Component (Donut Chart)
+  const CircleChart = ({ aiScore, humanScore }: { aiScore: number; humanScore: number }) => {
+    const size = 220;
+    const strokeWidth = 24;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    
+    // Calculate arc lengths
+    const aiLength = (aiScore / 100) * circumference;
+    const humanLength = (humanScore / 100) * circumference;
+    
+    const aiColor = aiScore >= 60 ? "#ef4444" : aiScore >= 40 ? "#f59e0b" : "#10b981";
+    const humanColor = "#3b82f6";
+
+    return (
+      <div className="relative flex items-center justify-center">
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth={strokeWidth}
+          />
+          {/* AI Score Arc (starts at top) */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={aiColor}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${aiLength} ${circumference}`}
+            strokeDashoffset="0"
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out"
+          />
+          {/* Human Score Arc (continues from AI arc) */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={humanColor}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${humanLength} ${circumference}`}
+            strokeDashoffset={-aiLength}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+        {/* Center Text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <p className={cn(
+            "text-5xl font-bold",
+            aiScore >= 60 ? "text-red-600" :
+            aiScore >= 40 ? "text-amber-600" :
+            "text-green-600"
+          )}>
+            {aiScore}%
+          </p>
+          <p className="text-xs text-gray-500 mt-1 font-medium">AI Detected</p>
+          <p className="text-xs text-gray-400 mt-0.5">{humanScore}% Human</p>
+        </div>
+      </div>
+    );
+  };
 
   const handleAnalyze = async () => {
     if (text.trim().length < 50) {
@@ -95,23 +172,11 @@ export default function AIDetectorPage() {
       }
       const data = await response.json();
       setResult(data);
-
-      // Save to history
-      const historyItem: DetectionHistory = {
-        id: Date.now().toString(),
-        preview: text.substring(0, 50) + "...",
-        aiScore: data.aiScore,
-        humanScore: data.humanScore,
-        timestamp: Date.now(),
-      };
-      setHistory(prev => [historyItem, ...prev.slice(0, 19)]);
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {
       setIsLoading(false);
-      const words = text.split(/\s+/).length;
-      const credits = Math.max(3, Math.ceil(words / 1000) * 3);
-      window.dispatchEvent(new CustomEvent("credits-updated", { detail: { amount: credits } }));
+      window.dispatchEvent(new CustomEvent("credits-updated"));
     }
   };
 
@@ -133,46 +198,6 @@ export default function AIDetectorPage() {
       toast({ title: "Humanization failed", variant: "destructive" });
     } finally {
       setIsHumanizing(false);
-    }
-  };
-
-  const handleChatSubmit = async () => {
-    if (!chatInput.trim()) return;
-    const userMessage = chatInput;
-    setChatInput("");
-    setChatMessages(prev => [...prev, { role: "user", content: userMessage }]);
-    setIsChatLoading(true);
-
-    try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: `You are an AI detection expert. Help the user understand AI detection and how to make their writing more human-like. Current text AI score: ${result?.aiScore || "unknown"}%` },
-            ...chatMessages.map(m => ({ role: m.role, content: m.content })),
-            { role: "user", content: userMessage },
-          ],
-          feature: "answer",
-          model: "fast",
-          language: aiLanguage || "en",
-        }),
-      });
-      if (!response.ok) throw new Error("Failed");
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No reader");
-      let content = "";
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        content += decoder.decode(value, { stream: true });
-      }
-      setChatMessages(prev => [...prev, { role: "assistant", content }]);
-    } catch {
-      setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, I couldn't process your request." }]);
-    } finally {
-      setIsChatLoading(false);
     }
   };
 
@@ -207,162 +232,234 @@ export default function AIDetectorPage() {
     a.click();
   };
 
-  const getScoreColor = (score: number, isAI: boolean) => {
-    if (isAI) {
-      if (score >= 60) return { bg: "bg-red-500", text: "text-red-600", light: "bg-red-50" };
-      if (score >= 40) return { bg: "bg-amber-500", text: "text-amber-600", light: "bg-amber-50" };
-      return { bg: "bg-green-500", text: "text-green-600", light: "bg-green-50" };
+  // Highlight detected phrases in text
+  const highlightText = (originalText: string, indicators: DetectionIndicator[] = []): string => {
+    if (!indicators || indicators.length === 0) return originalText;
+    
+    let highlighted = originalText;
+    const sortedIndicators = [...indicators].sort((a, b) => b.text.length - a.text.length);
+    
+    for (const indicator of sortedIndicators) {
+      const phrase = indicator.text.trim();
+      if (phrase.length < 3) continue;
+      
+      // Escape special regex characters
+      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escaped})`, "gi");
+      
+      // Replace with highlighted version
+      highlighted = highlighted.replace(regex, (match) => {
+        return `<mark class="bg-red-100 text-red-800 px-1 rounded font-medium" title="${indicator.reason}">${match}</mark>`;
+      });
     }
-    return { bg: "bg-blue-500", text: "text-blue-600", light: "bg-blue-50" };
+    
+    return highlighted;
   };
 
   const reset = () => {
     setText("");
     setResult(null);
-    setChatMessages([]);
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50/50">
-      {/* Top Bar */}
-      <div className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="font-bold text-gray-900">AI Detector</h1>
-            <p className="text-xs text-gray-500">Analyze content for AI patterns</p>
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
+      {/* Minimal Header */}
+      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-semibold text-gray-900">AI Content Detector</h1>
+          <div className="h-4 w-px bg-gray-200" />
+          <div className="px-2">
+            <ModelSelector value={selectedModel} onChange={setSelectedModel} />
           </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)} className={cn("h-8 rounded-lg", showHistory && "bg-blue-50 text-blue-600")}>
-            <History className="w-4 h-4" />
+          <Button
+            onClick={handleAnalyze}
+            disabled={isLoading || text.trim().length < 50}
+            className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-sm"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Scan className="w-4 h-4 mr-1.5" /> Analyze</>}
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setShowChat(!showChat)} className={cn("h-8 rounded-lg", showChat && "bg-blue-50 text-blue-600")}>
-            <MessageSquare className="w-4 h-4" />
-          </Button>
-          <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded-full flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> 3 credits
-          </span>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Side by Side */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left - Input */}
-        <div className="flex-1 flex flex-col border-r border-gray-100">
-          <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Scan className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">Input Text</span>
-              <span className="text-xs text-gray-400">{wordCount} words</span>
+        <div className="flex-1 flex flex-col border-r border-gray-200 bg-white">
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Input Text</span>
+              {text && (
+                <span className="text-xs text-gray-400">{wordCount(text)} words</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="h-7 px-2 rounded-lg">
-                <FileText className="w-3.5 h-3.5" />
-              </Button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                title="Upload file"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
               <input ref={fileInputRef} type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
               {text && (
-                <Button variant="ghost" size="sm" onClick={reset} className="h-7 px-2 rounded-lg text-gray-400">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
+                <button
+                  onClick={reset}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Clear"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               )}
             </div>
           </div>
-          <div className="flex-1 p-4">
-            <Textarea
-              value={text}
-              onChange={(e) => { setText(e.target.value); setResult(null); }}
-              placeholder="Paste your text here to check for AI-generated content...
-
-Minimum 50 characters required."
-              className="h-full resize-none border-0 shadow-none focus-visible:ring-0 text-base"
-            />
-          </div>
-          <div className="p-4 bg-white border-t border-gray-100 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200">
-                <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-              </div>
-              <Button variant="outline" size="sm" onClick={handleHumanize} disabled={isHumanizing || !text.trim()} className="h-9 rounded-lg">
-                {isHumanizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4 mr-1" /> Humanize</>}
-              </Button>
-            </div>
-            <Button onClick={handleAnalyze} disabled={isLoading || text.trim().length < 50} className="h-10 px-6 rounded-xl bg-blue-600 hover:bg-blue-700">
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Target className="w-4 h-4 mr-2" /> Analyze</>}
-            </Button>
+          <div className="flex-1 p-6 overflow-y-auto">
+            {result && result.indicators && result.indicators.length > 0 ? (
+              <div 
+                className="text-[15px] leading-relaxed text-gray-900 whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{ __html: highlightText(text, result.indicators) }}
+              />
+            ) : (
+              <Textarea
+                value={text}
+                onChange={(e) => { setText(e.target.value); setResult(null); }}
+                placeholder="Paste your text here to check for AI-generated content..."
+                className="h-full resize-none border-0 shadow-none focus-visible:ring-0 text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent"
+              />
+            )}
           </div>
         </div>
 
         {/* Right - Results */}
         <div className="flex-1 flex flex-col bg-white">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-900">Detection Results</span>
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Detection Results</span>
+              {result && (
+                <span className={cn(
+                  "px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1",
+                  result.aiScore >= 60 ? "bg-red-50 text-red-700" :
+                  result.aiScore >= 40 ? "bg-amber-50 text-amber-700" :
+                  "bg-green-50 text-green-700"
+                )}>
+                  <ShieldCheck className="w-3 h-3" />
+                  {result.aiScore}% AI
+                </span>
+              )}
+            </div>
             {result && (
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={copyReport} className="h-7 px-2 rounded-lg">
-                  {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={exportReport} className="h-7 px-2 rounded-lg">
-                  <Download className="w-3.5 h-3.5" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowIndicators(!showIndicators)} className={cn("h-7 px-2 rounded-lg", showIndicators && "bg-blue-50 text-blue-600")}>
-                  <Eye className="w-3.5 h-3.5" />
-                </Button>
+                <button
+                  onClick={copyReport}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Copy report"
+                >
+                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={exportReport}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Download report"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleHumanize}
+                  disabled={isHumanizing}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
+                  title="Humanize text"
+                >
+                  <Wand2 className={cn("w-4 h-4", isHumanizing && "animate-pulse")} />
+                </button>
+                <button
+                  onClick={() => { setResult(null); handleAnalyze(); }}
+                  disabled={isLoading}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
+                  title="Re-analyze"
+                >
+                  <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+                </button>
               </div>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 p-6 overflow-y-auto">
             {result ? (
               <div className="space-y-6">
-                {/* Score Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={cn("p-5 rounded-2xl", getScoreColor(result.aiScore, true).light)}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className={cn("w-4 h-4", getScoreColor(result.aiScore, true).text)} />
-                      <span className="text-xs font-medium text-gray-600">AI Detected</span>
+                {/* Circle Chart */}
+                <div className="flex flex-col items-center justify-center py-8">
+                  <CircleChart aiScore={result.aiScore} humanScore={result.humanScore} />
+                  
+                  {/* Legend */}
+                  <div className="flex items-center gap-6 mt-8">
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-4 h-4 rounded-full",
+                        result.aiScore >= 60 ? "bg-red-500" :
+                        result.aiScore >= 40 ? "bg-amber-500" :
+                        "bg-green-500"
+                      )} />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-semibold">{result.aiScore}%</span> AI Detected
+                      </span>
                     </div>
-                    <p className={cn("text-4xl font-bold", getScoreColor(result.aiScore, true).text)}>{result.aiScore}%</p>
-                    <div className="mt-2 h-2 bg-white/50 rounded-full overflow-hidden">
-                      <div className={cn("h-full rounded-full", getScoreColor(result.aiScore, true).bg)} style={{ width: `${result.aiScore}%` }} />
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-blue-500" />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-semibold">{result.humanScore}%</span> Human Written
+                      </span>
                     </div>
                   </div>
-                  <div className={cn("p-5 rounded-2xl", getScoreColor(result.humanScore, false).light)}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-medium text-gray-600">Human Written</span>
-                    </div>
-                    <p className="text-4xl font-bold text-blue-600">{result.humanScore}%</p>
-                    <div className="mt-2 h-2 bg-white/50 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-blue-500" style={{ width: `${result.humanScore}%` }} />
-                    </div>
+
+                  {/* Status Badge */}
+                  <div className={cn(
+                    "mt-4 px-4 py-2 rounded-full flex items-center gap-2",
+                    result.aiScore >= 60 ? "bg-red-50 text-red-700" :
+                    result.aiScore >= 40 ? "bg-amber-50 text-amber-700" :
+                    "bg-green-50 text-green-700"
+                  )}>
+                    {result.aiScore >= 60 ? (
+                      <>
+                        <AlertTriangle className="w-4 h-4" />
+                        <span className="text-sm font-medium">High AI Probability</span>
+                      </>
+                    ) : result.aiScore >= 40 ? (
+                      <>
+                        <AlertTriangle className="w-4 h-4" />
+                        <span className="text-sm font-medium">Moderate AI Probability</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="text-sm font-medium">Low AI Probability - Likely Human</span>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* Analysis */}
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-900">Analysis</span>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{result.analysis}</p>
+                <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
+                  <span className="text-sm font-semibold text-gray-900 block mb-3">Analysis</span>
+                  <p className="text-sm text-gray-700 leading-relaxed">{result.analysis}</p>
                 </div>
 
                 {/* Indicators */}
-                {showIndicators && result.indicators && result.indicators.length > 0 && (
-                  <div className="p-4 bg-red-50 rounded-xl border border-red-100">
-                    <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle className="w-4 h-4 text-red-600" />
-                      <span className="text-sm font-medium text-red-800">AI Indicators Found ({result.indicators.length})</span>
+                {result.indicators && result.indicators.length > 0 && (
+                  <div className="p-5 bg-red-50 rounded-xl border border-red-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                      <span className="text-sm font-semibold text-red-800">AI Indicators Found ({result.indicators.length})</span>
                     </div>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    <div className="space-y-3 max-h-[250px] overflow-y-auto">
                       {result.indicators.map((ind, i) => (
-                        <div key={i} className="p-3 bg-white rounded-lg">
-                          <p className="text-sm text-red-700 font-medium">"{ind.text.substring(0, 50)}{ind.text.length > 50 ? "..." : ""}"</p>
-                          <p className="text-xs text-gray-500 mt-1">{ind.reason}</p>
+                        <div key={i} className="p-3 bg-white rounded-lg border border-red-100">
+                          <p className="text-sm text-red-700 font-medium mb-1">
+                            "{ind.text.substring(0, 80)}{ind.text.length > 80 ? "..." : ""}"
+                          </p>
+                          <p className="text-xs text-gray-600">{ind.reason}</p>
                         </div>
                       ))}
                     </div>
@@ -371,123 +468,40 @@ Minimum 50 characters required."
 
                 {/* Suggestions */}
                 {result.suggestions && result.suggestions.length > 0 && (
-                  <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Lightbulb className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">Improvement Suggestions</span>
-                    </div>
+                  <div className="p-5 bg-green-50 rounded-xl border border-green-200">
+                    <span className="text-sm font-semibold text-green-800 block mb-3">Improvement Suggestions</span>
                     <ul className="space-y-2">
                       {result.suggestions.map((s, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-green-700">
-                          <Zap className="w-3 h-3 mt-1 shrink-0" />
-                          {s}
+                          <span className="text-green-600 mt-0.5">•</span>
+                          <span>{s}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
-
-                {/* Quick Actions */}
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleHumanize} disabled={isHumanizing} className="flex-1 rounded-xl">
-                    {isHumanizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4 mr-2" /> Auto-Humanize</>}
-                  </Button>
-                  <Button variant="outline" onClick={() => { setResult(null); }} className="flex-1 rounded-xl">
-                    <RefreshCw className="w-4 h-4 mr-2" /> Re-analyze
-                  </Button>
-                </div>
               </div>
             ) : (
               <div className="h-full flex items-center justify-center">
                 {isLoading ? (
                   <div className="text-center">
-                    <Scan className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-pulse" />
-                    <p className="text-gray-600 font-medium">Analyzing content...</p>
+                    <Loader2 className="w-8 h-8 text-blue-500 mx-auto mb-3 animate-spin" />
+                    <p className="text-sm text-gray-600 font-medium">Analyzing your text...</p>
                     <p className="text-xs text-gray-400 mt-1">Checking for AI patterns</p>
                   </div>
                 ) : (
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center max-w-sm">
+                    <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4">
                       <ShieldCheck className="w-8 h-8 text-gray-300" />
                     </div>
-                    <p className="text-gray-400">Paste text and click Analyze</p>
-                    <p className="text-xs text-gray-300 mt-1">Minimum 50 characters</p>
+                    <p className="text-sm text-gray-500 font-medium">Detection results will appear here</p>
+                    <p className="text-xs text-gray-400 mt-2">Paste your text and click Analyze to check for AI content</p>
                   </div>
                 )}
               </div>
             )}
           </div>
         </div>
-
-        {/* History Panel */}
-        {showHistory && (
-          <div className="w-64 bg-white border-l border-gray-100 flex flex-col">
-            <div className="h-12 border-b border-gray-100 flex items-center justify-between px-4">
-              <span className="font-medium text-gray-900 text-sm">History</span>
-              <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {history.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">No history yet</p>
-              ) : (
-                history.map(h => (
-                  <div key={h.id} className="p-3 rounded-xl border border-gray-100 hover:bg-gray-50">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={cn("text-xs font-bold", h.aiScore >= 50 ? "text-red-600" : "text-green-600")}>
-                        {h.aiScore}% AI
-                      </span>
-                      <span className="text-xs text-gray-400">{new Date(h.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">{h.preview}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Chat Panel */}
-        {showChat && (
-          <div className="w-72 bg-white border-l border-gray-100 flex flex-col">
-            <div className="h-12 border-b border-gray-100 flex items-center justify-between px-4">
-              <span className="font-medium text-gray-900 text-sm">AI Detection Help</span>
-              <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              {chatMessages.length === 0 && (
-                <div className="text-center py-8">
-                  <Lightbulb className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-400 text-sm">Ask how to improve your score</p>
-                </div>
-              )}
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={cn("max-w-[90%] p-3 rounded-2xl text-sm", msg.role === "user" ? "ml-auto bg-blue-600 text-white" : "bg-gray-100 text-gray-700")}>
-                  {msg.content}
-                </div>
-              ))}
-              {isChatLoading && <div className="bg-gray-100 p-3 rounded-2xl w-fit"><Loader2 className="w-4 h-4 animate-spin" /></div>}
-              <div ref={chatEndRef} />
-            </div>
-            <div className="p-3 border-t border-gray-100">
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="How can I reduce AI score?"
-                  onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <Button onClick={handleChatSubmit} size="sm" className="rounded-xl px-3 bg-blue-600 hover:bg-blue-700">
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

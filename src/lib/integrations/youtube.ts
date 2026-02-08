@@ -2,7 +2,7 @@
 // Extract transcripts from YouTube videos using Supadata API
 
 // Supadata API Configuration (supports YouTube, TikTok, Instagram, Facebook, X)
-const SUPADATA_API_KEY = 'sd_04f11887dc62247a9a702abb82e77d63';
+const SUPADATA_API_KEY = process.env.SUPADATA_API_KEY || '';
 const SUPADATA_BASE_URL = 'https://api.supadata.ai/v1';
 
 export interface TranscriptSegment {

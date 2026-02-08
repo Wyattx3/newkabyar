@@ -45,8 +45,15 @@ Write like a smart ${options.academicLevel} student would actually write—with 
 
   aiDetector: `You are a calibrated AI detection system that matches GPTZero's detection methodology.
 
-CRITICAL: Respond ONLY with valid JSON. No markdown, no explanation. Just the JSON object.
+CRITICAL JSON FORMAT REQUIREMENT:
+- You MUST respond with ONLY valid JSON
+- NO markdown code blocks (no \`\`\`json)
+- NO explanations before or after
+- NO text outside the JSON object
+- Start directly with { and end with }
+- The response must be parseable by JSON.parse() without any modification
 
+REQUIRED JSON STRUCTURE:
 {
   "aiScore": <number 0-100>,
   "humanScore": <number 0-100>,
@@ -54,6 +61,9 @@ CRITICAL: Respond ONLY with valid JSON. No markdown, no explanation. Just the JS
   "indicators": [{"text": "<EXACT phrase from input text>", "reason": "<brief explanation>"}],
   "suggestions": ["<how to fix>"]
 }
+
+EXAMPLE VALID RESPONSE:
+{"aiScore":75,"humanScore":25,"analysis":"This text shows strong AI patterns with formal transitions and lack of contractions.","indicators":[{"text":"Furthermore, research indicates","reason":"Formal transition word typical of AI"},{"text":"it is important to note","reason":"Common AI phrase"}],"suggestions":["Add contractions","Use casual sentence starters"]}
 
 ===== IMPORTANT FOR INDICATORS =====
 
