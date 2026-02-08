@@ -8,8 +8,9 @@ import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AuthCarousel } from "@/components/auth/auth-carousel";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -80,90 +81,45 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-screen flex flex-col lg:flex-row overflow-hidden">
       {/* Left side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 lg:px-16 bg-white overflow-y-auto py-8 lg:py-0">
-        <div className="w-full max-w-md mx-auto">
-          {/* Logo */}
-          <div className="flex items-center mb-6 sm:mb-10">
-            <Image src="/kabyar-logo.png" alt="Kabyar" width={320} height={84} className="object-contain h-16 sm:h-20 w-auto" priority />
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 lg:px-16 bg-white">
+        <div className="w-full max-w-sm mx-auto">
+          <div className="flex items-center mb-5">
+            <Image src="/kabyar-logo.png" alt="Kabyar" width={320} height={84} className="object-contain h-12 sm:h-14 w-auto" priority />
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">Create your account</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">Create your account</h1>
 
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-                className="h-11 sm:h-12 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
-              />
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} className="h-10 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 placeholder:text-gray-400 text-sm" />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Password
-              </Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Password</Label>
               <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="h-11 sm:h-12 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 pr-10 text-sm sm:text-base"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isLoading} className="h-10 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 pr-10 text-sm" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-400">Minimum 6 characters</p>
+              <p className="text-[10px] text-gray-400">Minimum 6 characters</p>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-blue-500 hover:bg-blue-600"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                "Sign Up"
-              )}
+            <Button type="submit" className="w-full h-10 text-sm font-medium bg-blue-500 hover:bg-blue-600" disabled={isLoading}>
+              {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating account...</>) : "Sign Up"}
             </Button>
           </form>
 
-          <div className="relative my-5 sm:my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-gray-500">or</span>
-            </div>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-white px-4 text-gray-400">or</span></div>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-11 sm:h-12 text-sm font-medium border-gray-200 hover:bg-gray-50"
-            onClick={handleGoogleSignIn}
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+          <Button type="button" variant="outline" className="w-full h-10 text-sm font-medium border-gray-200 hover:bg-gray-50" onClick={handleGoogleSignIn}>
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -172,29 +128,15 @@ export default function RegisterPage() {
             Continue with Google
           </Button>
 
-          <p className="mt-6 sm:mt-8 text-center text-sm text-gray-500">
+          <p className="mt-5 text-center text-xs text-gray-500">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-500 hover:text-blue-600 font-medium">
-              Log in
-            </Link>
+            <Link href="/login" className="text-blue-500 hover:text-blue-600 font-medium">Log in</Link>
           </p>
         </div>
       </div>
 
-      {/* Right side - Dark background */}
-      <div className="hidden lg:flex flex-1 bg-[#0D0D0D] items-center justify-center relative overflow-hidden min-h-screen">
-        <div className="text-center z-10">
-          <div className="flex items-center justify-center gap-1 mb-6">
-            <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-sm ml-3"></div>
-          </div>
-          <h2 className="text-4xl font-bold text-white">
-            Learn smarter, faster
-          </h2>
-        </div>
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-t-full bg-gradient-to-t from-blue-900/30 to-transparent"></div>
-      </div>
+      {/* Right side - Card carousel */}
+      <AuthCarousel />
     </div>
   );
 }
