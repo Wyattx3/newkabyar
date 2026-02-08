@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 
-// Use Grok API for fast news generation
-const grokClient = new OpenAI({
-  apiKey: process.env.GROK_API_KEY?.trim(),
-  baseURL: "https://api.x.ai/v1",
-});
+// Use Groq Compound API for news generation with web search capabilities
+const GROQ_API_KEY = process.env.GROQ_API_KEY?.trim();
+if (!GROQ_API_KEY) {
+  console.warn("GROQ_API_KEY not configured for news generation");
+}
 
 // Category colors
 const categoryColors: Record<string, string> = {
@@ -40,18 +39,17 @@ User Profile:
 - Study Goal: ${studyGoal || "Learn and improve skills"}
     `.trim();
 
-    const response = await grokClient.chat.completions.create({
-      model: "grok-4-1-fast-reasoning",
-      messages: [
-        {
-          role: "system",
-          content: `You are a helpful assistant that generates personalized educational news and updates for students. 
+    if (!GROQ_API_KEY) {
+      throw new Error("GROQ_API_KEY not configured");
+    }
+
+    const systemPrompt = `You are a helpful assistant that generates personalized educational news and updates for students. 
 Based on the user's profile, generate 4 relevant and interesting news/updates that would help them in their learning journey.
 
 Each news item should be:
 1. Relevant to their subjects of interest or field of study
 2. Educational and informative
-3. Current and trending in their field
+3. Current and trending in their field (use web search to find the latest information)
 4. Actionable or insightful
 
 IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
@@ -67,17 +65,41 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
       "relatedTopics": ["topic1", "topic2"]
     }
   ]
-}`
-        },
-        {
-          role: "user",
-          content: `Generate 4 personalized educational news/updates for this student:\n\n${userContext}`
-        }
-      ],
-      temperature: 0.8,
+}`;
+
+    const userQuery = `Generate 4 personalized educational news/updates for this student:\n\n${userContext}\n\nPlease search the web for the latest trends and updates in their field of study to provide current and relevant information.`;
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "groq/compound",
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt,
+          },
+          {
+            role: "user",
+            content: userQuery,
+          },
+        ],
+        temperature: 0.8,
+        max_tokens: 8192,
+      }),
     });
 
-    const content = response.choices[0]?.message?.content;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    const content = data.choices[0]?.message?.content;
     if (!content) {
       throw new Error("No response from AI");
     }
