@@ -256,7 +256,30 @@ export default function PDFQAPage() {
           toast({ title: "Insufficient credits", variant: "destructive" });
           return;
         }
-        throw new Error(errorData.error || "Failed");
+        if (response.status === 401) {
+          toast({ title: "Unauthorized", description: "Please log in again", variant: "destructive" });
+          return;
+        }
+        // Handle different error formats
+        let errorMessage = "Failed to get answer";
+        if (errorData.error) {
+          if (Array.isArray(errorData.error)) {
+            // ZodError format (old)
+            errorMessage = errorData.error.map((e: any) => e.message || e.path?.join(".")).join(", ") || "Invalid input";
+          } else if (typeof errorData.error === "string") {
+            errorMessage = errorData.error;
+            // Include details if available
+            if (errorData.details) {
+              errorMessage += `: ${errorData.details}`;
+            }
+          }
+        }
+        toast({ 
+          title: "Error", 
+          description: errorMessage,
+          variant: "destructive" 
+        });
+        return;
       }
 
       const data = await response.json();

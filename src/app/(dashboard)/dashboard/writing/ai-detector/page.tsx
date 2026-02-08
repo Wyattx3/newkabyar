@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import {
   ShieldCheck, Loader2, AlertTriangle, CheckCircle2, Scan,
@@ -26,15 +27,21 @@ interface DetectionResult {
   suggestions?: string[];
 }
 
-export default function AIDetectorPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function AIDetectorPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
   
   // Form states
-  const [text, setText] = usePersistedState("detect-text", "");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("detect-model", "fast");
+  const [text, setText] = usePersistedState("detect-text", (initialData?.inputData?.text as string) || "");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("detect-model", (initialData?.settings?.model as ModelType) || "fast");
   
   // Result states
-  const [result, setResult] = useState<DetectionResult | null>(null);
+  const [result, setResult] = useState<DetectionResult | null>((initialData?.outputData as unknown as DetectionResult) || null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedInput, setCopiedInput] = useState(false);
@@ -43,6 +50,7 @@ export default function AIDetectorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("ai-detector");
   // Highlighting helper
 
   useEffect(() => setMounted(true), []);
@@ -173,6 +181,12 @@ export default function AIDetectorPage() {
       }
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { text },
+        outputData: data,
+        settings: { model: selectedModel },
+        inputPreview: text.slice(0, 200),
+      });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {

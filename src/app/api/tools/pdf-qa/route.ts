@@ -3,17 +3,12 @@ import { auth } from "@/lib/auth";
 import { z } from "zod";
 import { checkToolCredits, deductCredits } from "@/lib/credits";
 import { chatWithTier } from "@/lib/ai-providers";
-import OpenAI from "openai";
 
 const pdfQASchema = z.object({
   question: z.string().min(5, "Question must be at least 5 characters"),
   pdfContent: z.string().min(100, "PDF content must be at least 100 characters"),
   model: z.string().default("fast"),
   language: z.string().default("en"),
-});
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(request: NextRequest) {
@@ -88,12 +83,25 @@ Instructions:
 - If the document doesn't contain relevant information, say so
 - Be concise but thorough`;
 
-    const result = await chatWithTier(
-      model,
-      systemPrompt,
-      `DOCUMENT CONTENT:\n${context}\n\nQUESTION: ${question}\n\nPlease answer the question based on the document above.`,
-      session.user.id
-    );
+    let result: string;
+    try {
+      result = await chatWithTier(
+        model,
+        systemPrompt,
+        `DOCUMENT CONTENT:\n${context}\n\nQUESTION: ${question}\n\nPlease answer the question based on the document above.`,
+        session.user.id
+      );
+      if (!result || result.trim().length === 0) {
+        throw new Error("AI returned empty response");
+      }
+    } catch (error: any) {
+      console.error("[PDF Q&A] AI call failed:", error);
+      const errorMessage = error?.message || error?.toString() || "AI service unavailable";
+      return NextResponse.json(
+        { error: `Failed to generate answer: ${errorMessage}` },
+        { status: 500 }
+      );
+    }
 
     // Clean up the response - remove any garbage characters
     const cleanResponse = (text: string) => {
@@ -235,10 +243,20 @@ Return ONLY the 3 questions, one per line, no numbering or bullets.`;
 
     return NextResponse.json(answer);
   } catch (error: any) {
-    console.error("PDF Q&A error:", error);
+    console.error("[PDF Q&A] Error:", error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json(
+        { 
+          error: "Validation error",
+          details: error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")
+        },
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: "Failed to answer question" }, { status: 500 });
+    const errorMessage = error?.message || error?.toString() || "Unknown error occurred";
+    return NextResponse.json(
+      { error: `Failed to answer question: ${errorMessage}` },
+      { status: 500 }
+    );
   }
 }

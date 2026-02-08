@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import {
   BrainCircuit,
@@ -177,13 +178,19 @@ const markdownComponents = {
   },
 };
 
-export default function AssignmentWorkerPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function AssignmentWorkerPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
 
-  const [assignment, setAssignment] = usePersistedState("assignment-worker-text", "");
-  const [instructions, setInstructions] = usePersistedState("assignment-worker-instructions", "");
-  const [outputFormat, setOutputFormat] = usePersistedState("assignment-worker-format", "detailed");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("assignment-worker-model", "fast");
+  const [assignment, setAssignment] = usePersistedState("assignment-worker-text", (initialData?.inputData?.assignment as string) || "");
+  const [instructions, setInstructions] = usePersistedState("assignment-worker-instructions", (initialData?.inputData?.instructions as string) || "");
+  const [outputFormat, setOutputFormat] = usePersistedState("assignment-worker-format", (initialData?.settings?.outputFormat as string) || "detailed");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("assignment-worker-model", (initialData?.settings?.model as ModelType) || "fast");
 
   const [showFormat, setShowFormat] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -194,10 +201,11 @@ export default function AssignmentWorkerPage() {
   const [uploadedFile, setUploadedFile] = useState<{ name: string; type: string; size: number } | null>(null);
   const [isParsingFile, setIsParsingFile] = useState(false);
 
-  const [result, setResult] = useState<AssignmentResult | null>(null);
+  const [result, setResult] = useState<AssignmentResult | null>((initialData?.outputData as unknown as AssignmentResult) || null);
 
   const { toast } = useToast();
   const { language } = useAILanguage();
+  const { saveProject } = useAutoSaveProject("assignment-worker");
   const resultRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -389,6 +397,12 @@ export default function AssignmentWorkerPage() {
       if (data.success && data.data) {
         setResult(data.data);
         setExpandedTask(data.data.tasks[0]?.id ?? null);
+        saveProject({
+          inputData: { assignment, instructions },
+          outputData: data.data,
+          settings: { outputFormat, model: selectedModel },
+          inputPreview: assignment.slice(0, 200),
+        });
         toast({
           title: "Assignment completed!",
           description: `${data.data.completedTasks}/${data.data.totalTasks} tasks done`,
@@ -496,9 +510,9 @@ export default function AssignmentWorkerPage() {
             </div>
           </div>
 
-          <div className="flex-1 relative min-h-0">
+          <div className="flex-1 relative min-h-0 overflow-hidden">
             {!assignment ? (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="absolute inset-0 flex items-center justify-center z-20 bg-white">
                 <div className="flex flex-col items-center gap-3">
                   {/* Paste button */}
                   <button
@@ -530,7 +544,7 @@ export default function AssignmentWorkerPage() {
             <Textarea
               value={assignment}
               onChange={(e) => setAssignment(e.target.value)}
-              placeholder={"Paste your entire assignment here...\n\nSupports: Essays, Math, Code, Research, Analysis, Q&A, Translation, and more."}
+              placeholder={assignment ? "" : ""}
               className="h-full border-0 resize-none focus-visible:ring-0 rounded-none text-sm text-gray-700 placeholder:text-gray-300 transition-none p-4"
               style={{ transition: "none" }}
             />

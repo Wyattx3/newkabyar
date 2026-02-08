@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import type { Components } from "react-markdown";
@@ -28,17 +29,24 @@ const intensities = [
   { value: "aggressive", label: "Aggressive", icon: Flame, desc: "No mercy", color: "bg-red-100 text-red-700" },
 ];
 
-export default function DevilsAdvocatePage() {
-  const [argument, setArgument] = usePersistedState("advocate-arg", "");
-  const [intensity, setIntensity] = usePersistedState("advocate-intensity", "balanced");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("advocate-model", "fast");
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function DevilsAdvocatePage({ initialData }: { initialData?: InitialData } = {}) {
+  const [argument, setArgument] = usePersistedState("advocate-arg", (initialData?.inputData?.argument as string) || "");
+  const [intensity, setIntensity] = usePersistedState("advocate-intensity", (initialData?.settings?.intensity as string) || "balanced");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("advocate-model", (initialData?.settings?.model as ModelType) || "fast");
   
   const [isLoading, setIsLoading] = useState(false);
-  const [counterArgument, setCounterArgument] = useState("");
+  const [counterArgument, setCounterArgument] = useState((initialData?.outputData?.counterArgument as string) || "");
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("devils-advocate");
 
   useEffect(() => setMounted(true), []);
 
@@ -102,6 +110,12 @@ export default function DevilsAdvocatePage() {
         result += decoder.decode(value, { stream: true });
         setCounterArgument(result);
       }
+      saveProject({
+        inputData: { argument },
+        outputData: { counterArgument: result },
+        settings: { intensity, model: selectedModel },
+        inputPreview: argument.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

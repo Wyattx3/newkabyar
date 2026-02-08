@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import { 
   RefreshCw, Loader2, Sparkles, Copy, Check, Wand2, ChevronDown,
@@ -42,16 +43,22 @@ const LANGUAGES = [
   { id: "th", label: "Thai", flag: "🇹🇭" },
 ];
 
-export default function ParaphraserPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function ParaphraserPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
-  const [text, setText] = usePersistedState("paraphrase-text", "");
-  const [style, setStyle] = usePersistedState("paraphrase-style", "academic");
+  const [text, setText] = usePersistedState("paraphrase-text", (initialData?.inputData?.text as string) || "");
+  const [style, setStyle] = usePersistedState("paraphrase-style", (initialData?.settings?.style as string) || "academic");
   const [preserveLength, setPreserveLength] = usePersistedState("paraphrase-length", true);
   const [targetLang, setTargetLang] = usePersistedState("paraphrase-lang", "en");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("paraphrase-model", "fast");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("paraphrase-model", (initialData?.settings?.model as ModelType) || "fast");
   
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState("");
+  const [result, setResult] = useState((initialData?.outputData?.result as string) || "");
   const [copied, setCopied] = useState(false);
   const [showStyles, setShowStyles] = useState(false);
   const [showLangs, setShowLangs] = useState(false);
@@ -66,6 +73,7 @@ export default function ParaphraserPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("paraphraser");
 
   useEffect(() => setMounted(true), []);
 
@@ -148,6 +156,12 @@ export default function ParaphraserPage() {
 
       calculateScores(text, output);
       setHistory(prev => [{ id: Date.now().toString(), original: text.substring(0, 80), paraphrased: output.substring(0, 80), style, timestamp: Date.now() }, ...prev.slice(0, 19)]);
+      saveProject({
+        inputData: { text },
+        outputData: { result: output },
+        settings: { style, model: selectedModel },
+        inputPreview: text.slice(0, 200),
+      });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {

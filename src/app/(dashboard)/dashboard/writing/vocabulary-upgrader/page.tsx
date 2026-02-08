@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import {
   GraduationCap, Loader2, Copy, Check, FileText, Trash2,
@@ -32,16 +33,22 @@ const LEVELS = [
   { value: "sophisticated", label: "Sophisticated", desc: "Elevated vocabulary", icon: "✨" },
 ];
 
-export default function VocabularyUpgraderPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function VocabularyUpgraderPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
 
   // Form states
-  const [text, setText] = usePersistedState("vocab-text", "");
-  const [level, setLevel] = usePersistedState("vocab-level", "academic");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("vocab-model", "fast");
+  const [text, setText] = usePersistedState("vocab-text", (initialData?.inputData?.text as string) || "");
+  const [level, setLevel] = usePersistedState("vocab-level", (initialData?.settings?.level as string) || "academic");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("vocab-model", (initialData?.settings?.model as ModelType) || "fast");
 
   // Result states
-  const [result, setResult] = useState<UpgradeResult | null>(null);
+  const [result, setResult] = useState<UpgradeResult | null>((initialData?.outputData as unknown as UpgradeResult) || null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedInput, setCopiedInput] = useState(false);
@@ -53,6 +60,7 @@ export default function VocabularyUpgraderPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("vocabulary-upgrader");
 
   useEffect(() => setMounted(true), []);
 
@@ -122,6 +130,12 @@ export default function VocabularyUpgraderPage() {
 
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { text },
+        outputData: data,
+        settings: { level, model: selectedModel },
+        inputPreview: text.slice(0, 200),
+      });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {

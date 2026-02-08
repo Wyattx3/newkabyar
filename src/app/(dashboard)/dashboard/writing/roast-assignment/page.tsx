@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import { 
   Flame, Loader2, Sparkles, Target, ThumbsUp, ThumbsDown, AlertTriangle,
@@ -63,16 +64,22 @@ const INTENSITIES = [
   { id: "brutal", emoji: "🔥", label: "Brutal" },
 ];
 
-export default function RoastAssignmentPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function RoastAssignmentPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
-  const [text, setText] = usePersistedState("roast-text", "");
-  const [type, setType] = usePersistedState("roast-type", "essay");
-  const [level, setLevel] = usePersistedState("roast-level", "undergraduate");
-  const [intensity, setIntensity] = usePersistedState("roast-intensity", "balanced");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("roast-model", "fast");
+  const [text, setText] = usePersistedState("roast-text", (initialData?.inputData?.text as string) || "");
+  const [type, setType] = usePersistedState("roast-type", (initialData?.settings?.type as string) || "essay");
+  const [level, setLevel] = usePersistedState("roast-level", (initialData?.settings?.level as string) || "undergraduate");
+  const [intensity, setIntensity] = usePersistedState("roast-intensity", (initialData?.settings?.intensity as string) || "balanced");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("roast-model", (initialData?.settings?.model as ModelType) || "fast");
   
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<RoastResult | null>(null);
+  const [result, setResult] = useState<RoastResult | null>((initialData?.outputData as unknown as RoastResult) || null);
   const [copied, setCopied] = useState(false);
   
   // Chat states
@@ -97,6 +104,7 @@ export default function RoastAssignmentPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("roast-assignment");
 
   useEffect(() => setMounted(true), []);
   
@@ -158,6 +166,12 @@ export default function RoastAssignmentPage() {
 
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { text },
+        outputData: data,
+        settings: { type, level, intensity, model: selectedModel },
+        inputPreview: text.slice(0, 200),
+      });
       setHistory(prev => [{ id: Date.now().toString(), preview: text.substring(0, 40) + "...", grade: data.overallGrade, score: data.overallScore, timestamp: Date.now() }, ...prev.slice(0, 19)]);
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });

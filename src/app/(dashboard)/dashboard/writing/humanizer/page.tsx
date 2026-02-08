@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import {
   Wand2, Loader2, Copy, Check, RefreshCw, Sparkles, ArrowRightLeft,
@@ -26,18 +27,24 @@ const INTENSITIES = [
   { id: "heavy", label: "Heavy", desc: "Full humanization", score: "~80%", recommended: true },
 ];
 
-export default function HumanizerPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function HumanizerPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
   
   // Form states
-  const [inputText, setInputText] = usePersistedState("humanizer-input", "");
-  const [tone, setTone] = usePersistedState("humanizer-tone", "natural");
-  const [intensity, setIntensity] = usePersistedState("humanizer-intensity", "heavy");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("humanizer-model", "fast");
+  const [inputText, setInputText] = usePersistedState("humanizer-input", (initialData?.inputData?.inputText as string) || "");
+  const [tone, setTone] = usePersistedState("humanizer-tone", (initialData?.settings?.tone as string) || "natural");
+  const [intensity, setIntensity] = usePersistedState("humanizer-intensity", (initialData?.settings?.intensity as string) || "heavy");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("humanizer-model", (initialData?.settings?.model as ModelType) || "fast");
   
   // Result states
-  const [result, setResult] = usePersistedState("humanizer-result", "");
-  const [htmlResult, setHtmlResult] = usePersistedState("humanizer-html", "");
+  const [result, setResult] = usePersistedState("humanizer-result", (initialData?.outputData?.result as string) || "");
+  const [htmlResult, setHtmlResult] = usePersistedState("humanizer-html", (initialData?.outputData?.htmlResult as string) || "");
   // aiScore removed - Sapling is only used for offline testing
   
   // UI states
@@ -51,6 +58,7 @@ export default function HumanizerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("humanizer");
 
   useEffect(() => setMounted(true), []);
 
@@ -120,6 +128,12 @@ export default function HumanizerPage() {
       const data = await response.json();
       setHtmlResult(data.html);
       setResult(data.plain);
+      saveProject({
+        inputData: { inputText },
+        outputData: { result: data.plain, htmlResult: data.html },
+        settings: { tone, intensity, model: selectedModel },
+        inputPreview: inputText.slice(0, 200),
+      });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {

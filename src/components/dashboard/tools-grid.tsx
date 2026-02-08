@@ -47,6 +47,8 @@ import {
   Swords,
   BookA,
   Mail,
+  ScanSearch,
+  BrainCircuit,
   type LucideIcon,
 } from "lucide-react";
 
@@ -84,6 +86,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   BookA,
   Mail,
   Sparkles,
+  ScanSearch,
+  BrainCircuit,
 };
 
 // Category icon mapping

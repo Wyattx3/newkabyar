@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import {
   Video,
@@ -32,21 +33,28 @@ const STYLES = [
   { value: "deep-dive", label: "Deep Dive", icon: "🔬", desc: "Comprehensive detail" },
 ];
 
-export default function VideoExplainerPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function VideoExplainerPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
 
-  const [topic, setTopic] = usePersistedState("video-explainer-topic", "");
-  const [style, setStyle] = usePersistedState("video-explainer-style", "educational");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("video-explainer-model", "fast");
+  const [topic, setTopic] = usePersistedState("video-explainer-topic", (initialData?.inputData?.topic as string) || "");
+  const [style, setStyle] = usePersistedState("video-explainer-style", (initialData?.settings?.style as string) || "educational");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("video-explainer-model", (initialData?.settings?.model as ModelType) || "fast");
 
   const [showStyle, setShowStyle] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedInput, setCopiedInput] = useState(false);
 
-  const [videoData, setVideoData] = useState<ExplainerData | null>(null);
+  const [videoData, setVideoData] = useState<ExplainerData | null>((initialData?.outputData as unknown as ExplainerData) || null);
 
   const { toast } = useToast();
   const { language } = useAILanguage();
+  const { saveProject } = useAutoSaveProject("video-explainer");
 
   useEffect(() => {
     setMounted(true);
@@ -156,6 +164,12 @@ export default function VideoExplainerPage() {
         }
 
         setVideoData(data.data);
+        saveProject({
+          inputData: { topic },
+          outputData: data.data,
+          settings: { style, model: selectedModel },
+          inputPreview: topic.slice(0, 200),
+        });
         const hasAudio = data.data.audioUrls?.some((u: string | null) => u);
         toast({
           title: "Video ready!",

@@ -56,6 +56,8 @@ import {
   Home,
   Star,
   Library,
+  ScanSearch,
+  BrainCircuit,
   type LucideIcon,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
@@ -72,7 +74,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   FileSearch, Globe, Video, Shapes, PenTool, FileQuestion, ClipboardCheck,
   TrendingUp, Layers, FileUser, Scale, Radar, Target, Youtube, Mic,
   FileAudio, MessageSquare, Network, Clock, GitBranch, FlaskConical,
-  Camera, Flame, RefreshCw, Wand2, ShieldCheck, Code, Bug, Swords, BookA, Mail, Sparkles,
+  Camera, Flame, RefreshCw, Wand2, ShieldCheck, Code, Bug, Swords, BookA, Mail, Sparkles, ScanSearch, BrainCircuit,
 };
 
 // Category icon mapping

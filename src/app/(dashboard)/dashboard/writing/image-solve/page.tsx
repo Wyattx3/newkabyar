@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import { 
   Camera, Loader2, Sparkles, Upload, X, Clipboard, Lightbulb, CheckCircle,
   BookOpen, Calculator, Beaker, FileText, Link2, Type, Mic, History,
   Download, Share2, MessageSquare, RefreshCw, ChevronDown, Send, Copy,
-  Check, Zap, Code, Globe, Atom, PenTool, BarChart3, Brain, ChevronRight,
+  Check, ScanSearch, Code, Globe, Atom, PenTool, BarChart3, Brain, ChevronRight,
   Bookmark, BookmarkCheck, Volume2, Printer, ThumbsUp, ThumbsDown, RotateCcw,
   Eye, EyeOff, HelpCircle, Star, ChevronUp
 } from "lucide-react";
@@ -89,24 +90,30 @@ const INPUT_MODES = [
   { id: "url", label: "URL", icon: Link2, desc: "From webpage" },
 ];
 
-export default function MultiInputSolverPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function MultiInputSolverPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
   
   // Settings
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("solver-model", "fast");
-  const [subject, setSubject] = usePersistedState("solver-subject", "math");
-  const [detailLevel, setDetailLevel] = usePersistedState("solver-detail", "detailed");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("solver-model", (initialData?.settings?.model as ModelType) || "fast");
+  const [subject, setSubject] = usePersistedState("solver-subject", (initialData?.settings?.subject as string) || "math");
+  const [detailLevel, setDetailLevel] = usePersistedState("solver-detail", (initialData?.settings?.detailLevel as string) || "detailed");
   
   // Input states
   const [inputMode, setInputMode] = useState<"image" | "text" | "pdf" | "url">("image");
   const [image, setImage] = useState<string | null>(null);
-  const [textInput, setTextInput] = useState("");
+  const [textInput, setTextInput] = useState((initialData?.inputData?.textInput as string) || "");
   const [urlInput, setUrlInput] = useState("");
   const [dragActive, setDragActive] = useState(false);
   
   // UI states
   const [isLoading, setIsLoading] = useState(false);
-  const [solution, setSolution] = useState<Solution | null>(null);
+  const [solution, setSolution] = useState<Solution | null>((initialData?.outputData as unknown as Solution) || null);
   const [showSubjects, setShowSubjects] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [stepByStep, setStepByStep] = useState(false);
@@ -135,6 +142,7 @@ export default function MultiInputSolverPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("image-solve");
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -259,6 +267,12 @@ export default function MultiInputSolverPage() {
 
       const data = await response.json();
       setSolution(data);
+      saveProject({
+        inputData: { textInput: inputMode === "text" ? textInput : "Image problem" },
+        outputData: data,
+        settings: { subject, detailLevel, model: selectedModel },
+        inputPreview: inputMode === "text" ? textInput.slice(0, 200) : "Image problem solution",
+      });
       
       // Add to history
       const historyItem: SolveHistory = {
@@ -523,7 +537,7 @@ export default function MultiInputSolverPage() {
             <div className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-blue-600" />
+                  <ScanSearch className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
                   <h1 className="font-bold text-gray-900">Problem Solver</h1>
@@ -570,7 +584,7 @@ export default function MultiInputSolverPage() {
                 >
                   {!image ? (
                     <div className="text-center">
-                      <Camera className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                      <Camera className="w-8 h-8 text-blue-600 mx-auto mb-4" />
                       <p className="text-gray-900 font-medium mb-2">Drop an image or click to upload</p>
                       <p className="text-sm text-gray-500 mb-4">You can also paste from clipboard (Ctrl+V)</p>
                       <div className="flex justify-center gap-2">

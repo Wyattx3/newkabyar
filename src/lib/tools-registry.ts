@@ -323,11 +323,11 @@ export const TOOLS: Tool[] = [
   {
     id: 'image-solution',
     slug: 'image-solve',
-    name: 'Image to Solution',
+    name: 'Problem Solver',
     description: 'Upload a photo of any math or science problem. Get a step-by-step solution with explanations.',
     shortDescription: 'Solve problems from photos with step-by-step explanations',
     category: 'writing',
-    icon: 'Camera',
+    icon: 'ScanSearch',
     color: 'rose',
     apiEndpoint: '/api/tools/image-solve',
     credits: 5,

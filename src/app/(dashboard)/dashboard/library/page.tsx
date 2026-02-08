@@ -53,8 +53,17 @@ interface Activity {
   creditsUsed: number;
 }
 
+interface ProjectItem {
+  id: string;
+  slug: string;
+  toolId: string;
+  caption: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 type LibraryItem = {
-  type: "document" | "activity";
+  type: "document" | "activity" | "project";
   id: string;
   name: string;
   category: string;
@@ -64,6 +73,7 @@ type LibraryItem = {
   size?: number;
   creditsUsed?: number;
   documentId?: string;
+  projectSlug?: string;
 };
 
 const categoryConfig: Record<string, { icon: any; bg: string; text: string; label: string }> = {
@@ -140,6 +150,10 @@ const toolCategories = [
       { name: "Roast My Assignment", slug: "roast-assignment" },
       { name: "Assignment Worker", slug: "assignment-worker" },
       { name: "Video Explainer", slug: "video-explainer" },
+      { name: "Devil's Advocate", slug: "devils-advocate" },
+      { name: "Vocabulary Upgrader", slug: "vocabulary-upgrader" },
+      { name: "Cold Email", slug: "cold-email" },
+      { name: "Image Solver", slug: "image-solve" },
     ],
   },
 ];
@@ -174,6 +188,7 @@ function formatFullDate(dateStr: string): string {
 export default function LibraryPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -189,16 +204,19 @@ export default function LibraryPage() {
 
   const fetchData = async () => {
     try {
-      const [docsRes, activityRes] = await Promise.all([
+      const [docsRes, activityRes, projectsRes] = await Promise.all([
         fetch("/api/user/documents"),
         fetch("/api/user/activity"),
+        fetch("/api/projects"),
       ]);
 
       const docsData = await docsRes.json();
       const activityData = await activityRes.json();
+      const projectsData = await projectsRes.json();
 
       if (docsData.documents) setDocuments(docsData.documents);
       if (activityData.activities) setActivities(activityData.activities);
+      if (projectsData.projects) setProjects(projectsData.projects);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -223,7 +241,34 @@ export default function LibraryPage() {
     setActiveMenu(null);
   };
 
-  // Combine documents and activities into unified library items
+  const deleteProject = async (slug: string) => {
+    try {
+      const res = await fetch(`/api/projects/${slug}`, { method: "DELETE" });
+      if (res.ok) {
+        setProjects((prev) => prev.filter((p) => p.slug !== slug));
+        toast({ title: "Project deleted successfully" });
+      }
+    } catch {
+      toast({ title: "Failed to delete project", variant: "destructive" });
+    }
+    setActiveMenu(null);
+  };
+
+  // Tool name lookup for projects
+  const toolNameMap: Record<string, string> = {
+    "paraphraser": "Paraphraser",
+    "humanizer": "Humanizer",
+    "ai-detector": "AI Detector",
+    "devils-advocate": "Devil's Advocate",
+    "vocabulary-upgrader": "Vocabulary Upgrader",
+    "cold-email": "Cold Email",
+    "assignment-worker": "Assignment Worker",
+    "video-explainer": "Video Explainer",
+    "roast-assignment": "Roast My Assignment",
+    "image-solve": "Image Solver",
+  };
+
+  // Combine documents, activities, and projects into unified library items
   const libraryItems: LibraryItem[] = [
     ...documents.map((doc) => ({
       type: "document" as const,
@@ -234,7 +279,7 @@ export default function LibraryPage() {
       createdAt: doc.createdAt,
       metadata: doc.metadata,
       size: doc.size,
-      documentId: doc.id, // For loading the actual document
+      documentId: doc.id,
     })),
     ...activities.map((act) => ({
       type: "activity" as const,
@@ -244,6 +289,15 @@ export default function LibraryPage() {
       toolId: act.toolSlug,
       createdAt: act.timestamp,
       creditsUsed: act.creditsUsed,
+    })),
+    ...projects.map((proj) => ({
+      type: "project" as const,
+      id: proj.id,
+      name: proj.caption,
+      category: getCategoryFromTool(proj.toolId),
+      toolId: proj.toolId,
+      createdAt: proj.createdAt,
+      projectSlug: proj.slug,
     })),
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -301,7 +355,7 @@ export default function LibraryPage() {
                 My Library
               </h1>
               <p className="text-xs text-gray-500 mt-0.5">
-                {libraryItems.length} items • {documents.length} documents • {activities.length} activities
+                {libraryItems.length} items • {projects.length} projects • {documents.length} documents
               </p>
             </div>
             <Button
@@ -456,9 +510,11 @@ export default function LibraryPage() {
                       {items.map((item) => {
                         const catConfig = categoryConfig[item.category] || categoryConfig.rag;
                         const Icon = catConfig.icon;
-                        const toolPath = item.documentId 
-                          ? `/dashboard/${item.category}/${item.toolId}?doc=${item.documentId}`
-                          : `/dashboard/${item.category}/${item.toolId}`;
+                        const toolPath = item.type === "project" && item.projectSlug
+                          ? `/dashboard/project/${item.projectSlug}`
+                          : item.documentId 
+                            ? `/dashboard/${item.category}/${item.toolId}?doc=${item.documentId}`
+                            : `/dashboard/${item.category}/${item.toolId}`;
 
                         return (
                           <motion.div
@@ -468,14 +524,24 @@ export default function LibraryPage() {
                             className="group relative flex flex-col rounded-xl overflow-hidden h-[150px] border border-gray-200 bg-white hover:shadow-md hover:border-blue-200 transition-all"
                           >
                             <Link href={toolPath} className="flex-1 relative overflow-hidden">
-                              <div className="absolute inset-0 bg-gray-50" />
+                              <div className={`absolute inset-0 ${item.type === "project" ? "bg-blue-50/50" : "bg-gray-50"}`} />
                               <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
                                 <Icon className={`w-8 h-8 ${catConfig.text} mb-2`} />
                                 <p className="text-xs text-gray-700 text-center line-clamp-2 font-medium">
                                   {item.name}
                                 </p>
+                                {item.type === "project" && (
+                                  <p className="text-[10px] text-gray-400 mt-1">
+                                    {toolNameMap[item.toolId] || item.toolId}
+                                  </p>
+                                )}
                               </div>
-                              <div className="absolute top-2 right-2">
+                              <div className="absolute top-2 right-2 flex items-center gap-1">
+                                {item.type === "project" && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-100 text-blue-600">
+                                    Project
+                                  </span>
+                                )}
                                 <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/80 ${catConfig.text}`}>
                                   {catConfig.label.split(" ")[0]}
                                 </span>
@@ -490,6 +556,19 @@ export default function LibraryPage() {
                                   {item.creditsUsed}
                                 </div>
                               )}
+                              {item.type === "project" && item.projectSlug && (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    deleteProject(item.projectSlug!);
+                                  }}
+                                  className="p-1 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                  title="Delete project"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+                                </button>
+                              )}
                               <Link href={toolPath}>
                                 <ChevronRight className="w-4 h-4 text-gray-300 hover:text-blue-500" />
                               </Link>
@@ -503,28 +582,50 @@ export default function LibraryPage() {
                       {items.map((item, idx) => {
                         const catConfig = categoryConfig[item.category] || categoryConfig.rag;
                         const Icon = catConfig.icon;
-                        const toolPath = item.documentId 
-                          ? `/dashboard/${item.category}/${item.toolId}?doc=${item.documentId}`
-                          : `/dashboard/${item.category}/${item.toolId}`;
+                        const toolPath = item.type === "project" && item.projectSlug
+                          ? `/dashboard/project/${item.projectSlug}`
+                          : item.documentId 
+                            ? `/dashboard/${item.category}/${item.toolId}?doc=${item.documentId}`
+                            : `/dashboard/${item.category}/${item.toolId}`;
 
                         return (
-                          <Link
+                          <div
                             key={item.id}
-                            href={toolPath}
-                            className={`flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors ${
+                            className={`group flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors ${
                               idx !== items.length - 1 ? "border-b border-gray-100" : ""
                             }`}
                           >
-                            <Icon className={`w-5 h-5 ${catConfig.text}`} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                              <p className="text-xs text-gray-400">{formatFullDate(item.createdAt)}</p>
-                            </div>
+                            <Link href={toolPath} className="flex items-center gap-3 flex-1 min-w-0">
+                              <Icon className={`w-5 h-5 ${catConfig.text}`} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                                <p className="text-xs text-gray-400">
+                                  {item.type === "project" ? `${toolNameMap[item.toolId] || item.toolId} • ` : ""}
+                                  {formatFullDate(item.createdAt)}
+                                </p>
+                              </div>
+                            </Link>
+                            {item.type === "project" && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">
+                                Project
+                              </span>
+                            )}
                             <span className={`px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 ${catConfig.text}`}>
                               {catConfig.label}
                             </span>
-                            <ExternalLink className="w-4 h-4 text-gray-300" />
-                          </Link>
+                            {item.type === "project" && item.projectSlug && (
+                              <button
+                                onClick={() => deleteProject(item.projectSlug!)}
+                                className="p-1 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                title="Delete project"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+                              </button>
+                            )}
+                            <Link href={toolPath}>
+                              <ExternalLink className="w-4 h-4 text-gray-300" />
+                            </Link>
+                          </div>
                         );
                       })}
                     </div>

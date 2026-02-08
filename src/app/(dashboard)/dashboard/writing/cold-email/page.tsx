@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import {
   Mail, Loader2, Copy, Check, Send, Lightbulb,
@@ -26,20 +27,26 @@ const TONES = [
   { value: "formal", label: "Formal", icon: "📋" },
 ];
 
-export default function ColdEmailPage() {
+interface InitialData {
+  inputData: Record<string, unknown>;
+  outputData: Record<string, unknown>;
+  settings: Record<string, unknown> | null;
+}
+
+export default function ColdEmailPage({ initialData }: { initialData?: InitialData } = {}) {
   const [mounted, setMounted] = useState(false);
 
   // Form states
-  const [purpose, setPurpose] = usePersistedState("coldemail-purpose", "");
-  const [recipient, setRecipient] = usePersistedState("coldemail-recipient", "");
-  const [background, setBackground] = usePersistedState("coldemail-background", "");
-  const [ask, setAsk] = usePersistedState("coldemail-ask", "");
-  const [tone, setTone] = usePersistedState("coldemail-tone", "professional");
-  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("coldemail-model", "fast");
+  const [purpose, setPurpose] = usePersistedState("coldemail-purpose", (initialData?.inputData?.purpose as string) || "");
+  const [recipient, setRecipient] = usePersistedState("coldemail-recipient", (initialData?.inputData?.recipient as string) || "");
+  const [background, setBackground] = usePersistedState("coldemail-background", (initialData?.inputData?.background as string) || "");
+  const [ask, setAsk] = usePersistedState("coldemail-ask", (initialData?.inputData?.ask as string) || "");
+  const [tone, setTone] = usePersistedState("coldemail-tone", (initialData?.settings?.tone as string) || "professional");
+  const [selectedModel, setSelectedModel] = usePersistedState<ModelType>("coldemail-model", (initialData?.settings?.model as ModelType) || "fast");
 
   // Result states
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<EmailResult | null>(null);
+  const [result, setResult] = useState<EmailResult | null>((initialData?.outputData as unknown as EmailResult) || null);
   const [copied, setCopied] = useState<"subject" | "body" | "all" | null>(null);
 
   // UI states
@@ -47,6 +54,7 @@ export default function ColdEmailPage() {
 
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("cold-email");
 
   useEffect(() => setMounted(true), []);
 
@@ -111,6 +119,12 @@ export default function ColdEmailPage() {
 
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { purpose, recipient, background, ask },
+        outputData: data,
+        settings: { tone, model: selectedModel },
+        inputPreview: purpose.slice(0, 200),
+      });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {
