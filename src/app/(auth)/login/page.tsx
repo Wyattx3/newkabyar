@@ -68,18 +68,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
       {/* Left side - Form */}
-      <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 bg-white">
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-8 lg:px-16 bg-white overflow-y-auto py-8 lg:py-0">
         <div className="w-full max-w-md mx-auto">
           {/* Logo */}
-          <div className="flex items-center mb-10">
-            <Image src="/kabyar-logo.png" alt="Kabyar" width={320} height={84} className="object-contain h-20 w-auto" priority />
+          <div className="flex items-center mb-6 sm:mb-10">
+            <Image src="/kabyar-logo.png" alt="Kabyar" width={320} height={84} className="object-contain h-16 sm:h-20 w-auto" priority />
           </div>
 
-          <h1 className="text-2xl font-semibold text-gray-900 mb-8">Log in to your account</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 sm:mb-8">Log in to your account</h1>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Email
@@ -91,7 +91,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="h-12 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 placeholder:text-gray-400"
+                className="h-11 sm:h-12 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
               />
             </div>
 
@@ -107,7 +107,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="h-12 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 pr-10"
+                  className="h-11 sm:h-12 bg-[#F5F5F5] border-[#E5E5E5] text-gray-900 pr-10 text-sm sm:text-base"
                 />
                 <button
                   type="button"
@@ -121,7 +121,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 text-base font-medium bg-blue-500 hover:bg-blue-600"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-blue-500 hover:bg-blue-600"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -141,7 +141,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <div className="relative my-6">
+          <div className="relative my-5 sm:my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
             </div>
@@ -153,7 +153,7 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="w-full h-12 text-sm font-medium border-gray-200 hover:bg-gray-50"
+            className="w-full h-11 sm:h-12 text-sm font-medium border-gray-200 hover:bg-gray-50"
             onClick={handleGoogleSignIn}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function LoginPage() {
             Continue with Google
           </Button>
 
-          <p className="mt-8 text-center text-sm text-gray-500">
+          <p className="mt-6 sm:mt-8 text-center text-sm text-gray-500">
             Don&apos;t have an account?{" "}
             <Link href="/register" className="text-blue-500 hover:text-blue-600 font-medium">
               Sign up
@@ -175,7 +175,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Dark background */}
-      <div className="hidden lg:flex flex-1 bg-[#0D0D0D] items-center justify-center relative overflow-hidden">
+      <div className="hidden lg:flex flex-1 bg-[#0D0D0D] items-center justify-center relative overflow-hidden min-h-screen">
         <div className="text-center z-10">
           <div className="flex items-center justify-center gap-1 mb-6">
             <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
