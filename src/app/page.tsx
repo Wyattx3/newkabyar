@@ -8,11 +8,6 @@ import {
   FileText,
   ShieldCheck,
   Wand2,
-  Search,
-  BookOpen,
-  GraduationCap,
-  Presentation,
-  MessageCircle,
   ArrowRight,
   Zap,
   Brain,
@@ -36,75 +31,61 @@ import {
   BarChart3,
   Play,
   Sparkle,
+  ScanSearch,
+  BrainCircuit,
+  Flame,
+  Video,
+  Scale,
+  BookA,
+  Mail,
+  FileSearch,
+  GraduationCap,
+  ClipboardCheck,
+  FileUser,
+  Radar,
+  Youtube,
+  Mic,
+  FileAudio,
+  MessageSquare,
+  Network,
+  GitBranch,
+  FlaskConical,
+  RefreshCw,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 const tools = [
-  { 
-    name: "Essay Writer", 
-    slug: "essay-writer",
-    icon: FileText, 
-    desc: "Generate well-structured academic essays with proper citations and formatting",
-    color: "from-blue-500 to-blue-600",
-    features: ["Auto-citations", "Multiple formats", "Plagiarism-free"]
-  },
-  { 
-    name: "AI Detector", 
-    slug: "ai-detector",
-    icon: ShieldCheck, 
-    desc: "Check if your content appears AI-generated and get improvement suggestions",
-    color: "from-emerald-500 to-emerald-600",
-    features: ["Instant scan", "Detailed report", "Fix suggestions"]
-  },
-  { 
-    name: "Humanizer", 
-    slug: "humanizer",
-    icon: Wand2, 
-    desc: "Transform AI-generated text into natural, human-sounding content",
-    color: "from-violet-500 to-violet-600",
-    features: ["Natural flow", "Tone matching", "Style preservation"]
-  },
-  { 
-    name: "Answer Finder", 
-    slug: "answer-finder",
-    icon: Search, 
-    desc: "Get detailed answers to your questions with step-by-step explanations",
-    color: "from-amber-500 to-amber-600",
-    features: ["Detailed steps", "Visual aids", "Source links"]
-  },
-  { 
-    name: "Homework Help", 
-    slug: "homework-helper",
-    icon: BookOpen, 
-    desc: "Get guidance and support for all your homework assignments",
-    color: "from-rose-500 to-rose-600",
-    features: ["All subjects", "Step-by-step", "Concept clarity"]
-  },
-  { 
-    name: "Study Guide", 
-    slug: "study-guide",
-    icon: GraduationCap, 
-    desc: "Create comprehensive study guides tailored to your curriculum",
-    color: "from-cyan-500 to-cyan-600",
-    features: ["Custom topics", "Key points", "Practice Q&A"]
-  },
-  { 
-    name: "Presentations", 
-    slug: "presentation",
-    icon: Presentation, 
-    desc: "Generate professional presentation outlines and slide content",
-    color: "from-pink-500 to-pink-600",
-    features: ["Slide outlines", "Speaker notes", "Visual tips"]
-  },
-  { 
-    name: "AI Tutor", 
-    slug: "tutor",
-    icon: MessageCircle, 
-    desc: "Chat with your personal AI tutor for interactive learning sessions",
-    color: "from-indigo-500 to-indigo-600",
-    features: ["24/7 available", "Personalized", "Interactive"]
-  },
+  // === Writing & Helpers ===
+  { name: "Safe Paraphraser", slug: "paraphraser", category: "writing", icon: RefreshCw, desc: "Rewrite text for clarity and academic tone while preserving the original meaning", color: "from-blue-500 to-blue-600", features: ["Multiple styles", "Tone control", "Side-by-side view"] },
+  { name: "Content Humanizer", slug: "humanizer", category: "writing", icon: Wand2, desc: "Transform AI-generated text into natural, human-sounding content that bypasses detection", color: "from-violet-500 to-violet-600", features: ["AI bypass", "Natural flow", "Word-count match"] },
+  { name: "AI Detector", slug: "ai-detector", category: "writing", icon: ShieldCheck, desc: "Check if your content appears AI-generated with detailed analysis and highlights", color: "from-emerald-500 to-emerald-600", features: ["Circle charts", "Red highlights", "Instant scan"] },
+  { name: "Problem Solver", slug: "image-solve", category: "writing", icon: ScanSearch, desc: "Upload a photo of any problem and get step-by-step solutions with explanations", color: "from-rose-500 to-rose-600", features: ["Image & text", "Step-by-step", "AI tutor chat"] },
+  { name: "Assignment Worker", slug: "assignment-worker", category: "writing", icon: BrainCircuit, desc: "AI autonomously decomposes and completes your entire assignment end-to-end", color: "from-amber-500 to-amber-600", features: ["Agentic AI", "Multi-task", "PDF/DOC input"] },
+  { name: "Video Explainer", slug: "video-explainer", category: "writing", icon: Video, desc: "Generate animated explainer videos with narration for any topic", color: "from-cyan-500 to-cyan-600", features: ["Animated scenes", "AI narration", "Topic images"] },
+  { name: "Devil's Advocate", slug: "devils-advocate", category: "writing", icon: Scale, desc: "Present your argument and get strong counter-arguments for debate prep", color: "from-pink-500 to-pink-600", features: ["Counter-arguments", "Weakness finding", "Debate points"] },
+  { name: "Vocabulary Upgrader", slug: "vocabulary-upgrader", category: "writing", icon: BookA, desc: "Transform simple text into sophisticated academic writing with advanced vocabulary", color: "from-indigo-500 to-indigo-600", features: ["Synonym suggestions", "Academic register", "Inline highlights"] },
+  { name: "Cold Email Generator", slug: "cold-email", category: "writing", icon: Mail, desc: "Generate personalized professional emails for internships, networking, or jobs", color: "from-blue-500 to-blue-600", features: ["Personalization", "Multiple templates", "Follow-up variants"] },
+  { name: "Roast My Assignment", slug: "roast-assignment", category: "writing", icon: Flame, desc: "Get brutally honest feedback on your assignment with actionable improvement tips", color: "from-rose-500 to-rose-600", features: ["Honest roasts", "Grade prediction", "Fix suggestions"] },
+  // === RAG & Documents ===
+  { name: "PDF Q&A Sniper", slug: "pdf-qa", category: "rag", icon: FileSearch, desc: "Upload any PDF and ask questions — get precise answers with page citations", color: "from-blue-500 to-blue-600", features: ["Vector search", "Page citations", "Follow-ups"] },
+  { name: "Quiz Generator", slug: "quiz-generator", category: "rag", icon: ClipboardCheck, desc: "Transform any text or PDF into interactive quizzes with MCQs and answer keys", color: "from-emerald-500 to-emerald-600", features: ["MCQ generation", "True/False", "Answer keys"] },
+  { name: "Past Paper Analyzer", slug: "past-paper", category: "rag", icon: TrendingUp, desc: "Analyze exam papers to predict likely topics and question trends", color: "from-violet-500 to-violet-600", features: ["Trend analysis", "Topic frequency", "Prediction"] },
+  { name: "Flashcard Maker", slug: "flashcard-maker", category: "rag", icon: Layers, desc: "Convert any text or notes into study flashcards with Anki export support", color: "from-amber-500 to-amber-600", features: ["Front/Back cards", "Anki export", "Bulk generation"] },
+  { name: "Resume/CV Tailor", slug: "resume-tailor", category: "rag", icon: FileUser, desc: "Upload your CV and a job description — get AI-powered tailoring suggestions", color: "from-cyan-500 to-cyan-600", features: ["Skill matching", "Gap analysis", "ATS optimization"] },
+  // === Research & Search ===
+  { name: "Academic Consensus", slug: "academic-consensus", category: "research", icon: Scale, desc: "Search academic papers to find scientific consensus on any topic", color: "from-emerald-500 to-emerald-600", features: ["Consensus meter", "Study snapshots", "Citation links"] },
+  { name: "Research Gap Finder", slug: "research-gap", category: "research", icon: Radar, desc: "Analyze existing research to identify unexplored areas and opportunities", color: "from-pink-500 to-pink-600", features: ["Gap identification", "Literature mapping", "Opportunity scoring"] },
+  // === Audio & Video ===
+  { name: "YouTube Summarizer", slug: "youtube-summarizer", category: "media", icon: Youtube, desc: "Paste any YouTube link to get AI-generated summaries with timestamps", color: "from-rose-500 to-rose-600", features: ["Transcript extraction", "Key moments", "Timestamp links"] },
+  { name: "PDF to Podcast", slug: "pdf-podcast", category: "media", icon: Mic, desc: "Transform any PDF or text into an engaging two-person podcast dialogue", color: "from-violet-500 to-violet-600", features: ["Two speakers", "Natural conversation", "Audio export"] },
+  { name: "Lecture Organizer", slug: "lecture-organizer", category: "media", icon: FileAudio, desc: "Transform lecture transcripts into organized notes with key points", color: "from-blue-500 to-blue-600", features: ["Topic segmentation", "Key points", "Exam questions"] },
+  { name: "Viva Simulator", slug: "viva-simulator", category: "media", icon: MessageSquare, desc: "Practice for oral exams with an AI examiner and get real-time feedback", color: "from-indigo-500 to-indigo-600", features: ["Real-time feedback", "Follow-up questions", "Performance analysis"] },
+  // === Visual & Diagrams ===
+  { name: "Mind Map Generator", slug: "mind-map", category: "visual", icon: Network, desc: "Convert any topic or text into a visual mind map for brainstorming", color: "from-amber-500 to-amber-600", features: ["Mermaid diagrams", "Hierarchy levels", "Interactive view"] },
+  { name: "Interactive Timeline", slug: "timeline", category: "visual", icon: Clock, desc: "Create chronological timelines for any historical topic or project", color: "from-cyan-500 to-cyan-600", features: ["Date ordering", "Event descriptions", "Period grouping"] },
+  { name: "Text to Flowchart", slug: "flowchart", category: "visual", icon: GitBranch, desc: "Convert process descriptions into clear flowcharts and decision trees", color: "from-emerald-500 to-emerald-600", features: ["Auto-layout", "Decision nodes", "Export SVG/PNG"] },
+  { name: "Lab Report Generator", slug: "lab-report", category: "visual", icon: FlaskConical, desc: "Enter raw experimental data and get a properly structured lab report", color: "from-pink-500 to-pink-600", features: ["IMRaD format", "Data analysis", "Conclusion writing"] },
 ];
 
 const stats = [
@@ -168,7 +149,7 @@ const aiModels = [
 
 const howItWorks = [
   { step: "01", title: "Sign Up Free", desc: "Create your account in seconds. No credit card required.", icon: Users },
-  { step: "02", title: "Choose Your Tool", desc: "Select from 8 powerful AI tools designed for students.", icon: Layers },
+  { step: "02", title: "Choose Your Tool", desc: "Select from 20+ powerful AI tools designed for students.", icon: Layers },
   { step: "03", title: "Enter Your Request", desc: "Describe what you need - essay topic, homework question, etc.", icon: PenTool },
   { step: "04", title: "Get Results", desc: "Receive high-quality, academic-ready content instantly.", icon: Rocket },
 ];
@@ -212,14 +193,14 @@ const benefits = [
 ];
 
 const comparisons = [
-  { feature: "Essay Generation", kay: true, others: true },
-  { feature: "AI Detection Check", kay: true, others: false },
+  { feature: "AI Detection & Bypass", kay: true, others: false },
   { feature: "Content Humanizer", kay: true, others: false },
-  { feature: "Multiple AI Models", kay: true, others: false },
-  { feature: "24/7 AI Tutor", kay: true, others: true },
-  { feature: "Study Guide Creator", kay: true, others: false },
-  { feature: "Presentation Maker", kay: true, others: false },
-  { feature: "All Academic Levels", kay: true, others: false },
+  { feature: "Image Problem Solver", kay: true, others: false },
+  { feature: "Agentic Assignment Worker", kay: true, others: false },
+  { feature: "Video Explainer with AI Narration", kay: true, others: false },
+  { feature: "PDF Q&A with References", kay: true, others: true },
+  { feature: "Smart Paraphraser", kay: true, others: true },
+  { feature: "20+ Tools in One Platform", kay: true, others: false },
 ];
 
 export default function HomePage() {
@@ -250,9 +231,9 @@ export default function HomePage() {
       observerRef.current?.observe(el);
     });
 
-    // Auto-rotate features
+    // Auto-rotate features (only first 8 featured tools in interactive section)
     const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % tools.length);
+      setActiveFeature((prev) => (prev + 1) % 8);
     }, 4000);
 
     return () => {
@@ -372,8 +353,8 @@ export default function HomePage() {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto animate-slide-up leading-relaxed" style={{ animationDelay: "0.3s" }}>
-            8 powerful AI tools in one platform. Write essays, get tutoring, 
-            create study guides, and more. Built for GED, IGCSE, OTHM & all students.
+            20+ powerful AI tools in one platform. Paraphrase, humanize, detect AI, 
+            solve problems, and more. Built for GED, IGCSE, OTHM & all students.
           </p>
 
           {/* CTA Buttons */}
@@ -422,18 +403,18 @@ export default function HomePage() {
               <Layers className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              8 Powerful Tools.<br />One Platform.
+              20+ Powerful Tools.<br />One Platform.
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to excel in your studies, powered by the world's most advanced AI models.
+              Everything you need to excel in your studies, powered by the world&apos;s most advanced AI models.
             </p>
           </div>
 
-          {/* Interactive Feature Display */}
+          {/* Interactive Feature Display - Top 8 Featured */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
             {/* Left: Feature List */}
             <div className="space-y-4">
-              {tools.map((tool, i) => {
+              {tools.slice(0, 8).map((tool, i) => {
                 const IconComponent = tool.icon;
                 return (
                   <div
@@ -444,7 +425,7 @@ export default function HomePage() {
                         : "bg-transparent hover:bg-white/50"
                     }`}
                     onClick={() => setActiveFeature(i)}
-                    onDoubleClick={() => window.location.href = `/tools/${tool.slug}`}
+                    onDoubleClick={() => window.location.href = `/dashboard/${tool.category}/${tool.slug}`}
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg transition-transform duration-500 ${activeFeature === i ? "scale-110 rotate-3" : ""}`}>
@@ -456,7 +437,7 @@ export default function HomePage() {
                           {tool.desc}
                         </p>
                       </div>
-                      <Link href={`/tools/${tool.slug}`} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                      <Link href={`/dashboard/${tool.category}/${tool.slug}`} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
                         <ArrowRight className={`w-5 h-5 text-gray-400 transition-all duration-300 ${activeFeature === i ? "translate-x-2 text-blue-500" : ""}`} />
                       </Link>
                     </div>
@@ -489,14 +470,15 @@ export default function HomePage() {
                 >
                   <div className={`w-20 h-20 rounded-3xl bg-blue-600 flex items-center justify-center shadow-2xl mb-6 transition-all duration-500`}>
                     {(() => {
-                      const Icon = tools[activeFeature].icon;
+                      const feat = activeFeature < 8 ? activeFeature : 0;
+                      const Icon = tools[feat].icon;
                       return <Icon className="w-10 h-10 text-white" />;
                     })()}
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4">{tools[activeFeature].name}</h3>
-                  <p className="text-lg text-gray-600 mb-6">{tools[activeFeature].desc}</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">{tools[activeFeature < 8 ? activeFeature : 0].name}</h3>
+                  <p className="text-lg text-gray-600 mb-6">{tools[activeFeature < 8 ? activeFeature : 0].desc}</p>
                   <div className="space-y-3">
-                    {tools[activeFeature].features.map((f, i) => (
+                    {tools[activeFeature < 8 ? activeFeature : 0].features.map((f, i) => (
                       <div 
                         key={f} 
                         className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
@@ -510,8 +492,8 @@ export default function HomePage() {
                     ))}
                   </div>
                   <Button asChild className={`w-full mt-6 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 border-0`}>
-                    <Link href={`/tools/${tools[activeFeature].slug}`}>
-                      Try {tools[activeFeature].name}
+                    <Link href={`/dashboard/${tools[activeFeature < 8 ? activeFeature : 0].category}/${tools[activeFeature < 8 ? activeFeature : 0].slug}`}>
+                      Try {tools[activeFeature < 8 ? activeFeature : 0].name}
                     </Link>
                   </Button>
                 </div>
@@ -523,14 +505,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Feature Cards Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* All Tools Grid */}
+          <div className="text-center mb-10">
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">All {tools.length} Tools</h3>
+            <p className="text-gray-500 mt-2">Click any tool to get started</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {tools.map((tool, i) => {
               const IconComponent = tool.icon;
               return (
                 <Link
                   key={tool.name}
-                  href={`/tools/${tool.slug}`}
+                  href={`/dashboard/${tool.category}/${tool.slug}`}
                   className="group relative bg-white rounded-3xl p-8 border border-gray-100 hover:border-gray-200 shadow-lg shadow-gray-100/50 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 cursor-pointer overflow-hidden hover:-translate-y-2 block"
                   style={{ animationDelay: `${i * 0.1}s` }}
                 >
@@ -867,11 +853,11 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold text-white mb-4">Tools</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/tools/essay-writer" className="hover:text-white transition">Essay Writer</Link></li>
+                <li><Link href="/tools/paraphraser" className="hover:text-white transition">Safe Paraphraser</Link></li>
+                <li><Link href="/tools/humanizer" className="hover:text-white transition">Content Humanizer</Link></li>
                 <li><Link href="/tools/ai-detector" className="hover:text-white transition">AI Detector</Link></li>
-                <li><Link href="/tools/humanizer" className="hover:text-white transition">Humanizer</Link></li>
-                <li><Link href="/tools/answer-finder" className="hover:text-white transition">Answer Finder</Link></li>
-                <li><Link href="/tools/tutor" className="hover:text-white transition">AI Tutor</Link></li>
+                <li><Link href="/tools/image-solve" className="hover:text-white transition">Problem Solver</Link></li>
+                <li><Link href="/tools/assignment-worker" className="hover:text-white transition">Assignment Worker</Link></li>
               </ul>
             </div>
             
@@ -881,9 +867,9 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/blog" className="hover:text-white transition">Blog</Link></li>
                 <li><Link href="/tools" className="hover:text-white transition">All Tools</Link></li>
-                <li><Link href="/tools/study-guide" className="hover:text-white transition">Study Guides</Link></li>
-                <li><Link href="/tools/presentation" className="hover:text-white transition">Presentations</Link></li>
-                <li><Link href="/tools/homework-helper" className="hover:text-white transition">Homework Help</Link></li>
+                <li><Link href="/tools/video-explainer" className="hover:text-white transition">Video Explainer</Link></li>
+                <li><Link href="/tools/pdf-qa" className="hover:text-white transition">PDF Q&A</Link></li>
+                <li><Link href="/tools/roast-assignment" className="hover:text-white transition">Roast My Assignment</Link></li>
               </ul>
             </div>
             
@@ -901,7 +887,7 @@ export default function HomePage() {
           
           {/* Bottom */}
           <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm">&copy; 2025 Kabyar. All rights reserved.</p>
+            <p className="text-sm">&copy; 2026 Kabyar. All rights reserved.</p>
             <div className="flex gap-6 text-sm">
               <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
               <Link href="/terms" className="hover:text-white transition">Terms</Link>
