@@ -9,7 +9,7 @@ import { usePersistedState } from "@/hooks/use-persisted-state";
 import { cn } from "@/lib/utils";
 import {
   ShieldCheck, Loader2, AlertTriangle, CheckCircle2, Scan,
-  FileText, Trash2, Copy, Check, Download, RefreshCw, Wand2, TrendingUp, TrendingDown
+  FileText, Trash2, Copy, Check, Download, RefreshCw, Wand2, TrendingUp, TrendingDown, ClipboardPaste
 } from "lucide-react";
 // Highlighting using regex - no external library needed
 
@@ -37,6 +37,7 @@ export default function AIDetectorPage() {
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedInput, setCopiedInput] = useState(false);
   const [isHumanizing, setIsHumanizing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -221,6 +222,22 @@ export default function AIDetectorPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyInputToClipboard = () => {
+    navigator.clipboard.writeText(text);
+    setCopiedInput(true);
+    setTimeout(() => setCopiedInput(false), 2000);
+  };
+
+  const handlePaste = async () => {
+    try {
+      const pasteText = await navigator.clipboard.readText();
+      setText(pasteText);
+      setResult(null);
+    } catch {
+      toast({ title: "Failed to paste", variant: "destructive" });
+    }
+  };
+
   const exportReport = () => {
     if (!result) return;
     const report = `# AI Detection Report\n\n## Scores\n- AI Score: ${result.aiScore}%\n- Human Score: ${result.humanScore}%\n\n## Analysis\n${result.analysis}\n\n## AI Indicators\n${result.indicators?.map(i => `- **"${i.text}"**: ${i.reason}`).join("\n") || "None found"}\n\n## Suggestions\n${result.suggestions?.map(s => `- ${s}`).join("\n") || "None"}`;
@@ -298,6 +315,15 @@ export default function AIDetectorPage() {
               )}
             </div>
             <div className="flex items-center gap-1">
+              {text && (
+                <button
+                  onClick={copyInputToClipboard}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Copy input"
+                >
+                  {copiedInput ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              )}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
@@ -317,7 +343,20 @@ export default function AIDetectorPage() {
               )}
             </div>
           </div>
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-6 overflow-y-auto relative">
+            {!text && (
+              <button
+                onClick={handlePaste}
+                className="absolute inset-0 flex items-center justify-center z-10 bg-white hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center transition-colors">
+                    <ClipboardPaste className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">Click to paste</span>
+                </div>
+              </button>
+            )}
             {result && result.indicators && result.indicators.length > 0 ? (
               <div 
                 className="text-[15px] leading-relaxed text-gray-900 whitespace-pre-wrap"
@@ -328,7 +367,8 @@ export default function AIDetectorPage() {
                 value={text}
                 onChange={(e) => { setText(e.target.value); setResult(null); }}
                 placeholder="Paste your text here to check for AI-generated content..."
-                className="h-full resize-none border-0 shadow-none focus-visible:ring-0 text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent"
+                className="h-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:outline-none text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent transition-none"
+                style={{ transition: 'none' }}
               />
             )}
           </div>

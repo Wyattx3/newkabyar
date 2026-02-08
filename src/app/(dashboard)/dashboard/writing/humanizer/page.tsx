@@ -9,7 +9,7 @@ import { usePersistedState } from "@/hooks/use-persisted-state";
 import { cn } from "@/lib/utils";
 import {
   Wand2, Loader2, Copy, Check, RefreshCw, Sparkles, ArrowRightLeft,
-  FileText, X, ShieldCheck, Trash2, ChevronDown, Eye, EyeOff, Download
+  FileText, X, ShieldCheck, Trash2, ChevronDown, Eye, EyeOff, Download, ClipboardPaste
 } from "lucide-react";
 
 const TONES = [
@@ -43,6 +43,7 @@ export default function HumanizerPage() {
   // UI states
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedInput, setCopiedInput] = useState(false);
   const [showTones, setShowTones] = useState(false);
   const [showIntensities, setShowIntensities] = useState(false);
   const [showDiff, setShowDiff] = useState(true);
@@ -131,6 +132,21 @@ export default function HumanizerPage() {
     navigator.clipboard.writeText(result);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyInputToClipboard = () => {
+    navigator.clipboard.writeText(inputText);
+    setCopiedInput(true);
+    setTimeout(() => setCopiedInput(false), 2000);
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setInputText(text);
+    } catch {
+      toast({ title: "Failed to paste", variant: "destructive" });
+    }
   };
 
   const exportResult = () => {
@@ -263,6 +279,15 @@ export default function HumanizerPage() {
               )}
             </div>
             <div className="flex items-center gap-1">
+              {inputText && (
+                <button
+                  onClick={copyInputToClipboard}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  title="Copy input"
+                >
+                  {copiedInput ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              )}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
@@ -282,12 +307,26 @@ export default function HumanizerPage() {
               )}
             </div>
           </div>
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-6 overflow-y-auto relative">
+            {!inputText && (
+              <button
+                onClick={handlePaste}
+                className="absolute inset-0 flex items-center justify-center z-10 bg-white hover:bg-gray-50 transition-colors group"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-gray-200 flex items-center justify-center transition-colors">
+                    <ClipboardPaste className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
+                  </div>
+                  <span className="text-sm text-gray-500 font-medium">Click to paste</span>
+                </div>
+              </button>
+            )}
             <Textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Paste your AI-generated text here to humanize it..."
-              className="h-full resize-none border-0 shadow-none focus-visible:ring-0 text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent"
+              className="h-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:outline-none text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent transition-none"
+              style={{ transition: 'none' }}
             />
           </div>
         </div>
