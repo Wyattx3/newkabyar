@@ -10,7 +10,6 @@ import { TOOLS, TOOL_CATEGORIES, type ToolCategory } from "@/lib/tools-registry"
 import {
   KayMascot,
   MascotSpeech,
-  ProgressRing,
   Shimmer,
 } from "@/components/premium";
 import {
@@ -37,7 +36,6 @@ import {
   Network,
   FlaskConical,
   History,
-  Flame,
   type LucideIcon,
 } from "lucide-react";
 
@@ -473,32 +471,6 @@ export default function DashboardPage() {
                     {getGreeting()}, <span className="text-blue-600">{session?.user?.name?.split(" ")[0] || "there"}</span>
                   </h1>
                   <p className="text-gray-500">What would you like to learn today?</p>
-                </div>
-              </div>
-
-              {/* Right: Stats */}
-              <div className="flex flex-wrap items-center gap-6">
-                {/* Streak */}
-                <div className="flex items-center gap-3">
-                  <motion.div
-                    animate={{ rotate: [0, -5, 5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Flame className="w-6 h-6 text-orange-500" />
-                  </motion.div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-800">7</p>
-                    <p className="text-xs text-gray-500">Day Streak</p>
-                  </div>
-                </div>
-
-                {/* Progress */}
-                <div className="flex items-center gap-3">
-                  <ProgressRing progress={65} size={48} strokeWidth={5} color="blue" showPercentage={false} />
-                  <div>
-                    <p className="text-2xl font-bold text-gray-800">65%</p>
-                    <p className="text-xs text-gray-500">Weekly Goal</p>
-                  </div>
                 </div>
               </div>
             </div>
