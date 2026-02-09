@@ -204,10 +204,14 @@ export default function DashboardPage() {
     try {
       const cached = localStorage.getItem("kay-daily-news");
       if (cached) {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.news) && parsed.date) {
+          return parsed;
+        }
       }
     } catch {
-      // Invalid cache
+      // Invalid cache — clear it
+      localStorage.removeItem("kay-daily-news");
     }
     return null;
   };
@@ -261,11 +265,15 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         const newsItems = (data.news || []).slice(0, 4);
-        setNews(newsItems);
-        localStorage.setItem("kay-daily-news", JSON.stringify({
-          news: newsItems,
-          date: today,
-        }));
+        if (newsItems.length > 0) {
+          setNews(newsItems);
+          localStorage.setItem("kay-daily-news", JSON.stringify({
+            news: newsItems,
+            date: today,
+          }));
+        }
+      } else {
+        console.error("News API returned:", response.status);
       }
     } catch (error) {
       console.error("Error fetching news:", error);

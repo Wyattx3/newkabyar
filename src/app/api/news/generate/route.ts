@@ -25,6 +25,28 @@ const categoryColors: Record<string, string> = {
   "default": "bg-gray-500",
 };
 
+function extractJSON(text: string): string {
+  // Try to extract JSON from various response formats
+  let cleaned = text.trim();
+
+  // Remove markdown code blocks
+  if (cleaned.includes("```")) {
+    const jsonMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      cleaned = jsonMatch[1].trim();
+    }
+  }
+
+  // Try to find JSON object in the text
+  const jsonStart = cleaned.indexOf("{");
+  const jsonEnd = cleaned.lastIndexOf("}");
+  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+    cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  }
+
+  return cleaned;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -52,7 +74,7 @@ Each news item should be:
 3. Current and trending in their field (use web search to find the latest information)
 4. Actionable or insightful
 
-IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
+IMPORTANT: Respond ONLY with valid JSON, no markdown, no extra text. Format:
 {
   "news": [
     {
@@ -67,8 +89,9 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
   ]
 }`;
 
-    const userQuery = `Generate 4 personalized educational news/updates for this student:\n\n${userContext}\n\nPlease search the web for the latest trends and updates in their field of study to provide current and relevant information.`;
+    const userQuery = `Generate 4 personalized educational news/updates for this student:\n\n${userContext}\n\nSearch the web for the latest trends and updates in their field. Return ONLY valid JSON.`;
 
+    // Groq Compound system — do NOT pass temperature/max_tokens as they are unsupported
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -76,44 +99,43 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "groq/compound",
+        model: "groq/compound-mini",
         messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: userQuery,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userQuery },
         ],
-        temperature: 0.8,
-        max_tokens: 8192,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      console.error(`Groq API error: ${response.status} - ${errorText}`);
+      throw new Error(`Groq API error: ${response.status}`);
     }
 
     const data = await response.json();
 
-    const content = data.choices[0]?.message?.content;
+    const content = data.choices?.[0]?.message?.content;
     if (!content) {
+      console.error("No content in Groq response:", JSON.stringify(data).slice(0, 500));
       throw new Error("No response from AI");
     }
 
-    // Extract JSON from response (handle potential markdown code blocks)
-    let jsonContent = content.trim();
-    if (jsonContent.startsWith("```")) {
-      const jsonMatch = jsonContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonContent = jsonMatch[1].trim();
-      }
-    }
+    // Extract and parse JSON from response
+    const jsonContent = extractJSON(content);
     
-    const parsed = JSON.parse(jsonContent);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonContent);
+    } catch (parseError) {
+      console.error("JSON parse error. Raw content:", content.slice(0, 1000));
+      throw new Error("Failed to parse AI response as JSON");
+    }
+
+    if (!parsed.news || !Array.isArray(parsed.news)) {
+      console.error("Invalid news format:", JSON.stringify(parsed).slice(0, 500));
+      throw new Error("Invalid news format from AI");
+    }
     
     // Add colors and time to news items
     const now = Date.now();
@@ -136,15 +158,15 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
       {
         id: "fallback-1",
         category: "Programming",
-        title: "Top Programming Languages to Learn in 2025",
+        title: "Top Programming Languages to Learn in 2026",
         summary: "Discover which programming languages are most in-demand for developers.",
-        fullContent: "As we move into 2025, several programming languages continue to dominate the tech industry. Python remains the top choice for data science and AI applications, while JavaScript and TypeScript lead in web development.\n\nRust and Go are gaining popularity for systems programming due to their performance and safety features. For mobile development, Swift and Kotlin are essential skills.\n\nTo stay competitive, focus on mastering one language deeply while having familiarity with others in your area of interest.",
+        fullContent: "As we move into 2026, several programming languages continue to dominate the tech industry. Python remains the top choice for data science and AI applications, while JavaScript and TypeScript lead in web development.\n\nRust and Go are gaining popularity for systems programming due to their performance and safety features. For mobile development, Swift and Kotlin are essential skills.\n\nTo stay competitive, focus on mastering one language deeply while having familiarity with others in your area of interest.",
         actionTip: "Pick one new language to learn this month and build a small project with it.",
         relatedTopics: ["Python", "JavaScript", "Career Development"],
         color: "bg-blue-500",
         time: "Just now",
         timestamp: fallbackNow,
-        source: "AI Generated",
+        source: "Fallback",
       },
       {
         id: "fallback-2",
@@ -157,7 +179,7 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         color: "bg-purple-500",
         time: "Just now",
         timestamp: fallbackNow,
-        source: "AI Generated",
+        source: "Fallback",
       },
       {
         id: "fallback-3",
@@ -170,40 +192,23 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         color: "bg-indigo-500",
         time: "Just now",
         timestamp: fallbackNow,
-        source: "AI Generated",
+        source: "Fallback",
       },
       {
         id: "fallback-4",
         category: "Web Development",
         title: "The Rise of Full-Stack Development Skills",
-        summary: "Why knowing both frontend and backend is valuable in 2025.",
+        summary: "Why knowing both frontend and backend is valuable in 2026.",
         fullContent: "Full-stack development skills are increasingly valuable as companies seek versatile developers who can work across the entire application stack.\n\nModern frameworks like Next.js blur the line between frontend and backend, making it easier to become a full-stack developer. Understanding databases, APIs, and deployment is essential.\n\nStart by mastering one stack (like React + Node.js + PostgreSQL) before expanding your knowledge to other technologies.",
         actionTip: "Build a complete full-stack project and deploy it to showcase your skills.",
         relatedTopics: ["React", "Node.js", "Database Design"],
         color: "bg-cyan-500",
         time: "Just now",
         timestamp: fallbackNow,
-        source: "AI Generated",
+        source: "Fallback",
       },
     ];
 
     return NextResponse.json({ news: fallbackNews, source: "fallback" });
   }
 }
-
-function formatRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
-}
-
-

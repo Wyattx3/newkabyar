@@ -33,8 +33,8 @@ export function OnboardingCheck() {
           const data = await res.json();
           const user = data.user;
           
-          // If user has any profile data, mark onboarding as complete
-          if (user && (user.school || user.educationLevel || user.subjects?.length > 0 || user.major)) {
+          // If user already has profile data filled, mark complete
+          if (user && (user.school || user.educationLevel || (user.subjects && user.subjects.length > 0) || user.major)) {
             localStorage.setItem(onboardingKey, "true");
             setChecked(true);
             return;
@@ -46,7 +46,7 @@ export function OnboardingCheck() {
         return;
       }
 
-      // Show onboarding for new users without profile data
+      // New user without profile data - must complete onboarding
       setShowOnboarding(true);
       setChecked(true);
     };
@@ -75,4 +75,3 @@ export function OnboardingCheck() {
     />
   );
 }
-
