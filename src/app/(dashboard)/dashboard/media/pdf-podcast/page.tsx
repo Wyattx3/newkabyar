@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface DialogueLine {
@@ -95,6 +96,7 @@ export default function PDFPodcastPage() {
 
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("pdf-podcast");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -218,6 +220,12 @@ export default function PDFPodcastPage() {
       }
 
       setScript(data);
+      saveProject({
+        inputData: { content: content.slice(0, 500) },
+        outputData: { script: data },
+        settings: { duration, style, model: selectedModel },
+        inputPreview: content.slice(0, 200),
+      });
 
       const dialogues: DialogueLine[] = data.segments.flatMap((seg: Segment) =>
         seg.dialogue.map((d: any) => ({

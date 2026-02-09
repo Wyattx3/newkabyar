@@ -60,6 +60,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface Paper {
@@ -262,6 +263,7 @@ export default function AcademicConsensusPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("academic-consensus");
 
   useEffect(() => setMounted(true), []);
 
@@ -341,6 +343,12 @@ export default function AcademicConsensusPage() {
         setResult(data);
         setIsLoading(false);
         window.dispatchEvent(new CustomEvent("credits-updated"));
+        saveProject({
+          inputData: { query, paperCount, searchMode },
+          outputData: data,
+          settings: { model: selectedModel, studyFilter, yearFilter },
+          inputPreview: query.slice(0, 200),
+        });
       }, 500);
     } catch (error) {
       console.error("Search error:", error);

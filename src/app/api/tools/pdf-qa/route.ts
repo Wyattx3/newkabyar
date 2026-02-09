@@ -75,20 +75,21 @@ export async function POST(request: NextRequest) {
       : "";
 
     // Use simple plain text prompt - more reliable across all models
-    const systemPrompt = `You are a helpful document Q&A assistant. Answer questions based ONLY on the provided document content.
+    const systemPrompt = `You are an expert document analyst. Your job is to answer the user's question using ONLY the text provided below. Do NOT say "the document is the only source" or mention anything about sources being limited. Just answer the question directly using the information in the text.
 ${languageInstructions}
 
-Instructions:
-- Give a clear, comprehensive answer based on the document
-- If the document doesn't contain relevant information, say so
-- Be concise but thorough`;
+Rules:
+- Answer directly and thoroughly using the provided text
+- Quote or paraphrase relevant parts when helpful
+- If the text does not contain enough information to answer, say "I couldn't find information about this in the provided document."
+- Never comment on the document structure, format, or sources — just answer the question`;
 
     let result: string;
     try {
       result = await chatWithTier(
         model,
         systemPrompt,
-        `DOCUMENT CONTENT:\n${context}\n\nQUESTION: ${question}\n\nPlease answer the question based on the document above.`,
+        `Here is the document text:\n\n${context}\n\n---\n\nQuestion: ${question}`,
         session.user.id
       );
       if (!result || result.trim().length === 0) {

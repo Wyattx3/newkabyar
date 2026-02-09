@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 
 // Extended color themes for mindmap - all use white text for better visibility
@@ -89,6 +90,7 @@ export default function MindMapPage() {
   
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("mind-map");
 
   useEffect(() => setMounted(true), []);
 
@@ -354,6 +356,12 @@ export default function MindMapPage() {
       if (newCode) {
         setMermaidCode(newCode);
         setPan({ x: 0, y: 0 });
+        saveProject({
+          inputData: { inputMode, topic, content, depth },
+          outputData: { mermaidCode: newCode },
+          settings: { model: selectedModel, language: aiLanguage },
+          inputPreview: (inputMode === "topic" ? topic : content).slice(0, 200),
+        });
       }
     } catch (error) {
       console.error(error);

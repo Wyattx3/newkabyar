@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 import mermaid from "mermaid";
 
@@ -109,6 +110,7 @@ export default function YoutubeSummarizerPage() {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("youtube-summarizer");
 
   // Feature States
   const [activeFeature, setActiveFeature] = useState<'translate' | 'chat' | 'flashcards' | 'mindmap' | 'audio' | null>(null);
@@ -226,6 +228,12 @@ export default function YoutubeSummarizerPage() {
       }
 
       setSummary(data);
+      saveProject({
+        inputData: { url, summaryType },
+        outputData: data,
+        settings: { model: selectedModel },
+        inputPreview: url.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Network error. Please try again.", variant: "destructive" });

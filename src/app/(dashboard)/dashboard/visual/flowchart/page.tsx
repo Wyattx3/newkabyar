@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 
 // Direction options
@@ -125,6 +126,7 @@ export default function FlowchartPage() {
 
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("flowchart");
 
   useEffect(() => setMounted(true), []);
   useEffect(() => { hasDraggedRef.current = hasDragged; }, [hasDragged]);
@@ -426,6 +428,12 @@ export default function FlowchartPage() {
 
       const data = await response.json();
       setMermaidCode(data.mermaidCode || "");
+      saveProject({
+        inputData: { description, direction },
+        outputData: { mermaidCode: data.mermaidCode || "" },
+        settings: { model: selectedModel, language: aiLanguage },
+        inputPreview: description.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

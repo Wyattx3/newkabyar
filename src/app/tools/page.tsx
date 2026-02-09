@@ -61,7 +61,7 @@ export default function ToolsPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center">
               <Image src="/kabyar-logo.png" alt="Kabyar" width={280} height={74} className="object-contain h-10 sm:h-14 w-auto" />
@@ -88,7 +88,7 @@ export default function ToolsPage() {
 
       {/* Hero — compact & clean */}
       <section className="pt-12 sm:pt-20 pb-8 sm:pb-12 px-4 sm:px-6">
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="max-w-5xl mx-auto text-center">
           <p className="text-[10px] sm:text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">{TOOLS.length} tools available</p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
             All Tools
@@ -101,7 +101,7 @@ export default function ToolsPage() {
 
       {/* Tools by Category — minimal list */}
       <section className="pb-16 sm:pb-24">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {categories.map((cat, catIdx) => {
             const catMeta = TOOL_CATEGORIES[cat];
             const tools = getToolsByCategory(cat);
@@ -205,7 +205,7 @@ export default function ToolsPage() {
 
       {/* Footer — minimal */}
       <footer className="bg-gray-900 text-gray-400 py-8 sm:py-10 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <Image src="/kabyar-logo.png" alt="Kabyar" width={280} height={74} className="object-contain h-10 sm:h-12 w-auto" />
           <div className="flex gap-5 text-xs sm:text-sm">
             <Link href="/about" className="hover:text-white transition">About</Link>

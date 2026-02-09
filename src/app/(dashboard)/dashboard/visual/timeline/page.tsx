@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 
 // Color themes for timeline
@@ -102,6 +103,7 @@ export default function TimelinePage() {
 
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("timeline");
 
   useEffect(() => setMounted(true), []);
   useEffect(() => { hasDraggedRef.current = hasDragged; }, [hasDragged]);
@@ -248,6 +250,12 @@ export default function TimelinePage() {
 
       const data = await response.json();
       setMermaidCode(data.mermaidCode || "");
+      saveProject({
+        inputData: { topic, eventCount },
+        outputData: { mermaidCode: data.mermaidCode || "" },
+        settings: { model: selectedModel, language: aiLanguage },
+        inputPreview: topic.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

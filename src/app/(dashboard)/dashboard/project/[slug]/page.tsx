@@ -16,47 +16,43 @@ interface ToolInitialData {
 type ToolComponentProps = { initialData?: ToolInitialData };
 
 // Dynamic imports for all tool pages
+const d = (path: string) =>
+  dynamic<ToolComponentProps>(
+    () => import(`../../${path}/page`) as Promise<{ default: ComponentType<ToolComponentProps> }>,
+    { ssr: false }
+  );
+
 const toolComponents: Record<string, ComponentType<ToolComponentProps>> = {
-  paraphraser: dynamic<ToolComponentProps>(
-    () => import("../../writing/paraphraser/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  humanizer: dynamic<ToolComponentProps>(
-    () => import("../../writing/humanizer/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "ai-detector": dynamic<ToolComponentProps>(
-    () => import("../../writing/ai-detector/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "devils-advocate": dynamic<ToolComponentProps>(
-    () => import("../../writing/devils-advocate/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "vocabulary-upgrader": dynamic<ToolComponentProps>(
-    () => import("../../writing/vocabulary-upgrader/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "cold-email": dynamic<ToolComponentProps>(
-    () => import("../../writing/cold-email/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "assignment-worker": dynamic<ToolComponentProps>(
-    () => import("../../writing/assignment-worker/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "video-explainer": dynamic<ToolComponentProps>(
-    () => import("../../writing/video-explainer/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "roast-assignment": dynamic<ToolComponentProps>(
-    () => import("../../writing/roast-assignment/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
-  "image-solve": dynamic<ToolComponentProps>(
-    () => import("../../writing/image-solve/page") as Promise<{ default: ComponentType<ToolComponentProps> }>,
-    { ssr: false }
-  ),
+  // Writing
+  paraphraser: d("writing/paraphraser"),
+  humanizer: d("writing/humanizer"),
+  "ai-detector": d("writing/ai-detector"),
+  "devils-advocate": d("writing/devils-advocate"),
+  "vocabulary-upgrader": d("writing/vocabulary-upgrader"),
+  "cold-email": d("writing/cold-email"),
+  "assignment-worker": d("writing/assignment-worker"),
+  "video-explainer": d("writing/video-explainer"),
+  "roast-assignment": d("writing/roast-assignment"),
+  "image-solve": d("writing/image-solve"),
+  // RAG & Documents
+  "pdf-qa": d("rag/pdf-qa"),
+  "quiz-generator": d("rag/quiz-generator"),
+  "flashcard-maker": d("rag/flashcard-maker"),
+  "past-paper": d("rag/past-paper"),
+  "resume-tailor": d("rag/resume-tailor"),
+  // Visual
+  "mind-map": d("visual/mind-map"),
+  timeline: d("visual/timeline"),
+  flowchart: d("visual/flowchart"),
+  "lab-report": d("visual/lab-report"),
+  // Research
+  "research-gap": d("research/research-gap"),
+  "academic-consensus": d("research/academic-consensus"),
+  // Media
+  "youtube-summarizer": d("media/youtube-summarizer"),
+  "pdf-podcast": d("media/pdf-podcast"),
+  "lecture-organizer": d("media/lecture-organizer"),
+  "viva-simulator": d("media/viva-simulator"),
 };
 
 interface ProjectData {

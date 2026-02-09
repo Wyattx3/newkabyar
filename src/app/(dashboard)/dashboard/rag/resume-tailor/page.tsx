@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface KeywordMatch {
@@ -93,6 +94,7 @@ export default function ResumeTailorPage() {
   const jdFileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("resume-tailor");
 
   useEffect(() => setMounted(true), []);
 
@@ -176,6 +178,12 @@ export default function ResumeTailorPage() {
 
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { resume, jobDescription },
+        outputData: data,
+        settings: { focus, model: selectedModel },
+        inputPreview: resume.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

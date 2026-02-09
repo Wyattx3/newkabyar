@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface TopicFreq {
@@ -91,6 +92,7 @@ export default function PastPaperPage() {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("past-paper");
 
   useEffect(() => setMounted(true), []);
 
@@ -209,6 +211,12 @@ export default function PastPaperPage() {
 
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { papers: papers.map(p => ({ year: p.year, fileName: p.fileName })), subject },
+        outputData: data,
+        settings: { model: selectedModel },
+        inputPreview: subject || "Past Paper Analysis",
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

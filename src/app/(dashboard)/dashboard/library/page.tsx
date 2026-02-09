@@ -1,16 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import {
   FileText,
   Plus,
   Search,
-  Grid3X3,
-  List,
-  MoreVertical,
   Trash2,
-  ChevronDown,
   Filter,
   Sparkles,
   FileSearch,
@@ -18,40 +13,24 @@ import {
   Video,
   Shapes,
   PenTool,
-  Brain,
-  Zap,
   ChevronRight,
-  Calendar,
-  ExternalLink,
+  Clock,
+  FolderOpen,
+  MoreHorizontal,
   X,
+  Mic,
+  FlaskConical,
+  Network,
+  RefreshCw,
+  ShieldCheck,
+  Wand2,
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
-interface Document {
-  id: string;
-  filename: string;
-  contentType: string;
-  size: number;
-  toolId: string | null;
-  createdAt: string;
-  metadata: any;
-  _count: {
-    chunks: number;
-  };
-}
-
-interface Activity {
-  id: string;
-  toolSlug: string;
-  toolName: string;
-  category: string;
-  timestamp: string;
-  inputPreview: string;
-  creditsUsed: number;
-}
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface ProjectItem {
   id: string;
@@ -62,74 +41,72 @@ interface ProjectItem {
   updatedAt: string;
 }
 
-type LibraryItem = {
-  type: "document" | "activity" | "project";
-  id: string;
-  name: string;
-  category: string;
-  toolId: string;
-  createdAt: string;
-  metadata?: any;
-  size?: number;
-  creditsUsed?: number;
-  documentId?: string;
-  projectSlug?: string;
+// ── Config ─────────────────────────────────────────────────────────────────────
+
+const categoryConfig: Record<string, { icon: LucideIcon; color: string; label: string }> = {
+  writing: { icon: PenTool, color: "text-rose-500", label: "Writing" },
+  rag: { icon: FileSearch, color: "text-blue-500", label: "Documents" },
+  visual: { icon: Shapes, color: "text-amber-500", label: "Visual" },
+  research: { icon: Globe, color: "text-emerald-500", label: "Research" },
+  media: { icon: Video, color: "text-purple-500", label: "Media" },
 };
 
-const categoryConfig: Record<string, { icon: any; bg: string; text: string; label: string }> = {
-  rag: { icon: FileSearch, bg: "bg-blue-100", text: "text-blue-600", label: "RAG & Documents" },
-  research: { icon: Globe, bg: "bg-emerald-100", text: "text-emerald-600", label: "Research" },
-  media: { icon: Video, bg: "bg-purple-100", text: "text-purple-600", label: "Audio & Video" },
-  visual: { icon: Shapes, bg: "bg-amber-100", text: "text-amber-600", label: "Visual" },
-  writing: { icon: PenTool, bg: "bg-rose-100", text: "text-rose-600", label: "Writing" },
+const toolMeta: Record<string, { name: string; icon: LucideIcon; category: string }> = {
+  "paraphraser": { name: "Paraphraser", icon: RefreshCw, category: "writing" },
+  "humanizer": { name: "Humanizer", icon: Wand2, category: "writing" },
+  "ai-detector": { name: "AI Detector", icon: ShieldCheck, category: "writing" },
+  "devils-advocate": { name: "Devil's Advocate", icon: Zap, category: "writing" },
+  "vocabulary-upgrader": { name: "Vocabulary Upgrader", icon: FileText, category: "writing" },
+  "cold-email": { name: "Cold Email", icon: PenTool, category: "writing" },
+  "assignment-worker": { name: "Assignment Worker", icon: FileText, category: "writing" },
+  "video-explainer": { name: "Video Explainer", icon: Video, category: "writing" },
+  "roast-assignment": { name: "Roast Assignment", icon: Zap, category: "writing" },
+  "image-solve": { name: "Image Solver", icon: Sparkles, category: "writing" },
+  "pdf-qa": { name: "PDF Q&A", icon: FileSearch, category: "rag" },
+  "quiz-generator": { name: "Quiz Generator", icon: Sparkles, category: "rag" },
+  "flashcard-maker": { name: "Flashcard Maker", icon: FileText, category: "rag" },
+  "past-paper": { name: "Past Paper", icon: FileText, category: "rag" },
+  "resume-tailor": { name: "Resume Tailor", icon: FileText, category: "rag" },
+  "mind-map": { name: "Mind Map", icon: Network, category: "visual" },
+  "timeline": { name: "Timeline", icon: Clock, category: "visual" },
+  "flowchart": { name: "Flowchart", icon: Shapes, category: "visual" },
+  "lab-report": { name: "Lab Report", icon: FlaskConical, category: "visual" },
+  "research-gap": { name: "Research Gap", icon: Globe, category: "research" },
+  "academic-consensus": { name: "Academic Consensus", icon: Globe, category: "research" },
+  "youtube-summarizer": { name: "YouTube Summarizer", icon: Video, category: "media" },
+  "pdf-podcast": { name: "PDF Podcast", icon: Mic, category: "media" },
+  "lecture-organizer": { name: "Lecture Organizer", icon: FileText, category: "media" },
+  "viva-simulator": { name: "Viva Simulator", icon: Mic, category: "media" },
 };
 
-// Tool categories for new project modal
 const toolCategories = [
   {
-    name: "RAG & Documents",
-    category: "rag",
-    icon: FileSearch,
-    bg: "bg-blue-100",
-    text: "text-blue-600",
+    name: "Writing", category: "writing", icon: PenTool, color: "text-rose-500",
+    tools: [
+      { name: "Paraphraser", slug: "paraphraser" },
+      { name: "Humanizer", slug: "humanizer" },
+      { name: "AI Detector", slug: "ai-detector" },
+      { name: "Assignment Worker", slug: "assignment-worker" },
+      { name: "Video Explainer", slug: "video-explainer" },
+      { name: "Devil's Advocate", slug: "devils-advocate" },
+      { name: "Vocabulary Upgrader", slug: "vocabulary-upgrader" },
+      { name: "Cold Email", slug: "cold-email" },
+      { name: "Roast Assignment", slug: "roast-assignment" },
+      { name: "Image Solver", slug: "image-solve" },
+    ],
+  },
+  {
+    name: "Documents", category: "rag", icon: FileSearch, color: "text-blue-500",
     tools: [
       { name: "PDF Q&A", slug: "pdf-qa" },
       { name: "Quiz Generator", slug: "quiz-generator" },
       { name: "Flashcard Maker", slug: "flashcard-maker" },
-      { name: "Past Paper Analyzer", slug: "past-paper" },
+      { name: "Past Paper", slug: "past-paper" },
       { name: "Resume Tailor", slug: "resume-tailor" },
     ],
   },
   {
-    name: "Research",
-    category: "research",
-    icon: Globe,
-    bg: "bg-emerald-100",
-    text: "text-emerald-600",
-    tools: [
-      { name: "Academic Consensus", slug: "academic-consensus" },
-      { name: "Research Gap Finder", slug: "research-gap" },
-    ],
-  },
-  {
-    name: "Audio & Video",
-    category: "media",
-    icon: Video,
-    bg: "bg-purple-100",
-    text: "text-purple-600",
-    tools: [
-      { name: "YouTube Summarizer", slug: "youtube-summarizer" },
-      { name: "PDF to Podcast", slug: "pdf-podcast" },
-      { name: "Lecture Organizer", slug: "lecture-organizer" },
-      { name: "Viva Simulator", slug: "viva-simulator" },
-    ],
-  },
-  {
-    name: "Visual",
-    category: "visual",
-    icon: Shapes,
-    bg: "bg-amber-100",
-    text: "text-amber-600",
+    name: "Visual", category: "visual", icon: Shapes, color: "text-amber-500",
     tools: [
       { name: "Mind Map", slug: "mind-map" },
       { name: "Timeline", slug: "timeline" },
@@ -138,524 +115,313 @@ const toolCategories = [
     ],
   },
   {
-    name: "Writing",
-    category: "writing",
-    icon: PenTool,
-    bg: "bg-rose-100",
-    text: "text-rose-600",
+    name: "Research", category: "research", icon: Globe, color: "text-emerald-500",
     tools: [
-      { name: "AI Detector", slug: "ai-detector" },
-      { name: "Humanizer", slug: "humanizer" },
-      { name: "Paraphraser", slug: "paraphraser" },
-      { name: "Roast My Assignment", slug: "roast-assignment" },
-      { name: "Assignment Worker", slug: "assignment-worker" },
-      { name: "Video Explainer", slug: "video-explainer" },
-      { name: "Devil's Advocate", slug: "devils-advocate" },
-      { name: "Vocabulary Upgrader", slug: "vocabulary-upgrader" },
-      { name: "Cold Email", slug: "cold-email" },
-      { name: "Image Solver", slug: "image-solve" },
+      { name: "Academic Consensus", slug: "academic-consensus" },
+      { name: "Research Gap", slug: "research-gap" },
+    ],
+  },
+  {
+    name: "Media", category: "media", icon: Video, color: "text-purple-500",
+    tools: [
+      { name: "YouTube Summarizer", slug: "youtube-summarizer" },
+      { name: "PDF Podcast", slug: "pdf-podcast" },
+      { name: "Lecture Organizer", slug: "lecture-organizer" },
+      { name: "Viva Simulator", slug: "viva-simulator" },
     ],
   },
 ];
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor(diff / (1000 * 60));
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days === 0) return "Today";
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "Just now";
+  if (min < 60) return `${min}m`;
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
   if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (days < 7) return `${days}d`;
+  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function formatFullDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function dateGroup(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  if (d > new Date(now.getTime() - 7 * 86400000)) return "This Week";
+  return "Earlier";
 }
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function LibraryPage() {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const { toast } = useToast();
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchData();
+    fetchProjects();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [docsRes, activityRes, projectsRes] = await Promise.all([
-        fetch("/api/user/documents"),
-        fetch("/api/user/activity"),
-        fetch("/api/projects"),
-      ]);
-
-      const docsData = await docsRes.json();
-      const activityData = await activityRes.json();
-      const projectsData = await projectsRes.json();
-
-      if (docsData.documents) setDocuments(docsData.documents);
-      if (activityData.activities) setActivities(activityData.activities);
-      if (projectsData.projects) setProjects(projectsData.projects);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteDocument = async (id: string) => {
-    try {
-      const res = await fetch("/api/user/documents", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId: id }),
-      });
-      if (res.ok) {
-        setDocuments((prev) => prev.filter((d) => d.id !== id));
-        toast({ title: "Document deleted successfully" });
+  // Close menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(null);
       }
-    } catch (error) {
-      toast({ title: "Failed to delete document", variant: "destructive" });
-    }
-    setActiveMenu(null);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      const data = await res.json();
+      if (data.projects) setProjects(data.projects);
+    } catch { /* */ } finally { setLoading(false); }
   };
 
   const deleteProject = async (slug: string) => {
     try {
       const res = await fetch(`/api/projects/${slug}`, { method: "DELETE" });
       if (res.ok) {
-        setProjects((prev) => prev.filter((p) => p.slug !== slug));
-        toast({ title: "Project deleted successfully" });
+        setProjects(prev => prev.filter(p => p.slug !== slug));
+        toast({ title: "Project deleted" });
       }
     } catch {
-      toast({ title: "Failed to delete project", variant: "destructive" });
+      toast({ title: "Failed to delete", variant: "destructive" });
     }
-    setActiveMenu(null);
+    setOpenMenu(null);
   };
 
-  // Tool name lookup for projects
-  const toolNameMap: Record<string, string> = {
-    "paraphraser": "Paraphraser",
-    "humanizer": "Humanizer",
-    "ai-detector": "AI Detector",
-    "devils-advocate": "Devil's Advocate",
-    "vocabulary-upgrader": "Vocabulary Upgrader",
-    "cold-email": "Cold Email",
-    "assignment-worker": "Assignment Worker",
-    "video-explainer": "Video Explainer",
-    "roast-assignment": "Roast My Assignment",
-    "image-solve": "Image Solver",
-  };
-
-  // Combine documents, activities, and projects into unified library items
-  const libraryItems: LibraryItem[] = [
-    ...documents.map((doc) => ({
-      type: "document" as const,
-      id: doc.id,
-      name: doc.filename,
-      category: doc.toolId ? getCategoryFromTool(doc.toolId) : "rag",
-      toolId: doc.toolId || "pdf-qa",
-      createdAt: doc.createdAt,
-      metadata: doc.metadata,
-      size: doc.size,
-      documentId: doc.id,
-    })),
-    ...activities.map((act) => ({
-      type: "activity" as const,
-      id: act.id,
-      name: act.toolName,
-      category: act.category,
-      toolId: act.toolSlug,
-      createdAt: act.timestamp,
-      creditsUsed: act.creditsUsed,
-    })),
-    ...projects.map((proj) => ({
-      type: "project" as const,
-      id: proj.id,
-      name: proj.caption,
-      category: getCategoryFromTool(proj.toolId),
-      toolId: proj.toolId,
-      createdAt: proj.createdAt,
-      projectSlug: proj.slug,
-    })),
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  // Helper to get category from tool ID
-  function getCategoryFromTool(toolId: string): string {
-    for (const cat of toolCategories) {
-      if (cat.tools.some(t => t.slug === toolId)) {
-        return cat.category;
-      }
-    }
-    return "rag";
-  }
-
-  // Filter items
-  const filteredItems = libraryItems.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !filterCategory || item.category === filterCategory;
-    return matchesSearch && matchesCategory;
+  // Filter + search
+  const filtered = projects.filter(p => {
+    const meta = toolMeta[p.toolId];
+    const matchSearch = p.caption.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (meta?.name || p.toolId).toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCat = !filterCategory || meta?.category === filterCategory;
+    return matchSearch && matchCat;
   });
 
-  // Group by date
-  const groupedItems = filteredItems.reduce((groups, item) => {
-    const date = new Date(item.createdAt);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+  // Group
+  const grouped = filtered.reduce((acc, p) => {
+    const g = dateGroup(p.createdAt);
+    if (!acc[g]) acc[g] = [];
+    acc[g].push(p);
+    return acc;
+  }, {} as Record<string, ProjectItem[]>);
 
-    let group: string;
-    if (date.toDateString() === today.toDateString()) {
-      group = "Today";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      group = "Yesterday";
-    } else if (date > new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)) {
-      group = "This Week";
-    } else {
-      group = "Earlier";
-    }
+  const groupOrder = ["Today", "Yesterday", "This Week", "Earlier"];
 
-    if (!groups[group]) groups[group] = [];
-    groups[group].push(item);
-    return groups;
-  }, {} as Record<string, LibraryItem[]>);
-
-  const uniqueCategories = [...new Set(libraryItems.map((item) => item.category))];
+  // Stats
+  const stats = Object.entries(categoryConfig).map(([key, cfg]) => ({
+    key, ...cfg,
+    count: projects.filter(p => toolMeta[p.toolId]?.category === key).length,
+  }));
 
   return (
-    <div className="-m-4 lg:-m-5 -mt-16 lg:-mt-5 min-h-[calc(100vh-0px)] flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shrink-0">
-        <div className="max-w-[1400px] mx-auto px-6 py-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-col">
-              <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Brain className="w-6 h-6 text-blue-600" />
-                My Library
-              </h1>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {libraryItems.length} items • {projects.length} projects • {documents.length} documents
+    <div className="-m-4 lg:-m-5 -mt-16 lg:-mt-5 h-[calc(100vh)] flex flex-col bg-[#fafafa] overflow-hidden">
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-gray-200/80">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-semibold text-gray-900">My Library</h1>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {projects.length} project{projects.length !== 1 ? "s" : ""} saved
               </p>
             </div>
-            <Button
-              onClick={() => setShowNewProjectModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-9"
+            <button
+              onClick={() => setShowNewModal(true)}
+              className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
-              <Plus className="w-4 h-4" />
-              New Project
-            </Button>
+              <Plus className="w-3.5 h-3.5" />
+              New
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="bg-white border-b border-gray-100 shrink-0">
-        <div className="max-w-[1400px] mx-auto px-6 py-2">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {/* Filter Dropdown */}
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFilterMenu(!showFilterMenu)}
-                  className="gap-2 h-8 text-xs"
-                >
-                  <Filter className="w-3.5 h-3.5" />
-                  {filterCategory ? categoryConfig[filterCategory]?.label : "All Categories"}
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </Button>
-                <AnimatePresence>
-                  {showFilterMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
-                    >
-                      <button
-                        onClick={() => {
-                          setFilterCategory(null);
-                          setShowFilterMenu(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                          !filterCategory ? "bg-blue-50 text-blue-600" : "text-gray-700"
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        All Categories
-                      </button>
-                      {Object.entries(categoryConfig).map(([key, config]) => {
-                        const Icon = config.icon;
-                        const count = libraryItems.filter(i => i.category === key).length;
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => {
-                              setFilterCategory(key);
-                              setShowFilterMenu(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                              filterCategory === key ? "bg-blue-50 text-blue-600" : "text-gray-700"
-                            }`}
-                          >
-                            <Icon className="w-4 h-4" />
-                            {config.label}
-                            <span className="ml-auto text-xs text-gray-400">({count})</span>
-                          </button>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* View Toggle */}
-              <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`flex items-center justify-center w-7 h-7 rounded transition-colors ${
-                    viewMode === "grid"
-                      ? "bg-gray-200 text-gray-900"
-                      : "hover:bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`flex items-center justify-center w-7 h-7 rounded transition-colors ${
-                    viewMode === "list"
-                      ? "bg-gray-200 text-gray-900"
-                      : "hover:bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
+      {/* ── Toolbar ───────────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="px-6 py-2.5">
+          <div className="flex items-center gap-2">
             {/* Search */}
-            <div className="relative">
-              <Input
-                placeholder="Search library..."
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input
+                placeholder="Search projects..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 w-56 pl-3 pr-8 text-sm"
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-8 pl-8 pr-3 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 transition-all"
               />
-              <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+
+            {/* Category pills */}
+            <div className="flex items-center gap-1 ml-auto">
+              <button
+                onClick={() => setFilterCategory(null)}
+                className={`h-7 px-2.5 rounded-md text-[10px] font-medium transition-all ${
+                  !filterCategory ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                }`}
+              >
+                All
+              </button>
+              {stats.filter(s => s.count > 0).map(s => {
+                const Icon = s.icon;
+                return (
+                  <button
+                    key={s.key}
+                    onClick={() => setFilterCategory(filterCategory === s.key ? null : s.key)}
+                    className={`h-7 px-2.5 rounded-md text-[10px] font-medium flex items-center gap-1 transition-all ${
+                      filterCategory === s.key ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {s.label}
+                    <span className="opacity-60">{s.count}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[1400px] mx-auto px-6 py-4">
+      {/* ── Content ───────────────────────────────────────────────────────── */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="px-6 py-4">
           {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-center">
-              <FileText className="w-10 h-10 text-gray-400 mb-3" />
-              <h3 className="text-base font-medium text-gray-900 mb-1">No items yet</h3>
-              <p className="text-sm text-gray-500 mb-3">
-                Start using tools to see your project history here
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                <FolderOpen className="w-6 h-6 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-900 mb-1">
+                {searchQuery || filterCategory ? "No matching projects" : "No projects yet"}
               </p>
-              <Button
-                onClick={() => setShowNewProjectModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
-              >
-                <Sparkles className="w-4 h-4" />
-                Start a Project
-              </Button>
+              <p className="text-xs text-gray-400 mb-4 max-w-xs">
+                {searchQuery || filterCategory
+                  ? "Try a different search or filter."
+                  : "Use any tool to automatically save your work here."}
+              </p>
+              {!searchQuery && !filterCategory && (
+                <button
+                  onClick={() => setShowNewModal(true)}
+                  className="h-8 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Start a Project
+                </button>
+              )}
             </div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedItems).map(([group, items]) => (
-                <div key={group}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{group}</h2>
-                    <span className="text-xs text-gray-400">({items.length})</span>
-                  </div>
+            <div className="space-y-5">
+              {groupOrder.map(group => {
+                const items = grouped[group];
+                if (!items || items.length === 0) return null;
+                return (
+                  <div key={group}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{group}</span>
+                      <div className="flex-1 h-px bg-gray-200/60" />
+                      <span className="text-[10px] text-gray-300">{items.length}</span>
+                    </div>
 
-                  {viewMode === "grid" ? (
-                    <div
-                      className="grid gap-3"
-                      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
-                    >
-                      {items.map((item) => {
-                        const catConfig = categoryConfig[item.category] || categoryConfig.rag;
-                        const Icon = catConfig.icon;
-                        const toolPath = item.type === "project" && item.projectSlug
-                          ? `/dashboard/project/${item.projectSlug}`
-                          : item.documentId 
-                            ? `/dashboard/${item.category}/${item.toolId}?doc=${item.documentId}`
-                            : `/dashboard/${item.category}/${item.toolId}`;
+                    <div className="bg-white rounded-xl border border-gray-200/80 divide-y divide-gray-100 overflow-hidden">
+                      {items.map(project => {
+                        const meta = toolMeta[project.toolId];
+                        const catCfg = categoryConfig[meta?.category || "writing"];
+                        const ToolIcon = meta?.icon || FileText;
 
                         return (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="group relative flex flex-col rounded-xl overflow-hidden h-[150px] border border-gray-200 bg-white hover:shadow-md hover:border-blue-200 transition-all"
-                          >
-                            <Link href={toolPath} className="flex-1 relative overflow-hidden">
-                              <div className={`absolute inset-0 ${item.type === "project" ? "bg-blue-50/50" : "bg-gray-50"}`} />
-                              <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                                <Icon className={`w-8 h-8 ${catConfig.text} mb-2`} />
-                                <p className="text-xs text-gray-700 text-center line-clamp-2 font-medium">
-                                  {item.name}
+                          <div key={project.id} className="group relative">
+                            <Link
+                              href={`/dashboard/project/${project.slug}`}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50/80 transition-colors"
+                            >
+                              {/* Icon */}
+                              <div className={`w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 group-hover:bg-blue-50 transition-colors`}>
+                                <ToolIcon className={`w-4 h-4 ${catCfg?.color || "text-gray-500"} group-hover:text-blue-600 transition-colors`} />
+                              </div>
+
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                                  {project.caption}
                                 </p>
-                                {item.type === "project" && (
-                                  <p className="text-[10px] text-gray-400 mt-1">
-                                    {toolNameMap[item.toolId] || item.toolId}
-                                  </p>
-                                )}
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] text-gray-400">{meta?.name || project.toolId}</span>
+                                  <span className="text-[10px] text-gray-300">·</span>
+                                  <span className="text-[10px] text-gray-400">{relativeTime(project.createdAt)}</span>
+                                </div>
                               </div>
-                              <div className="absolute top-2 right-2 flex items-center gap-1">
-                                {item.type === "project" && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-100 text-blue-600">
-                                    Project
-                                  </span>
-                                )}
-                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/80 ${catConfig.text}`}>
-                                  {catConfig.label.split(" ")[0]}
-                                </span>
-                              </div>
+
+                              {/* Arrow */}
+                              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 shrink-0 transition-colors" />
                             </Link>
 
-                            <div className="flex items-center gap-2 h-10 px-3 border-t border-gray-100 bg-white">
-                              <span className="text-[10px] text-gray-400 flex-1">{formatDate(item.createdAt)}</span>
-                              {item.creditsUsed && (
-                                <div className="flex items-center gap-0.5 text-[10px] text-gray-400">
-                                  <Zap className="w-3 h-3" />
-                                  {item.creditsUsed}
+                            {/* Menu */}
+                            <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" ref={openMenu === project.id ? menuRef : null}>
+                              <button
+                                onClick={e => { e.preventDefault(); e.stopPropagation(); setOpenMenu(openMenu === project.id ? null : project.id); }}
+                                className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center"
+                              >
+                                <MoreHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                              </button>
+                              {openMenu === project.id && (
+                                <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50">
+                                  <button
+                                    onClick={e => { e.preventDefault(); e.stopPropagation(); deleteProject(project.slug); }}
+                                    className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    Delete
+                                  </button>
                                 </div>
                               )}
-                              {item.type === "project" && item.projectSlug && (
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    deleteProject(item.projectSlug!);
-                                  }}
-                                  className="p-1 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
-                                  title="Delete project"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
-                                </button>
-                              )}
-                              <Link href={toolPath}>
-                                <ChevronRight className="w-4 h-4 text-gray-300 hover:text-blue-500" />
-                              </Link>
                             </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                      {items.map((item, idx) => {
-                        const catConfig = categoryConfig[item.category] || categoryConfig.rag;
-                        const Icon = catConfig.icon;
-                        const toolPath = item.type === "project" && item.projectSlug
-                          ? `/dashboard/project/${item.projectSlug}`
-                          : item.documentId 
-                            ? `/dashboard/${item.category}/${item.toolId}?doc=${item.documentId}`
-                            : `/dashboard/${item.category}/${item.toolId}`;
-
-                        return (
-                          <div
-                            key={item.id}
-                            className={`group flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors ${
-                              idx !== items.length - 1 ? "border-b border-gray-100" : ""
-                            }`}
-                          >
-                            <Link href={toolPath} className="flex items-center gap-3 flex-1 min-w-0">
-                              <Icon className={`w-5 h-5 ${catConfig.text}`} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                                <p className="text-xs text-gray-400">
-                                  {item.type === "project" ? `${toolNameMap[item.toolId] || item.toolId} • ` : ""}
-                                  {formatFullDate(item.createdAt)}
-                                </p>
-                              </div>
-                            </Link>
-                            {item.type === "project" && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">
-                                Project
-                              </span>
-                            )}
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 ${catConfig.text}`}>
-                              {catConfig.label}
-                            </span>
-                            {item.type === "project" && item.projectSlug && (
-                              <button
-                                onClick={() => deleteProject(item.projectSlug!)}
-                                className="p-1 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
-                                title="Delete project"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
-                              </button>
-                            )}
-                            <Link href={toolPath}>
-                              <ExternalLink className="w-4 h-4 text-gray-300" />
-                            </Link>
                           </div>
                         );
                       })}
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {/* Quick Stats */}
-          {libraryItems.length > 0 && (
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">
-              {Object.entries(categoryConfig).map(([key, config]) => {
-                const count = libraryItems.filter((i) => i.category === key).length;
-                const Icon = config.icon;
+          {/* Stats Cards */}
+          {projects.length > 0 && (
+            <div className="mt-6 grid grid-cols-5 gap-2">
+              {stats.map(s => {
+                const Icon = s.icon;
                 return (
                   <button
-                    key={key}
-                    onClick={() => setFilterCategory(filterCategory === key ? null : key)}
-                    className={`bg-white rounded-xl border p-3 transition-all hover:shadow-sm ${
-                      filterCategory === key ? "border-blue-400 ring-2 ring-blue-100" : "border-gray-200"
+                    key={s.key}
+                    onClick={() => setFilterCategory(filterCategory === s.key ? null : s.key)}
+                    className={`py-3 rounded-xl border text-center transition-all ${
+                      filterCategory === s.key ? "border-blue-400 bg-blue-50" : "border-gray-200 bg-white hover:border-blue-200"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <Icon className={`w-5 h-5 ${config.text}`} />
-                      <div className="text-left">
-                        <p className="text-lg font-bold text-gray-900">{count}</p>
-                        <p className="text-[10px] text-gray-500 truncate">{config.label}</p>
-                      </div>
-                    </div>
+                    <Icon className={`w-4 h-4 mx-auto mb-1 ${s.color}`} />
+                    <p className="text-lg font-bold text-gray-900">{s.count}</p>
+                    <p className="text-[9px] text-gray-400">{s.label}</p>
                   </button>
                 );
               })}
@@ -664,66 +430,48 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      {/* New Project Modal */}
-      <AnimatePresence>
-        {showNewProjectModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowNewProjectModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-900">Start a New Project</h2>
-                <button
-                  onClick={() => setShowNewProjectModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-              <div className="p-6 overflow-y-auto max-h-[60vh]">
-                <div className="space-y-6">
-                  {toolCategories.map((cat) => {
-                    const Icon = cat.icon;
-                    return (
-                      <div key={cat.category}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Icon className={`w-4 h-4 ${cat.text}`} />
-                          <h3 className="text-sm font-semibold text-gray-700">{cat.name}</h3>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {cat.tools.map((tool) => (
-                            <Link
-                              key={tool.slug}
-                              href={`/dashboard/${cat.category}/${tool.slug}`}
-                              onClick={() => setShowNewProjectModal(false)}
-                              className={`flex items-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all group`}
-                            >
-                              <Icon className={`w-5 h-5 ${cat.text} group-hover:scale-110 transition-transform`} />
-                              <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
-                                {tool.name}
-                              </span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── New Project Modal ─────────────────────────────────────────────── */}
+      {showNewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowNewModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+              <h2 className="text-sm font-semibold text-gray-900">New Project</h2>
+              <button onClick={() => setShowNewModal(false)} className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="p-5 max-h-[60vh] overflow-y-auto space-y-4">
+              {toolCategories.map(cat => {
+                const CatIcon = cat.icon;
+                return (
+                  <div key={cat.category}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <CatIcon className={`w-3.5 h-3.5 ${cat.color}`} />
+                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{cat.name}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {cat.tools.map(tool => (
+                        <Link
+                          key={tool.slug}
+                          href={`/dashboard/${cat.category}/${tool.slug}`}
+                          onClick={() => setShowNewModal(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-xs text-gray-700 hover:text-blue-700 transition-colors"
+                        >
+                          <Filter className="w-3 h-3 text-gray-400" />
+                          {tool.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface Topic {
@@ -139,6 +140,7 @@ export default function LectureOrganizerPage() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("lecture-organizer");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -209,6 +211,12 @@ export default function LectureOrganizerPage() {
       setSavedNotes((prev) => [newNote, ...prev]);
       setSelectedNote(newNote);
       setView("note");
+      saveProject({
+        inputData: { transcript, subject },
+        outputData: { note: newNote },
+        settings: { noteStyle, model: selectedModel },
+        inputPreview: transcript.slice(0, 200),
+      });
       setTranscript("");
       setSubject("");
     } catch (error) {

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface Flashcard {
@@ -50,6 +51,7 @@ export default function FlashcardMakerPage() {
   const [showKeyboardHints, setShowKeyboardHints] = useState(false);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("flashcard-maker");
 
   useEffect(() => setMounted(true), []);
 
@@ -153,6 +155,12 @@ export default function FlashcardMakerPage() {
         setCurrentCard(0);
         setIsFlipped(false);
         toast({ title: `Created ${flashcards.length} flashcards!` });
+        saveProject({
+          inputData: { text, cardCount },
+          outputData: { cards: flashcards },
+          settings: { model: selectedModel, style: "standard" },
+          inputPreview: text.slice(0, 200),
+        });
       }
     } catch (error) {
       console.error(error);

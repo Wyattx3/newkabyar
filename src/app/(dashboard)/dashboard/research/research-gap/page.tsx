@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface Gap {
@@ -84,6 +85,7 @@ export default function ResearchGapPage() {
   const [proposalContent, setProposalContent] = useState("");
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("research-gap");
 
   useEffect(() => setMounted(true), []);
 
@@ -121,6 +123,12 @@ export default function ResearchGapPage() {
 
       const data = await response.json();
       setResult(data);
+      saveProject({
+        inputData: { topic, field },
+        outputData: data,
+        settings: { model: selectedModel },
+        inputPreview: topic.slice(0, 200),
+      });
       
       // Add to history
       setSearchHistory(prev => [

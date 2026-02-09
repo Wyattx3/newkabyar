@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModelSelector, type ModelType, useAILanguage } from "@/components/ai";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import { cn } from "@/lib/utils";
 import { 
   FlaskConical, Loader2, Copy, Check, Download, FileText, Beaker, Target,
@@ -98,6 +99,7 @@ export default function LabReportPage() {
   const [isParsingFile, setIsParsingFile] = useState(false);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("lab-report");
 
   useEffect(() => setMounted(true), []);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages]);
@@ -211,6 +213,12 @@ export default function LabReportPage() {
       setReport(data);
       // Add to history
       setReportHistory(prev => [data, ...prev.slice(0, 9)]);
+      saveProject({
+        inputData: { title, objective, rawData, materials, procedure, observations, subject },
+        outputData: data,
+        settings: { model: selectedModel, language: aiLanguage },
+        inputPreview: title.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

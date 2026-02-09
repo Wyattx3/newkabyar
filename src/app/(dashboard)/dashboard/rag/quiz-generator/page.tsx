@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface ChatMessage {
@@ -75,6 +76,7 @@ export default function QuizGeneratorPage() {
   
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("quiz-generator");
   
   // Auto scroll chat
   useEffect(() => {
@@ -377,6 +379,12 @@ ${getQuizContext()}`
       setAnswers({});
       setShowResults(false);
       setChatMessages([]);
+      saveProject({
+        inputData: { text, questionCount, difficulty },
+        outputData: { quiz: data },
+        settings: { model: selectedModel, language: quizLanguage },
+        inputPreview: text.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

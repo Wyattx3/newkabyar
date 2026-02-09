@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface Source {
@@ -80,6 +81,7 @@ export default function PDFQAPage() {
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("pdf-qa");
 
   // Load document from query parameter
   const loadDocumentFromId = useCallback(async (docId: string) => {
@@ -291,6 +293,12 @@ export default function PDFQAPage() {
         followUps: data.followUps || [],
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      saveProject({
+        inputData: { question: q, sources: sources.map(s => ({ name: s.name, type: s.type })) },
+        outputData: { lastAnswer: data.answer, references: data.references || [] },
+        settings: { model: selectedModel },
+        inputPreview: q.slice(0, 200),
+      });
     } catch (error) {
       console.error(error);
       toast({ title: "Something went wrong", variant: "destructive" });

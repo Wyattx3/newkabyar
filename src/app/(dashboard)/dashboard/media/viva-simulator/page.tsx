@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePersistedState } from "@/hooks/use-persisted-state";
+import { useAutoSaveProject } from "@/hooks/use-auto-save-project";
 import Link from "next/link";
 
 interface QuestionHistory {
@@ -144,6 +145,7 @@ export default function VivaSimulatorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const aiLanguage = useAILanguage();
+  const { saveProject } = useAutoSaveProject("viva-simulator");
 
   useEffect(() => setMounted(true), []);
 
@@ -408,6 +410,12 @@ export default function VivaSimulatorPage() {
         },
       ];
       setHistory(updatedHistory);
+      saveProject({
+        inputData: { topic, subject, difficulty },
+        outputData: { history: updatedHistory },
+        settings: { examinerStyle, model: selectedModel },
+        inputPreview: topic.slice(0, 200),
+      });
       
       // Show next question immediately
       setVivaState({
