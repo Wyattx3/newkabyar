@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { SessionProvider, useSession } from "next-auth/react";
 import {
   Check,
   ArrowRight,
@@ -13,11 +16,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-export const metadata = {
-  title: "Pricing - Kabyar | AI Study Tools for Students",
-  description: "Choose the perfect plan for your study needs. Start free, upgrade anytime. AI-powered tools for every student.",
-};
-
 const plans = [
   {
     name: "Free",
@@ -28,6 +26,7 @@ const plans = [
     color: "gray",
     cta: "Start Free",
     ctaLink: "/register",
+    planId: "free",
     popular: false,
     credits: "50 credits/mo",
     features: [
@@ -53,6 +52,7 @@ const plans = [
     color: "blue",
     cta: "Get Student Plan",
     ctaLink: "/register?plan=student",
+    planId: "student",
     popular: true,
     credits: "500 credits/mo",
     features: [
@@ -80,6 +80,7 @@ const plans = [
     color: "gray",
     cta: "Get Pro Plan",
     ctaLink: "/register?plan=pro",
+    planId: "pro",
     popular: false,
     credits: "Unlimited",
     features: [
@@ -126,6 +127,25 @@ const faqs = [
 
 export default function PricingPage() {
   return (
+    <SessionProvider>
+      <PricingContent />
+    </SessionProvider>
+  );
+}
+
+function PricingContent() {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+
+  const getCtaLink = (plan: typeof plans[0]) => {
+    if (isLoggedIn) {
+      if (plan.planId === "free") return "/dashboard";
+      return `/dashboard/settings`;
+    }
+    return plan.ctaLink;
+  };
+
+  return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
@@ -141,15 +161,20 @@ export default function PricingPage() {
               <Link href="/blog" className="text-gray-500 hover:text-gray-900 transition">Blog</Link>
             </nav>
             <div className="flex items-center gap-2">
-              <Link href="/login" className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition">
-                Log in
-              </Link>
-              <Link
-                href="/register"
-                className="px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                Start Free
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/dashboard" className="px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors">
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition">
+                    Log in
+                  </Link>
+                  <Link href="/register" className="px-4 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors">
+                    Start Free
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -225,14 +250,14 @@ export default function PricingPage() {
 
                   {/* CTA */}
                   <Link
-                    href={plan.ctaLink}
+                    href={getCtaLink(plan)}
                     className={`flex items-center justify-center gap-2 w-full py-2.5 sm:py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-6 ${
                       isPopular
                         ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20"
                         : "bg-gray-900 text-white hover:bg-gray-800"
                     }`}
                   >
-                    {plan.cta}
+                    {isLoggedIn && plan.planId === "free" ? "Go to Dashboard" : plan.cta}
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
 
@@ -323,10 +348,10 @@ export default function PricingPage() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link
-              href="/register"
+              href={isLoggedIn ? "/dashboard" : "/register"}
               className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors text-sm sm:text-base"
             >
-              Get Started Free <ArrowRight className="w-4 h-4" />
+              {isLoggedIn ? "Go to Dashboard" : "Get Started Free"} <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/tools"

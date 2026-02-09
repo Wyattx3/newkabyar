@@ -557,9 +557,11 @@ export function Sidebar() {
             </Tooltip>
           )}
 
-          {/* Profile Popup (Expanded) */}
-          {isExpanded && showProfilePopup && (
-            <div className="absolute bottom-20 left-3 right-3 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in slide-in-from-bottom-2">
+          {/* Profile Popup */}
+          {showProfilePopup && (
+            <div className={`absolute bottom-20 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in slide-in-from-bottom-2 ${
+              isExpanded ? "left-3 right-3" : "left-full ml-2 w-56"
+            }`}>
               <div className="bg-blue-600 px-4 py-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border-2 border-white/30">
@@ -572,24 +574,41 @@ export function Sidebar() {
                   </div>
                 </div>
               </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-4 space-y-2.5">
+                {/* Plan */}
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Coins className="w-4 h-4 text-amber-500" />
+                    <Crown className="w-3.5 h-3.5 text-blue-500" />
+                    <span className="text-xs text-gray-500">Plan</span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-900 capitalize px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md">
+                    {userProfile?.plan || "free"}
+                  </span>
+                </div>
+                {/* Credits */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-3.5 h-3.5 text-amber-500" />
                     <span className="text-xs text-gray-500">Credits</span>
                   </div>
                   <span className="text-sm font-bold text-gray-900">{credits}</span>
                 </div>
                 {userProfile?.plan === "free" && (
-                  <Link href="/dashboard/plans" className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5">
-                    <Crown className="w-3.5 h-3.5" />Upgrade
+                  <Link href="/pricing" className="w-full py-2 mt-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors">
+                    <Crown className="w-3.5 h-3.5" />Upgrade Plan
                   </Link>
                 )}
               </div>
-              <div className="px-4 pb-4">
+              <div className="px-4 pb-3 flex gap-2">
+                <Link
+                  href="/dashboard/settings"
+                  className="flex-1 py-2 text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Settings className="w-3.5 h-3.5" />Settings
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="w-full py-2 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                 >
                   <LogOut className="w-3.5 h-3.5" />Logout
                 </button>
@@ -618,14 +637,15 @@ export function Sidebar() {
           ) : (
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <div className="flex justify-center py-2">
-                  <button onClick={() => setShowProfilePopup(!showProfilePopup)}>
-                    <Avatar className="h-7 w-7">
-                      {userImage && <AvatarImage src={userImage} alt={userName} />}
-                      <AvatarFallback className="bg-blue-100 text-blue-600 text-[10px] font-bold">{userName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowProfilePopup(!showProfilePopup)}
+                  className="flex justify-center py-2 w-full hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <Avatar className="h-7 w-7">
+                    {userImage && <AvatarImage src={userImage} alt={userName} />}
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-[10px] font-bold">{userName.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="right" className="bg-gray-900 text-white border-0">
                 {userName} • {credits} credits
