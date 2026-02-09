@@ -89,11 +89,13 @@ export async function stream(
 const GEMINI_SUPER_SMART_KEY = "AIzaSyC6WnkMJO5FvHwUG1dZwpRfwPWOQbNxAwo";
 
 // Model tiers for user selection
+// Kay AI 1.0 = fast (Groq Kimi K2) — available to all
+// Kay AI 2.0 = pro-smart (Groq GPT-OSS 120B) — premium only
 export const MODEL_TIERS = {
-  "super-smart": { name: "Super Smart", description: "Most powerful AI model", provider: "gemini" as AIProvider, model: "gemini-2.5-pro-preview-05-06", apiKey: GEMINI_SUPER_SMART_KEY, credits: 0, proOnly: true },
-  "pro-smart": { name: "Pro Smart", description: "Fast & intelligent", provider: "gemini" as AIProvider, model: "gemini-2.5-flash-preview-05-20", apiKey: GEMINI_SUPER_SMART_KEY, credits: 5 },
-  normal: { name: "Normal", description: "Grok 3 Mini - Balanced", grokModel: GROK_MODELS.normal, credits: 3 },
-  fast: { name: "Fast", description: "Groq Kimi K2 - Ultra Fast", provider: "groq" as AIProvider, model: GROQ_MODELS.kimi, credits: 2 },
+  "super-smart": { name: "Kay AI 2.0", description: "Most powerful AI", provider: "groq" as AIProvider, model: GROQ_MODELS.gptOss, credits: 5, proOnly: true },
+  "pro-smart": { name: "Kay AI 2.0", description: "Most powerful AI", provider: "groq" as AIProvider, model: GROQ_MODELS.gptOss, credits: 5, proOnly: true },
+  normal: { name: "Kay AI 1.0", description: "Fast & reliable", provider: "groq" as AIProvider, model: GROQ_MODELS.kimi, credits: 2 },
+  fast: { name: "Kay AI 1.0", description: "Fast & reliable", provider: "groq" as AIProvider, model: GROQ_MODELS.kimi, credits: 2 },
 } as const;
 
 export const AVAILABLE_MODELS: Record<AIProvider, string[]> = {
@@ -101,7 +103,7 @@ export const AVAILABLE_MODELS: Record<AIProvider, string[]> = {
   claude: ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
   gemini: ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"],
   grok: [GROK_MODELS.smart, GROK_MODELS.normal, GROK_MODELS.fast],
-  groq: [GROQ_MODELS.kimi, GROQ_MODELS.llama, GROQ_MODELS.mixtral],
+  groq: [GROQ_MODELS.kimi, GROQ_MODELS.gptOss, GROQ_MODELS.llama, GROQ_MODELS.mixtral],
 };
 
 export const PROVIDER_NAMES: Record<AIProvider, string> = {
@@ -116,35 +118,18 @@ export const PROVIDER_NAMES: Record<AIProvider, string> = {
 export type ModelTier = "super-smart" | "pro-smart" | "normal" | "fast";
 
 export function getModelConfig(tier: ModelTier): { provider: AIProvider; model: string; apiKey?: string } {
-  if (tier === "super-smart") {
-    return {
-      provider: "gemini",
-      model: "gemini-2.5-pro-preview-05-06",
-      apiKey: GEMINI_SUPER_SMART_KEY,
-    };
-  }
-  
-  if (tier === "pro-smart") {
-    return {
-      provider: "gemini",
-      model: "gemini-2.5-flash-preview-05-20",
-      apiKey: GEMINI_SUPER_SMART_KEY,
-    };
-  }
-  
-  // Fast tier uses Groq with Kimi K2
-  if (tier === "fast") {
+  // Kay AI 2.0 (premium) — uses Groq GPT-OSS 120B
+  if (tier === "super-smart" || tier === "pro-smart") {
     return {
       provider: "groq",
-      model: GROQ_MODELS.kimi,
+      model: GROQ_MODELS.gptOss,
     };
   }
   
-  // Normal tier uses Grok
-  const tierConfig = MODEL_TIERS[tier];
+  // Kay AI 1.0 (default) — uses Groq Kimi K2
   return {
-    provider: "grok" as AIProvider,
-    model: tierConfig && 'grokModel' in tierConfig ? tierConfig.grokModel : getGrokModel(tier),
+    provider: "groq",
+    model: GROQ_MODELS.kimi,
   };
 }
 

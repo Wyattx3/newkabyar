@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const DAILY_FREE_CREDITS = 50;
-const DAILY_PRO_CREDITS = 3500;
+const DAILY_PLUS_CREDITS = 500;
+const DAILY_PRO_CREDITS = 999999; // Unlimited
 
 const deductSchema = z.object({
   amount: z.number().min(1).max(100),
@@ -24,9 +25,11 @@ function shouldResetCredits(resetAt: Date): boolean {
 function getDailyCreditsForPlan(plan: string): number {
   switch (plan) {
     case "unlimited":
-      return 999999; // Effectively unlimited
     case "pro":
       return DAILY_PRO_CREDITS;
+    case "plus":
+    case "student":
+      return DAILY_PLUS_CREDITS;
     default:
       return DAILY_FREE_CREDITS;
   }

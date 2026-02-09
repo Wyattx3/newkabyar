@@ -3,6 +3,7 @@ import type { AIMessage, AIResponse } from "./types";
 // Groq Models
 export const GROQ_MODELS = {
   kimi: "moonshotai/kimi-k2-instruct-0905",
+  gptOss: "openai/gpt-oss-120b",
   llama: "llama-3.3-70b-versatile",
   mixtral: "mixtral-8x7b-32768",
   // Compound models with built-in tools (web search, etc.)

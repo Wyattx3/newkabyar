@@ -63,10 +63,17 @@ export async function POST(request: NextRequest) {
       .slice(0, 8)
       .sort((a, b) => a.startIndex - b.startIndex); // Re-sort by position for context
 
-    // If no relevant chunks found, use the first few chunks as context
-    const finalChunks = relevantChunks.length > 0 && relevantChunks[0].score > 0 
+    // If no relevant chunks found via keyword, use a broad spread of the document
+    const hasKeywordMatches = relevantChunks.length > 0 && relevantChunks[0].score > 0;
+    const finalChunks = hasKeywordMatches 
       ? relevantChunks 
-      : chunks.slice(0, 5);
+      : chunks.length <= 8 
+        ? chunks // If document is small, use everything
+        : [
+            ...chunks.slice(0, 3), // Start of document
+            ...chunks.slice(Math.floor(chunks.length / 2) - 1, Math.floor(chunks.length / 2) + 1), // Middle
+            ...chunks.slice(-2), // End of document
+          ];
 
     const context = finalChunks.map(c => c.text).join("\n\n---\n\n");
 
@@ -75,14 +82,17 @@ export async function POST(request: NextRequest) {
       : "";
 
     // Use simple plain text prompt - more reliable across all models
-    const systemPrompt = `You are an expert document analyst. Your job is to answer the user's question using ONLY the text provided below. Do NOT say "the document is the only source" or mention anything about sources being limited. Just answer the question directly using the information in the text.
+    const systemPrompt = `You are an expert document analyst. Answer the user's question using the text provided below.
 ${languageInstructions}
 
 Rules:
-- Answer directly and thoroughly using the provided text
+- Always provide a thorough, helpful answer based on the text
 - Quote or paraphrase relevant parts when helpful
-- If the text does not contain enough information to answer, say "I couldn't find information about this in the provided document."
-- Never comment on the document structure, format, or sources — just answer the question`;
+- If the exact answer isn't explicitly stated, use your reasoning to infer the answer from related information in the text
+- If the question is about a general topic covered in the text, summarize what the text says about that topic
+- Be confident in your answers — do not hedge or say you cannot find information unless the text is completely unrelated to the question
+- Never mention "the document", "the text provided", "the source" or anything meta about the format — just answer naturally as if you know the information
+- Never refuse to answer. Always give the best possible answer from the available text`;
 
     let result: string;
     try {
@@ -232,8 +242,9 @@ Return ONLY the 3 questions, one per line, no numbering or bullets.`;
     // Generate smart follow-up questions based on document context
     const followUps = await generateFollowUps(context, question, result);
 
+    const cleanedAnswer = cleanResponse(result);
     const answer = {
-      answer: cleanResponse(result),
+      answer: cleanedAnswer,
       confidence: "high",
       references: references,
       followUps: followUps,

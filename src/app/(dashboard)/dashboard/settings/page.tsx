@@ -141,9 +141,11 @@ export default function SettingsPage() {
   };
 
   const planInfo: Record<string, { name: string; features: string[] }> = {
-    free: { name: "Free", features: ["5 tools", "50 credits/mo", "Basic models"] },
-    student: { name: "Student", features: ["All 25+ tools", "500 credits/mo", "GPT-4 & Claude"] },
-    pro: { name: "Pro", features: ["All 25+ tools", "Unlimited", "All models"] },
+    free: { name: "Free", features: ["All tools", "50 credits/day", "Kay AI 1.0"] },
+    plus: { name: "Plus", features: ["All tools", "500 credits/day", "Kay AI 1.0 + 2.0"] },
+    student: { name: "Plus", features: ["All tools", "500 credits/day", "Kay AI 1.0 + 2.0"] },
+    pro: { name: "Pro", features: ["All tools", "Unlimited credits", "Kay AI 1.0 + 2.0"] },
+    unlimited: { name: "Pro", features: ["All tools", "Unlimited credits", "Kay AI 1.0 + 2.0"] },
   };
   const plan = planInfo[userPlan] || planInfo.free;
 

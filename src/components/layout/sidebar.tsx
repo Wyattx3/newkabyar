@@ -103,7 +103,7 @@ interface UserProfile {
   dailyCreditsUsed: number;
   creditsRemaining: number;
   resetTimeText: string;
-  plan: "free" | "pro" | "unlimited";
+  plan: "free" | "plus" | "student" | "pro" | "unlimited";
 }
 
 export function Sidebar() {
@@ -290,38 +290,7 @@ export function Sidebar() {
             </Tooltip>
           )}
 
-          {/* Library */}
-          {isExpanded ? (
-            <Link
-              href="/dashboard/library"
-              onClick={() => setIsMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2 transition-all duration-200",
-                pathname === "/dashboard/library"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-              )}
-            >
-              <Library className="w-5 h-5 shrink-0" />
-              <span className="text-sm font-medium">My Library</span>
-            </Link>
-          ) : (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <div className="flex justify-center py-2 mb-2">
-                  <Link href="/dashboard/library" onClick={() => setIsMobileOpen(false)}>
-                    <Library className={cn(
-                      "w-5 h-5 transition-colors duration-200",
-                      pathname === "/dashboard/library" ? "text-blue-600" : "text-gray-400 hover:text-gray-600"
-                    )} />
-                  </Link>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-gray-900 text-white border-0">
-                My Library
-              </TooltipContent>
-            </Tooltip>
-          )}
+          {/* Library - temporarily hidden */}
 
           {/* Divider */}
           <div className="h-px bg-gray-100 my-2" />
@@ -582,7 +551,7 @@ export function Sidebar() {
                     <span className="text-xs text-gray-500">Plan</span>
                   </div>
                   <span className="text-xs font-bold text-gray-900 capitalize px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md">
-                    {userProfile?.plan || "free"}
+                    {({ free: "Free", plus: "Plus", student: "Plus", pro: "Pro", unlimited: "Pro" } as Record<string, string>)[userProfile?.plan || "free"] || "Free"}
                   </span>
                 </div>
                 {/* Credits */}
