@@ -51,6 +51,7 @@ interface NewsArticle {
   relatedTopics?: string[];
   source: string;
   time: string;
+  timestamp?: number;
   color: string;
 }
 
@@ -174,6 +175,24 @@ export default function DashboardPage() {
     if (days === 1) return "Yesterday";
     if (days < 7) return `${days}d ago`;
     return new Date(date).toLocaleDateString();
+  };
+
+  // Format news time - use timestamp if available, otherwise use time string
+  const formatNewsTime = (article: NewsArticle) => {
+    if (article.timestamp) {
+      const diff = Date.now() - article.timestamp;
+      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      if (minutes < 1) return "Just now";
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days === 1) return "Yesterday";
+      if (days < 7) return `${days}d ago`;
+      return new Date(article.timestamp).toLocaleDateString();
+    }
+    return article.time;
   };
 
   // Get today's date as string (YYYY-MM-DD)
@@ -327,7 +346,7 @@ export default function DashboardPage() {
                   <h2 className="text-xl font-bold text-gray-900">{selectedNews.title}</h2>
                   <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                     <Clock className="w-4 h-4" />
-                    {selectedNews.time}
+                    {formatNewsTime(selectedNews)}
                     <span className="text-gray-300">|</span>
                     <Sparkles className="w-4 h-4 text-blue-500" />
                     {selectedNews.source}
@@ -655,7 +674,7 @@ export default function DashboardPage() {
                     </span>
                     <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Clock className="w-3 h-3" />
-                      {article.time}
+                      {formatNewsTime(article)}
                     </div>
                   </div>
 

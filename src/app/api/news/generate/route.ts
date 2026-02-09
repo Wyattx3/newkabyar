@@ -116,11 +116,13 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
     const parsed = JSON.parse(jsonContent);
     
     // Add colors and time to news items
+    const now = Date.now();
     const newsWithMeta = parsed.news.map((item: any, index: number) => ({
       ...item,
-      id: `ai-news-${Date.now()}-${index}`,
+      id: `ai-news-${now}-${index}`,
       color: categoryColors[item.category] || categoryColors.default,
-      time: getRandomTime(),
+      time: "Just now",
+      timestamp: now,
       source: "AI Generated",
     }));
 
@@ -129,6 +131,7 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
     console.error("Error generating news:", error);
     
     // Fallback news
+    const fallbackNow = Date.now();
     const fallbackNews = [
       {
         id: "fallback-1",
@@ -140,6 +143,7 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         relatedTopics: ["Python", "JavaScript", "Career Development"],
         color: "bg-blue-500",
         time: "Just now",
+        timestamp: fallbackNow,
         source: "AI Generated",
       },
       {
@@ -151,7 +155,8 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         actionTip: "Try building a simple chatbot using OpenAI's API to understand how LLMs work.",
         relatedTopics: ["Machine Learning", "Natural Language Processing", "Deep Learning"],
         color: "bg-purple-500",
-        time: "2 hours ago",
+        time: "Just now",
+        timestamp: fallbackNow,
         source: "AI Generated",
       },
       {
@@ -163,7 +168,8 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         actionTip: "Practice solving algorithm problems on LeetCode to apply your math skills.",
         relatedTopics: ["Linear Algebra", "Algorithms", "Cryptography"],
         color: "bg-indigo-500",
-        time: "5 hours ago",
+        time: "Just now",
+        timestamp: fallbackNow,
         source: "AI Generated",
       },
       {
@@ -175,7 +181,8 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
         actionTip: "Build a complete full-stack project and deploy it to showcase your skills.",
         relatedTopics: ["React", "Node.js", "Database Design"],
         color: "bg-cyan-500",
-        time: "1 day ago",
+        time: "Just now",
+        timestamp: fallbackNow,
         source: "AI Generated",
       },
     ];
@@ -184,9 +191,19 @@ IMPORTANT: Respond ONLY with valid JSON, no other text. Format:
   }
 }
 
-function getRandomTime(): string {
-  const options = ["Just now", "1 hour ago", "2 hours ago", "3 hours ago", "5 hours ago", "Today"];
-  return options[Math.floor(Math.random() * options.length)];
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
 }
 
 
