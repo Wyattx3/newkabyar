@@ -171,20 +171,20 @@ export default function ColdEmailPage({ initialData }: { initialData?: InitialDa
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
       {/* Minimal Header */}
-      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">Cold Email Generator</h1>
-          <div className="h-4 w-px bg-gray-200" />
-          <div className="flex items-center gap-3">
+      <div className="bg-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-2 sm:py-0 sm:h-14 shrink-0 gap-2 sm:gap-0">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+          <h1 className="text-base sm:text-lg font-semibold text-gray-900">Cold Email Generator</h1>
+          <div className="hidden sm:block h-4 w-px bg-gray-200" />
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {/* Tone Selector */}
             <div className="relative">
               <button
                 onClick={() => setShowTone(!showTone)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
               >
-                <span>{TONES.find(t => t.value === tone)?.icon}</span>
-                <span className="font-medium">{TONES.find(t => t.value === tone)?.label}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-sm">{TONES.find(t => t.value === tone)?.icon}</span>
+                <span className="font-medium hidden xs:inline">{TONES.find(t => t.value === tone)?.label}</span>
+                <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400" />
               </button>
               {showTone && (
                 <div className="absolute top-full mt-1 left-0 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-30 min-w-[180px]">
@@ -216,32 +216,32 @@ export default function ColdEmailPage({ initialData }: { initialData?: InitialDa
           <Button
             onClick={handleGenerate}
             disabled={isLoading || !canGenerate}
-            className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-sm"
+            className="h-8 sm:h-9 px-3 sm:px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-xs sm:text-sm w-full sm:w-auto"
           >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 mr-1.5" /> Generate</>}
+            {isLoading ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" /> <span className="hidden xs:inline">Generate</span><span className="xs:hidden">Go</span></>}
           </Button>
         </div>
       </div>
 
-      {/* Main Content - Side by Side */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Content - Side by Side on desktop, stacked on mobile */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left - Form */}
-        <div className="flex-1 flex flex-col border-r border-gray-200 bg-white">
-          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-            <span className="text-sm font-medium text-gray-700">Email Details</span>
-            <div className="flex items-center gap-1">
+        <div className="flex-1 flex flex-col border-r-0 lg:border-r border-gray-200 bg-white min-h-0">
+          <div className="h-10 sm:h-12 border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 shrink-0">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Email Details</span>
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
               {(purpose || recipient || ask) && (
                 <button
                   onClick={reset}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
                   title="Clear all"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               )}
             </div>
           </div>
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
             <div className="max-w-lg space-y-5">
               {/* Purpose */}
               <div>
@@ -315,9 +315,9 @@ export default function ColdEmailPage({ initialData }: { initialData?: InitialDa
         </div>
 
         {/* Right - Output */}
-        <div className="flex-1 flex flex-col bg-white">
-          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-            <div className="flex items-center gap-3">
+        <div className="flex-1 flex flex-col bg-white border-t lg:border-t-0 border-gray-200">
+          <div className="h-10 sm:h-12 border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <span className="text-sm font-medium text-gray-700">Generated Email</span>
               {result && (
                 <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full flex items-center gap-1">
