@@ -295,13 +295,13 @@ export default function AIDetectorPage({ initialData }: { initialData?: InitialD
   if (!mounted) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Minimal Header */}
-      <div className="bg-white border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-2 sm:py-0 sm:h-14 shrink-0 gap-2 sm:gap-0">
-        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-          <h1 className="text-base sm:text-lg font-semibold text-gray-900">AI Content Detector</h1>
-          <div className="hidden sm:block h-4 w-px bg-gray-200" />
-          <div className="px-1 sm:px-2">
+      <div className="min-h-[3.5rem] py-2 bg-white border-b border-gray-200 flex items-center justify-between px-3 lg:px-6 shrink-0 flex-wrap gap-2">
+        <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
+          <h1 className="text-base lg:text-lg font-semibold text-gray-900">AI Content Detector</h1>
+          <div className="h-4 w-px bg-gray-200" />
+          <div className="px-2">
             <ModelSelector value={selectedModel} onChange={setSelectedModel} />
           </div>
         </div>
@@ -310,54 +310,54 @@ export default function AIDetectorPage({ initialData }: { initialData?: InitialD
           <Button
             onClick={handleAnalyze}
             disabled={isLoading || text.trim().length < 50}
-            className="h-8 sm:h-9 px-3 sm:px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-xs sm:text-sm w-full sm:w-auto"
+            className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-sm"
           >
-            {isLoading ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <><Scan className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" /> <span className="hidden xs:inline">Analyze</span><span className="xs:hidden">Go</span></>}
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Scan className="w-4 h-4 mr-1.5" /> Analyze</>}
           </Button>
         </div>
       </div>
 
-      {/* Main Content - Side by Side on desktop, stacked on mobile */}
+      {/* Main Content - Side by Side */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left - Input */}
-        <div className="flex-1 flex flex-col border-r-0 lg:border-r border-gray-200 bg-white min-h-0">
-          <div className="h-10 sm:h-12 border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">Input Text</span>
+        <div className="flex-1 min-h-[35vh] lg:min-h-0 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 bg-white">
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-3 lg:px-6 shrink-0">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <span className="text-sm font-medium text-gray-700">Input Text</span>
               {text && (
-                <span className="text-[10px] sm:text-xs text-gray-400 shrink-0">{wordCount(text)} words</span>
+                <span className="text-xs text-gray-400">{wordCount(text)} words</span>
               )}
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            <div className="flex items-center gap-1">
               {text && (
                 <button
                   onClick={copyInputToClipboard}
-                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
                   title="Copy input"
                 >
-                  {copiedInput ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                  {copiedInput ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
               )}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
                 title="Upload file"
               >
-                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <FileText className="w-4 h-4" />
               </button>
               <input ref={fileInputRef} type="file" accept=".txt,.md" onChange={handleFileUpload} className="hidden" />
               {text && (
                 <button
                   onClick={reset}
-                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
                   title="Clear"
                 >
-                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
-          <div className="flex-1 p-3 sm:p-6 overflow-y-auto relative">
+          <div className="flex-1 p-3 lg:p-6 overflow-y-auto relative">
             {!text && (
               <button
                 onClick={handlePaste}
@@ -373,7 +373,7 @@ export default function AIDetectorPage({ initialData }: { initialData?: InitialD
             )}
             {result && result.indicators && result.indicators.length > 0 ? (
               <div 
-                className="text-sm sm:text-[15px] leading-relaxed text-gray-900 whitespace-pre-wrap"
+                className="text-[15px] leading-relaxed text-gray-900 whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: highlightText(text, result.indicators) }}
               />
             ) : (
@@ -381,7 +381,7 @@ export default function AIDetectorPage({ initialData }: { initialData?: InitialD
                 value={text}
                 onChange={(e) => { setText(e.target.value); setResult(null); }}
                 placeholder="Paste your text here to check for AI-generated content..."
-                className="h-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:outline-none text-sm sm:text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent transition-none"
+                className="h-full resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:outline-none text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 bg-transparent transition-none"
                 style={{ transition: 'none' }}
               />
             )}
@@ -389,58 +389,58 @@ export default function AIDetectorPage({ initialData }: { initialData?: InitialD
         </div>
 
         {/* Right - Results */}
-        <div className="flex-1 flex flex-col bg-white border-t lg:border-t-0 border-gray-200">
-          <div className="h-10 sm:h-12 border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">Detection Results</span>
+        <div className="flex-1 min-h-[35vh] lg:min-h-0 flex flex-col bg-white">
+          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-3 lg:px-6 shrink-0">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <span className="text-sm font-medium text-gray-700">Detection Results</span>
               {result && (
                 <span className={cn(
-                  "px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded-full flex items-center gap-0.5 sm:gap-1 shrink-0",
+                  "px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1",
                   result.aiScore >= 60 ? "bg-red-50 text-red-700" :
                   result.aiScore >= 40 ? "bg-amber-50 text-amber-700" :
                   "bg-green-50 text-green-700"
                 )}>
-                  <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <ShieldCheck className="w-3 h-3" />
                   {result.aiScore}% AI
                 </span>
               )}
             </div>
             {result && (
-              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={copyReport}
-                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
                   title="Copy report"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
                 <button
                   onClick={exportReport}
-                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
                   title="Download report"
                 >
-                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Download className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleHumanize}
                   disabled={isHumanizing}
-                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
                   title="Humanize text"
                 >
-                  <Wand2 className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", isHumanizing && "animate-pulse")} />
+                  <Wand2 className={cn("w-4 h-4", isHumanizing && "animate-pulse")} />
                 </button>
                 <button
                   onClick={() => { setResult(null); handleAnalyze(); }}
                   disabled={isLoading}
-                  className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors disabled:opacity-50"
                   title="Re-analyze"
                 >
-                  <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", isLoading && "animate-spin")} />
+                  <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                 </button>
               </div>
             )}
           </div>
-          <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
+          <div className="flex-1 p-3 lg:p-6 overflow-y-auto">
             {result ? (
               <div className="space-y-6">
                 {/* Circle Chart */}

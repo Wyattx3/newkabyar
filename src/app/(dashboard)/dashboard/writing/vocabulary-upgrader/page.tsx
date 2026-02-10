@@ -220,12 +220,12 @@ export default function VocabularyUpgraderPage({ initialData }: { initialData?: 
   if (!mounted) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Minimal Header */}
-      <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">Vocabulary Upgrader</h1>
-          <div className="h-4 w-px bg-gray-200" />
+      <div className="min-h-[3.5rem] py-2 bg-white border-b border-gray-200 flex items-center justify-between px-3 lg:px-6 shrink-0 flex-wrap gap-2">
+        <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
+          <h1 className="text-base lg:text-lg font-semibold text-gray-900">Vocabulary Upgrader</h1>
+          <div className="h-4 w-px bg-gray-200 hidden lg:block" />
           <div className="flex items-center gap-3">
             {/* Level Selector */}
             <div className="relative">
@@ -278,10 +278,10 @@ export default function VocabularyUpgraderPage({ initialData }: { initialData?: 
       </div>
 
       {/* Main Content - Side by Side */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left - Input */}
-        <div className="flex-1 flex flex-col border-r border-gray-200 bg-white">
-          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 bg-white min-h-0">
+          <div className="min-h-[3rem] py-2 border-b border-gray-200 flex items-center justify-between px-3 lg:px-6 shrink-0">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700">Original Text</span>
               {text && (
@@ -317,7 +317,7 @@ export default function VocabularyUpgraderPage({ initialData }: { initialData?: 
               )}
             </div>
           </div>
-          <div className="flex-1 p-6 overflow-y-auto relative">
+          <div className="flex-1 p-3 lg:p-6 overflow-y-auto relative">
             {!text && (
               <button
                 onClick={handlePaste}
@@ -342,8 +342,8 @@ export default function VocabularyUpgraderPage({ initialData }: { initialData?: 
         </div>
 
         {/* Right - Output */}
-        <div className="flex-1 flex flex-col bg-white">
-          <div className="h-12 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <div className="flex-1 flex flex-col bg-white min-h-0">
+          <div className="min-h-[3rem] py-2 border-b border-gray-200 flex items-center justify-between px-3 lg:px-6 shrink-0">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-700">Upgraded Text</span>
               {result && (
@@ -393,7 +393,7 @@ export default function VocabularyUpgraderPage({ initialData }: { initialData?: 
 
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Upgraded Text Area */}
-            <div className="flex-1 p-6 overflow-y-auto">
+            <div className="flex-1 p-3 lg:p-6 overflow-y-auto">
               {result ? (
                 <div className="space-y-0">
                   {/* Highlighted Text */}
@@ -436,13 +436,13 @@ export default function VocabularyUpgraderPage({ initialData }: { initialData?: 
             {/* Replacements Panel - Bottom Section */}
             {result && result.replacements.length > 0 && (
               <div className="border-t border-gray-200 bg-gray-50 shrink-0">
-                <div className="px-6 py-3 flex items-center justify-between">
+                <div className="px-3 lg:px-6 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium text-gray-700">Word Replacements ({result.replacements.length})</span>
                   </div>
                 </div>
-                <div className="px-6 pb-4 max-h-[180px] overflow-y-auto">
+                <div className="px-3 lg:px-6 pb-4 max-h-[180px] overflow-y-auto">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {result.replacements.map((r, i) => (
                       <div key={i} className="p-3 bg-white rounded-lg border border-gray-200 group hover:border-blue-200 transition-colors min-w-0">

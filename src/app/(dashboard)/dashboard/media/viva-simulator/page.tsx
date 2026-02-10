@@ -548,9 +548,9 @@ export default function VivaSimulatorPage() {
       </div>
 
       {/* Main Layout */}
-      <div className="flex-1 min-h-0 grid grid-cols-[200px_1fr_220px] gap-2 overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[200px_1fr_220px] gap-2 overflow-hidden">
         {/* Left Sidebar - Sessions & Topics */}
-        <div className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="hidden lg:flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden">
           {/* Quick Topics */}
           <div className="p-2 border-b border-gray-100">
             <span className="text-[10px] font-medium text-gray-500 px-1 mb-1 block">QUICK START</span>
@@ -608,11 +608,11 @@ export default function VivaSimulatorPage() {
           <div className="p-2 border-t border-gray-100 bg-gray-50">
             <div className="grid grid-cols-2 gap-2">
               <div className="text-center">
-                <p className="text-lg font-bold text-gray-900">{totalQuestions}</p>
+                <p className="text-base lg:text-lg font-bold text-gray-900">{totalQuestions}</p>
                 <p className="text-[10px] text-gray-500">Total Qs</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-bold text-blue-600">{overallAvg}%</p>
+                <p className="text-base lg:text-lg font-bold text-blue-600">{overallAvg}%</p>
                 <p className="text-[10px] text-gray-500">Avg Score</p>
               </div>
             </div>
@@ -633,7 +633,7 @@ export default function VivaSimulatorPage() {
                       <X className="w-3.5 h-3.5 text-gray-400" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {/* Timer */}
                     <div className="p-2 bg-white rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between mb-1">
@@ -748,11 +748,11 @@ export default function VivaSimulatorPage() {
                 </div>
               ) : (
                 /* New Session Form */
-                <div className="flex-1 flex items-center justify-center p-6">
+                <div className="flex-1 flex items-center justify-center p-3 lg:p-6">
                   <div className="w-full max-w-md">
                     <div className="text-center mb-4">
                       <GraduationCap className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                      <h2 className="text-lg font-bold text-gray-900">Start Viva Practice</h2>
+                      <h2 className="text-base lg:text-lg font-bold text-gray-900">Start Viva Practice</h2>
                       <p className="text-xs text-gray-500">Practice oral exams with AI examiner</p>
                     </div>
 
@@ -876,17 +876,17 @@ export default function VivaSimulatorPage() {
             /* Viva Session Chat */
             <div className="h-full bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
               {/* Chat Header */}
-              <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+              <div className="min-h-[3.5rem] py-2 px-3 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                     <Bot className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">AI Examiner</p>
-                    <p className="text-[10px] text-gray-500">{topic} • {difficulty}</p>
+                    <p className="text-[10px] text-gray-500 truncate max-w-[150px] lg:max-w-none">{topic} • {difficulty}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {timerEnabled && isTimerRunning && (
                     <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
                       timeRemaining <= 10 ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
@@ -923,13 +923,13 @@ export default function VivaSimulatorPage() {
               </div>
 
               {/* Messages - Perplexity Style */}
-              <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div ref={chatRef} className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4">
                 {history.map((item, i) => (
                   <div key={i} className="space-y-3">
                     {/* Question Card - Perplexity Style */}
                     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                       {/* Question Header */}
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                      <div className="px-3 lg:px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
                         <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
                           <Bot className="w-3 h-3 text-blue-600" />
                         </div>
@@ -940,7 +940,7 @@ export default function VivaSimulatorPage() {
                       </div>
                       
                       {/* Question Content */}
-                      <div className="p-4">
+                      <div className="p-3 lg:p-4">
                         <p className="text-sm text-gray-800 leading-relaxed">{item.question}</p>
                         
                         {/* Translation */}
@@ -961,7 +961,7 @@ export default function VivaSimulatorPage() {
                     </div>
 
                     {/* Answer Card */}
-                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 ml-6">
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 lg:p-4 ml-3 lg:ml-6">
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
                           <User className="w-4 h-4 text-white" />
@@ -977,14 +977,14 @@ export default function VivaSimulatorPage() {
 
                     {/* Feedback Card - Perplexity Style */}
                     {item.feedback && (
-                      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm ml-6">
+                      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm ml-3 lg:ml-6">
                         {/* Score Header with Expression */}
-                        <div className={`p-4 ${
+                        <div className={`p-3 lg:p-4 ${
                           item.feedback.score >= 80 ? "bg-gradient-to-r from-green-50 to-emerald-50" :
                           item.feedback.score >= 60 ? "bg-gradient-to-r from-amber-50 to-yellow-50" :
                           "bg-gradient-to-r from-red-50 to-orange-50"
                         }`}>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-3 lg:gap-4">
                             {/* Expression SVG */}
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
                               item.feedback.score >= 80 ? "bg-green-100" :
@@ -1053,7 +1053,7 @@ export default function VivaSimulatorPage() {
                         </div>
 
                         {/* Feedback Content */}
-                        <div className="p-4 space-y-3">
+                        <div className="p-3 lg:p-4 space-y-3">
                           {/* Strengths */}
                           {item.feedback.strengths.length > 0 && (
                             <div>
@@ -1103,7 +1103,7 @@ export default function VivaSimulatorPage() {
                 {vivaState && !isLoading && (
                   <div className="bg-white border-2 border-blue-200 rounded-2xl overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-2">
                     {/* Question Header */}
-                    <div className="px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 flex items-center justify-between">
+                    <div className="px-3 lg:px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
                           <Bot className="w-4 h-4 text-white" />
@@ -1120,7 +1120,7 @@ export default function VivaSimulatorPage() {
                     </div>
                     
                     {/* Question Content */}
-                    <div className="p-4">
+                    <div className="p-3 lg:p-4">
                       <p className="text-sm text-gray-800 leading-relaxed">{vivaState.currentQuestion}</p>
                       
                       {/* Translation */}
@@ -1253,7 +1253,7 @@ export default function VivaSimulatorPage() {
         </div>
 
         {/* Right Sidebar - Stats */}
-        <div className="flex flex-col gap-2 overflow-hidden">
+        <div className="hidden lg:flex flex-col gap-2 overflow-hidden">
           {/* Current Session Stats */}
           {vivaStarted && (
             <>

@@ -59,10 +59,6 @@ export async function chatWithGrok(
 ): Promise<AIResponse> {
   const actualModel = getGrokModel(model);
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/92b18a31-6db0-4103-b645-1d6ae5621960',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'grok.ts:chatWithGrok:entry',message:'chatWithGrok called',data:{model,actualModel,hasApiKey:!!apiKey,apiKeyPrefix:apiKey?.slice(0,10)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
-  // #endregion
-  
   const client = new OpenAI({
     apiKey,
     baseURL: "https://api.x.ai/v1",
@@ -87,15 +83,8 @@ export async function chatWithGrok(
       };
     });
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/92b18a31-6db0-4103-b645-1d6ae5621960',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'grok.ts:chatWithGrok:success',message:'chatWithGrok success',data:{responseModel:result.model,hasContent:!!result.content,contentLength:result.content?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    
     return result;
   } catch (error: any) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/92b18a31-6db0-4103-b645-1d6ae5621960',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'grok.ts:chatWithGrok:error',message:'chatWithGrok failed',data:{errorMessage:error?.message,errorStatus:error?.status,errorCode:error?.code,errorType:error?.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,C'})}).catch(()=>{});
-    // #endregion
     throw error;
   }
 }

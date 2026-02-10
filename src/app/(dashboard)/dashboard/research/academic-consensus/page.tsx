@@ -530,7 +530,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
           className="min-h-[calc(100vh-200px)] flex flex-col"
         >
         {/* Hero Section */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 pt-8">
+        <div className="flex-1 flex flex-col items-center justify-center px-3 lg:px-4 pt-8">
           {/* Logo & Title */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -538,8 +538,8 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
             className="text-center mb-8"
           >
             <Scale className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Academic Consensus</h1>
-            <p className="text-base text-gray-500 max-w-lg mx-auto">
+            <h1 className="text-xl lg:text-3xl font-bold text-gray-900 mb-2">Academic Consensus</h1>
+            <p className="text-sm lg:text-base text-gray-500 max-w-lg mx-auto">
               Search and analyze peer-reviewed research. See where the science agrees.
             </p>
           </motion.div>
@@ -553,7 +553,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
           >
             <div className="bg-white rounded-2xl border border-gray-200 shadow-xl shadow-gray-200/50 overflow-hidden">
               {/* Search Mode Tabs */}
-              <div className="flex border-b border-gray-100">
+              <div className="flex border-b border-gray-100 overflow-x-auto">
                 {[
                   { id: "general", label: "General", icon: BookOpen },
                   { id: "medical", label: "Medical", icon: Stethoscope },
@@ -586,7 +586,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
               </div>
 
               {/* Search Input */}
-              <div className="p-4">
+              <div className="p-3 lg:p-4">
                 <div className="relative">
                   <Search className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
                   <textarea
@@ -606,7 +606,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                 </div>
 
                 {/* Filters Row */}
-                <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center gap-2 lg:gap-3 pt-3 border-t border-gray-100 flex-wrap">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -653,7 +653,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="grid grid-cols-2 gap-4 pt-4 mt-3 border-t border-gray-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 pt-4 mt-3 border-t border-gray-100">
                         <div>
                           <label className="text-xs font-medium text-gray-500 mb-2 block">Study Type</label>
                           <div className="flex flex-wrap gap-2">
@@ -724,7 +724,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
             className="w-full max-w-4xl mt-12"
           >
             <p className="text-sm font-medium text-gray-400 text-center mb-6">Try asking about...</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               {suggestedQueries.map((category) => (
                 <div key={category.category} className="space-y-2">
                   <div className="flex items-center gap-2 text-gray-500 mb-3">
@@ -749,7 +749,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
 
         {/* Footer Stats */}
         <div className="border-t border-gray-100 py-6 mt-8">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-3 lg:gap-6 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <Library className="w-4 h-4" />
               <span>250M+ Papers</span>
@@ -848,11 +848,11 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="-m-4 lg:-m-5 -mt-16 lg:-mt-5 h-[calc(100vh)] flex flex-col bg-gray-50 overflow-hidden"
+          className="-m-4 lg:-m-5 -mt-16 lg:-mt-5 h-full flex flex-col bg-gray-50 overflow-hidden"
         >
       {/* Sticky Header - z-30 to stay below sidebar (z-40) */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 lg:px-6 py-3 shrink-0 shadow-sm">
-        <div className="flex items-center gap-4 max-w-[1800px] mx-auto">
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-3 lg:px-6 min-h-[3.5rem] py-2 shrink-0 shadow-sm">
+        <div className="flex items-center gap-2 lg:gap-4 max-w-[1800px] mx-auto flex-wrap">
           <button
             onClick={resetSearch}
             className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
@@ -889,8 +889,8 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
       </div>
 
       {/* Main Content - Scrollable */}
-      <div className="flex-1 py-4 px-4 lg:px-6 overflow-y-auto min-h-0">
-        <div className="grid lg:grid-cols-[340px_1fr_340px] gap-4 max-w-[1800px] mx-auto">
+      <div className="flex-1 py-3 lg:py-4 px-3 lg:px-6 overflow-y-auto min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr_340px] gap-3 lg:gap-4 max-w-[1800px] mx-auto">
           {/* Left - Papers List (narrow) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -1027,7 +1027,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                             )}
                             
                             {/* Additional Info Grid */}
-                            <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                               {paper.journal && (
                                 <div>
                                   <p className="text-[10px] text-gray-400">Journal</p>
@@ -1115,14 +1115,14 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
           </motion.div>
 
           {/* Middle - Consensus & Summary (wide) */}
-          <div className="space-y-3 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 scrollbar-thin order-1 lg:order-2">
+          <div className="space-y-3 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-2 scrollbar-thin order-1 lg:order-2 min-w-0">
             {/* Consensus Meter Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl border border-gray-200 p-5"
+              className="bg-white rounded-xl border border-gray-200 p-3 lg:p-5"
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-emerald-600" />
                   Research Consensus
@@ -1144,7 +1144,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.2 }}
-                  className="text-5xl font-bold text-gray-900"
+                  className="text-3xl lg:text-5xl font-bold text-gray-900"
                 >
                   {result?.consensusMeter?.yes || 0}%
                 </motion.p>
@@ -1223,25 +1223,25 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                 Research Summary
               </h3>
               <div className="prose prose-sm prose-gray max-w-none">
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{result?.summary}</p>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line break-words">{result?.summary}</p>
               </div>
               
               {/* Quick Stats */}
-              <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-4 gap-2 text-center">
+              <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                 <div>
-                  <p className="text-lg font-bold text-gray-900">{result?.papers?.length || 0}</p>
+                  <p className="text-base lg:text-lg font-bold text-gray-900">{result?.papers?.length || 0}</p>
                   <p className="text-xs text-gray-500">Total</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-emerald-600">{result?.webSearchResults || 0}</p>
+                  <p className="text-base lg:text-lg font-bold text-emerald-600">{result?.webSearchResults || 0}</p>
                   <p className="text-xs text-emerald-600">Web</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-blue-600">{result?.databasePapers || 0}</p>
+                  <p className="text-base lg:text-lg font-bold text-blue-600">{result?.databasePapers || 0}</p>
                   <p className="text-xs text-blue-600">Database</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p className="text-base lg:text-lg font-bold text-gray-900">
                     {(() => {
                       const years = result?.papers?.map(p => parseInt(p.year || "0")).filter(y => y > 0) || [];
                       const avgYear = years.length > 0 ? Math.round(years.reduce((a, b) => a + b, 0) / years.length) : "-";
@@ -1916,10 +1916,10 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.1 }}
-                  className="p-3 rounded-lg bg-emerald-50 border border-emerald-100"
+                  className="p-2 lg:p-3 rounded-lg bg-emerald-50 border border-emerald-100"
                 >
                   <ThumbsUp className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
-                  <p className="text-2xl font-bold text-emerald-700">
+                  <p className="text-xl lg:text-2xl font-bold text-emerald-700">
                     {result?.papers?.filter(p => p.stance === "yes").length || 0}
                   </p>
                   <p className="text-xs text-emerald-600 font-medium">Support</p>
@@ -1931,10 +1931,10 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="p-3 rounded-lg bg-gray-50 border border-gray-100"
+                  className="p-2 lg:p-3 rounded-lg bg-gray-50 border border-gray-100"
                 >
                   <MinusCircle className="w-5 h-5 text-gray-500 mx-auto mb-1" />
-                  <p className="text-2xl font-bold text-gray-700">
+                  <p className="text-xl lg:text-2xl font-bold text-gray-700">
                     {result?.papers?.filter(p => p.stance === "neutral").length || 0}
                   </p>
                   <p className="text-xs text-gray-600 font-medium">Neutral</p>
@@ -1946,10 +1946,10 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="p-3 rounded-lg bg-red-50 border border-red-100"
+                  className="p-2 lg:p-3 rounded-lg bg-red-50 border border-red-100"
                 >
                   <ThumbsDown className="w-5 h-5 text-red-500 mx-auto mb-1" />
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-xl lg:text-2xl font-bold text-red-600">
                     {result?.papers?.filter(p => p.stance === "no").length || 0}
                   </p>
                   <p className="text-xs text-red-600 font-medium">Oppose</p>
@@ -2134,7 +2134,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
               </div>
               
               {/* Timeline Stats */}
-              <div className="pt-3 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
+              <div className="pt-3 border-t border-gray-100 grid grid-cols-3 gap-1.5 lg:gap-2 text-center">
                 <div className="p-2 rounded-lg bg-gray-50">
                   <p className="text-sm font-bold text-gray-900">
                     {(() => {
@@ -2252,7 +2252,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                   {result.conflictingEvidence.map((conflict, i) => (
                     <div key={i} className="p-3 rounded-lg bg-gray-50 border border-gray-100">
                       <p className="text-sm font-medium text-gray-800 mb-2">{conflict.topic}</p>
-                      <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                         <div className="p-2 rounded bg-emerald-50 border border-emerald-100">
                           <p className="text-[10px] text-emerald-600 font-medium mb-1">Supporting ({conflict.supportingPapers.length})</p>
                           {conflict.supportingPapers.slice(0, 2).map((paper, j) => (
@@ -2275,7 +2275,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
           </div>
 
           {/* Right Sidebar - Chat & Popular Questions */}
-          <div className="flex flex-col gap-3 lg:max-h-[calc(100vh-100px)] order-3">
+          <div className="flex flex-col gap-3 lg:max-h-[calc(100vh-100px)] order-3 min-w-0">
             {/* Research Assistant - Full Height */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -2305,12 +2305,12 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
                         <Bot className="w-4 h-4 text-emerald-600" />
                       </div>
                     )}
-                    <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
+                    <div className={`max-w-[85%] rounded-xl px-3 py-2 min-w-0 ${
                       msg.role === "user" 
                         ? "bg-emerald-600 text-white" 
                         : "bg-gray-100 text-gray-700"
                     }`}>
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                     </div>
                     {msg.role === "user" && (
                       <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center shrink-0">

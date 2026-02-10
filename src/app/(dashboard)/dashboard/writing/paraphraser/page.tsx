@@ -228,18 +228,18 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
   if (!mounted) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {!result ? (
         /* INPUT STATE */
-        <div className="flex-1 flex items-center justify-center p-3 sm:p-6 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-3 lg:p-6 overflow-hidden">
           <div className="w-full max-w-2xl flex flex-col h-full max-h-[580px]">
             {/* Header */}
-            <div className="text-center mb-3 sm:mb-4 shrink-0">
-              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 mb-2 sm:mb-3">
-                <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div className="text-center mb-4 shrink-0">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-50 mb-3">
+                <RefreshCw className="w-6 h-6 text-blue-600" />
               </div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900">Safe Paraphraser</h1>
-              <p className="text-xs sm:text-sm text-gray-500">Rewrite text while preserving meaning</p>
+              <h1 className="text-xl font-bold text-gray-900">Safe Paraphraser</h1>
+              <p className="text-sm text-gray-500">Rewrite text while preserving meaning</p>
             </div>
 
             {/* Main Card */}
@@ -263,25 +263,25 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
 
               {/* Stats */}
               {text.length > 0 && (
-                <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-50 border-t border-gray-100 flex gap-2 sm:gap-4 text-[10px] text-gray-500 shrink-0 flex-wrap">
-                  <span className="flex items-center gap-1"><Hash className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{wordCount} words</span>
-                  <span className="flex items-center gap-1"><AlignLeft className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{charCount} chars</span>
-                  <span className="flex items-center gap-1"><FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3" />{sentences} sentences</span>
+                <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex gap-4 text-[10px] text-gray-500 shrink-0">
+                  <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{wordCount} words</span>
+                  <span className="flex items-center gap-1"><AlignLeft className="w-3 h-3" />{charCount} chars</span>
+                  <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{sentences} sentences</span>
                 </div>
               )}
 
               {/* Options */}
-              <div className="p-2 sm:p-3 border-t border-gray-100 space-y-2 sm:space-y-3 shrink-0">
+              <div className="p-3 border-t border-gray-100 space-y-3 shrink-0">
                 {/* Style & Language Row */}
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex gap-2">
                   {/* Style Dropdown */}
                   <div className="flex-1 relative">
-                    <button onClick={() => { setShowStyles(!showStyles); setShowLangs(false); }} className="w-full flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm hover:border-gray-300">
-                      <span className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                        <span className="text-sm">{STYLES.find(s => s.id === style)?.icon}</span>
-                        <span className="font-medium text-gray-700 truncate">{STYLES.find(s => s.id === style)?.label}</span>
+                    <button onClick={() => { setShowStyles(!showStyles); setShowLangs(false); }} className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm hover:border-gray-300">
+                      <span className="flex items-center gap-2">
+                        <span>{STYLES.find(s => s.id === style)?.icon}</span>
+                        <span className="font-medium text-gray-700">{STYLES.find(s => s.id === style)?.label}</span>
                       </span>
-                      <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 shrink-0" />
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
                     </button>
                     {showStyles && (
                       <div className="absolute bottom-full mb-1 left-0 right-0 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20 max-h-[240px] overflow-y-auto">
@@ -299,13 +299,13 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
                   </div>
 
                   {/* Language Dropdown */}
-                  <div className="w-full sm:w-36 relative">
-                    <button onClick={() => { setShowLangs(!showLangs); setShowStyles(false); }} className="w-full flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm hover:border-gray-300">
-                      <span className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-36 relative">
+                    <button onClick={() => { setShowLangs(!showLangs); setShowStyles(false); }} className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm hover:border-gray-300">
+                      <span className="flex items-center gap-2">
                         <span>{LANGUAGES.find(l => l.id === targetLang)?.flag}</span>
                         <span className="font-medium text-gray-700">{LANGUAGES.find(l => l.id === targetLang)?.label}</span>
                       </span>
-                      <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 shrink-0" />
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
                     </button>
                     {showLangs && (
                       <div className="absolute bottom-full mb-1 left-0 right-0 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20">
@@ -322,38 +322,38 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
                 {/* Length & Sentence Mode */}
                 <div className="flex gap-2">
                   <div className="flex-1 flex bg-gray-100 rounded-xl p-0.5">
-                    <button onClick={() => setPreserveLength(true)} className={cn("flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium rounded-lg", preserveLength ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>
+                    <button onClick={() => setPreserveLength(true)} className={cn("flex-1 py-2 text-xs font-medium rounded-lg", preserveLength ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>
                       Keep Length
                     </button>
-                    <button onClick={() => setPreserveLength(false)} className={cn("flex-1 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium rounded-lg", !preserveLength ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>
+                    <button onClick={() => setPreserveLength(false)} className={cn("flex-1 py-2 text-xs font-medium rounded-lg", !preserveLength ? "bg-white shadow-sm text-gray-900" : "text-gray-500")}>
                       Flexible
                     </button>
                   </div>
-                  <button onClick={() => setSentenceMode(!sentenceMode)} className={cn("px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium border flex items-center gap-1", sentenceMode ? "bg-purple-50 border-purple-200 text-purple-600" : "bg-gray-50 border-gray-200 text-gray-600")}>
-                    <SplitSquareVertical className="w-3 h-3 sm:w-3.5 sm:h-3.5" /><span className="hidden xs:inline">Sentence</span><span className="xs:hidden">Sent</span>
+                  <button onClick={() => setSentenceMode(!sentenceMode)} className={cn("px-3 py-2 rounded-xl text-xs font-medium border flex items-center gap-1", sentenceMode ? "bg-purple-50 border-purple-200 text-purple-600" : "bg-gray-50 border-gray-200 text-gray-600")}>
+                    <SplitSquareVertical className="w-3.5 h-3.5" />Sentence
                   </button>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="p-2 sm:p-3 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 shrink-0">
+              <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between shrink-0 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <button onClick={() => fileInputRef.current?.click()} className="p-1.5 sm:p-2 hover:bg-white rounded-lg text-gray-500 border border-gray-200 bg-white">
-                    <FileUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-white rounded-lg text-gray-500 border border-gray-200 bg-white">
+                    <FileUp className="w-4 h-4" />
                   </button>
                   <input ref={fileInputRef} type="file" accept=".txt,.md,.pdf" onChange={handleFile} className="hidden" />
-                  <div className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white border border-gray-200 rounded-lg">
+                  <div className="px-2 py-1 bg-white border border-gray-200 rounded-lg">
                     <ModelSelector value={selectedModel} onChange={setSelectedModel} />
                   </div>
                 </div>
-                <Button onClick={handleParaphrase} disabled={isLoading || text.length < 20} className="h-8 sm:h-9 px-4 sm:px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm w-full sm:w-auto">
-                  {isLoading ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <><Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />Paraphrase</>}
+                <Button onClick={handleParaphrase} disabled={isLoading || text.length < 20} className="h-9 px-6 rounded-xl bg-blue-600 hover:bg-blue-700">
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4 mr-1.5" />Paraphrase</>}
                 </Button>
               </div>
             </div>
 
-            <p className="text-center text-[10px] text-gray-400 mt-2 sm:mt-3 shrink-0">
-              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-0.5 sm:mr-1" />2 credits per paraphrase
+            <p className="text-center text-[10px] text-gray-400 mt-3 shrink-0">
+              <Sparkles className="w-3 h-3 inline mr-1" />2 credits per paraphrase
             </p>
           </div>
         </div>
@@ -361,21 +361,21 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
         /* RESULTS STATE */
         <div className="h-full flex flex-col overflow-hidden">
           {/* Top Bar */}
-          <div className="h-10 sm:h-12 bg-white border-b border-gray-100 flex items-center justify-between px-3 sm:px-4 shrink-0">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <button onClick={reset} className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-lg shrink-0">
-                <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
+          <div className="py-2 lg:py-0 lg:h-12 bg-white border-b border-gray-100 flex items-center justify-between px-3 lg:px-4 shrink-0 flex-wrap gap-2">
+            <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
+              <button onClick={reset} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                <RotateCcw className="w-4 h-4 text-gray-500" />
               </button>
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <span className="text-base sm:text-lg">{STYLES.find(s => s.id === style)?.icon}</span>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{STYLES.find(s => s.id === style)?.label} Style</p>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{STYLES.find(s => s.id === style)?.icon}</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{STYLES.find(s => s.id === style)?.label} Style</p>
                   <p className="text-[10px] text-gray-500">{wordCount} → {resultWordCount} words</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center flex-wrap gap-2">
               {/* Uniqueness & Formality */}
               <div className="flex items-center gap-2 mr-2 px-2 py-1 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-1">
@@ -401,9 +401,9 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             {/* Left - Original */}
-            <div className="flex-1 flex flex-col border-r border-gray-100 overflow-hidden">
+            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-100 overflow-hidden min-h-[35vh] lg:min-h-0">
               <div className="h-10 border-b border-gray-100 flex items-center px-4 shrink-0">
                 <span className="text-xs font-medium text-gray-500">Original</span>
                 <span className="ml-2 text-[10px] text-gray-400">{wordCount} words</span>
@@ -414,7 +414,7 @@ export default function ParaphraserPage({ initialData }: { initialData?: Initial
             </div>
 
             {/* Center - Result */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden min-h-[35vh] lg:min-h-0">
               <div className="h-10 border-b border-gray-100 flex items-center justify-between px-4 shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium text-gray-900">Paraphrased</span>

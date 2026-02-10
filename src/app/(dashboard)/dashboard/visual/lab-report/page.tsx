@@ -430,16 +430,16 @@ export default function LabReportPage() {
       {!hasResult ? (
         <div className="h-full flex flex-col lg:flex-row overflow-hidden">
           {/* Left - Form */}
-          <div className="flex-1 flex flex-col border-r-0 lg:border-r border-gray-100 min-h-0">
+          <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-100">
             {/* Header */}
-            <div className="h-auto sm:h-14 bg-white border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-2 sm:py-0 shrink-0 gap-2 sm:gap-0">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                  <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            <div className="min-h-[3.5rem] py-2 bg-white border-b border-gray-100 flex items-center justify-between px-3 lg:px-6 shrink-0 flex-wrap gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <FlaskConical className="w-5 h-5 text-blue-600" />
                 </div>
-                <div className="min-w-0">
-                  <h1 className="text-sm sm:text-base font-bold text-gray-900 truncate">Lab Report Generator</h1>
-                  <p className="text-[10px] sm:text-xs text-gray-500">Generate professional scientific reports</p>
+                <div>
+                  <h1 className="font-bold text-gray-900 text-base lg:text-lg">Lab Report Generator</h1>
+                  <p className="text-xs text-gray-500">Generate professional scientific reports</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -479,17 +479,17 @@ export default function LabReportPage() {
             {/* Form Content */}
             <div className="flex-1 flex flex-col overflow-hidden bg-white">
               {/* Title */}
-              <div className="px-6 py-4 border-b border-gray-100 shrink-0">
+              <div className="px-3 lg:px-6 py-3 lg:py-4 border-b border-gray-100 shrink-0">
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Experiment Title (e.g., Effect of Temperature on Enzyme Activity)"
-                  className="text-lg border-0 border-none shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 placeholder:text-gray-400 bg-transparent"
+                  className="text-base lg:text-lg border-0 border-none shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 placeholder:text-gray-400 bg-transparent"
                 />
               </div>
 
               {/* Objective */}
-              <div className="px-6 py-3 border-b border-gray-100 shrink-0">
+              <div className="px-3 lg:px-6 py-3 border-b border-gray-100 shrink-0">
                 <Textarea
                   value={objective}
                   onChange={(e) => setObjective(e.target.value)}
@@ -500,7 +500,7 @@ export default function LabReportPage() {
 
               {/* Raw Data - Flexible */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="px-6 py-2 flex items-center justify-between shrink-0">
+                <div className="px-3 lg:px-6 py-2 flex items-center justify-between shrink-0">
                   <span className="text-xs text-gray-500">Raw Data & Measurements</span>
                   <div className="flex items-center gap-1">
                     <input
@@ -535,7 +535,7 @@ export default function LabReportPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex-1 px-6 pb-3 overflow-hidden">
+                <div className="flex-1 px-3 lg:px-6 pb-3 overflow-hidden">
                   <Textarea
                     value={rawData}
                     onChange={(e) => setRawData(e.target.value)}
@@ -553,7 +553,7 @@ Or upload a PDF/DOC file with your data."
               </div>
 
               {/* Bottom Actions */}
-              <div className="px-4 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0">
+              <div className="px-3 lg:px-4 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between gap-2 lg:gap-3 shrink-0 flex-wrap">
                 <div className="flex items-center gap-2">
                   <div className="px-2 py-1 rounded-lg bg-white border border-gray-200">
                     <ModelSelector value={selectedModel} onChange={setSelectedModel} />
@@ -599,12 +599,12 @@ Or upload a PDF/DOC file with your data."
           </div>
 
           {/* Right - Additional Info */}
-          <div className="w-80 bg-white flex flex-col overflow-hidden">
-            <div className="h-14 border-b border-gray-100 flex items-center px-4 shrink-0">
+          <div className="w-full lg:w-80 bg-white flex flex-col overflow-hidden">
+            <div className="min-h-[3.5rem] py-2 border-b border-gray-100 flex items-center px-3 lg:px-4 shrink-0">
               <span className="text-sm font-medium text-gray-900">Additional Details</span>
               <span className="text-xs text-gray-400 ml-2">(optional)</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4">
               <div>
                 <label className="text-xs font-medium text-gray-500 mb-1.5 block">Materials Used</label>
                 <Input
@@ -636,7 +636,7 @@ Or upload a PDF/DOC file with your data."
 
             {/* Error Analysis */}
             {showErrorCalc && errorAnalysis && (
-              <div className="border-t border-gray-100 p-4 max-h-[200px] overflow-y-auto">
+              <div className="border-t border-gray-100 p-3 lg:p-4 max-h-[200px] overflow-y-auto">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-900 flex items-center gap-1">
                     <Calculator className="w-4 h-4 text-blue-600" /> Error Analysis
@@ -654,39 +654,41 @@ Or upload a PDF/DOC file with your data."
         /* RESULTS STATE - Full Report View */
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Left Sidebar - Sections */}
-          <div className="w-full lg:w-56 bg-white border-r-0 lg:border-r border-gray-100 flex flex-col min-h-0">
-            <div className="p-3 sm:p-4 border-b border-gray-100">
-              <h2 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{report.title}</h2>
-              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">{SUBJECTS.find(s => s.id === subject)?.label} Report</p>
+          <div className="w-full lg:w-56 bg-white border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col shrink-0">
+            <div className="p-3 lg:p-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900 truncate text-base lg:text-lg">{report.title}</h2>
+              <p className="text-xs text-gray-500 mt-1">{SUBJECTS.find(s => s.id === subject)?.label} Report</p>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-2">
-              {SECTIONS.map((s) => (
-                <button
-                  key={s.key}
-                  onClick={() => setActiveSection(s.key)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm transition-all",
-                    activeSection === s.key
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
-                  )}
-                >
-                  <s.icon className="w-4 h-4" />
-                  {s.label}
-                </button>
-              ))}
+            <div className="flex lg:flex-1 overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto p-2">
+              <div className="flex lg:flex-col gap-1 min-w-max lg:min-w-0 w-full">
+                {SECTIONS.map((s) => (
+                  <button
+                    key={s.key}
+                    onClick={() => setActiveSection(s.key)}
+                    className={cn(
+                      "flex items-center gap-2 lg:gap-3 px-3 py-2 lg:py-2.5 rounded-xl text-left text-sm transition-all whitespace-nowrap lg:whitespace-normal lg:w-full",
+                      activeSection === s.key
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    )}
+                  >
+                    <s.icon className="w-4 h-4 shrink-0" />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="p-3 border-t border-gray-100 space-y-2">
-              <Button onClick={() => setShowChat(!showChat)} variant="outline" size="sm" className="w-full rounded-xl justify-start">
-                <MessageSquare className="w-4 h-4 mr-2" /> Ask AI
+            <div className="p-2 lg:p-3 border-t border-gray-100 flex lg:flex-col gap-2">
+              <Button onClick={() => setShowChat(!showChat)} variant="outline" size="sm" className="flex-1 lg:w-full rounded-xl justify-center lg:justify-start">
+                <MessageSquare className="w-4 h-4 lg:mr-2" /> <span className="hidden lg:inline">Ask AI</span>
               </Button>
-              <Button onClick={() => setShowHistory(!showHistory)} variant="outline" size="sm" className="w-full rounded-xl justify-start">
-                <History className="w-4 h-4 mr-2" /> History
+              <Button onClick={() => setShowHistory(!showHistory)} variant="outline" size="sm" className="flex-1 lg:w-full rounded-xl justify-center lg:justify-start">
+                <History className="w-4 h-4 lg:mr-2" /> <span className="hidden lg:inline">History</span>
               </Button>
-              <Button onClick={resetForm} variant="ghost" size="sm" className="w-full rounded-xl justify-start text-gray-500">
-                <RotateCcw className="w-4 h-4 mr-2" /> New Report
+              <Button onClick={resetForm} variant="ghost" size="sm" className="flex-1 lg:w-full rounded-xl justify-center lg:justify-start text-gray-500">
+                <RotateCcw className="w-4 h-4 lg:mr-2" /> <span className="hidden lg:inline">New Report</span>
               </Button>
             </div>
           </div>
@@ -694,11 +696,11 @@ Or upload a PDF/DOC file with your data."
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Top Toolbar */}
-            <div className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6">
+            <div className="min-h-[3.5rem] py-2 bg-white border-b border-gray-100 flex items-center justify-between px-3 lg:px-6 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-900">{SECTIONS.find(s => s.key === activeSection)?.label}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 lg:gap-2 flex-wrap">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -745,9 +747,9 @@ Or upload a PDF/DOC file with your data."
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50">
-              <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">
+            <div className="flex-1 overflow-y-auto p-3 lg:p-8 bg-gray-50/50">
+              <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-3 lg:p-8">
+                <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6 pb-3 lg:pb-4 border-b border-gray-100">
                   {SECTIONS.find(s => s.key === activeSection)?.label}
                 </h3>
                 <div className="prose prose-gray max-w-none">
@@ -761,16 +763,16 @@ Or upload a PDF/DOC file with your data."
 
           {/* Right Chat Panel */}
           {showChat && (
-            <div className="w-80 bg-white border-l border-gray-100 flex flex-col">
-              <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4">
+            <div className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-100 flex flex-col shrink-0 max-h-[50vh] lg:max-h-none">
+              <div className="min-h-[3.5rem] py-2 border-b border-gray-100 flex items-center justify-between px-3 lg:px-4">
                 <span className="font-medium text-gray-900 text-sm">Ask about your report</span>
                 <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3">
                 {chatMessages.length === 0 && (
-                  <div className="text-center py-8 text-gray-400 text-sm">
+                  <div className="text-center py-6 lg:py-8 text-gray-400 text-sm">
                     Ask questions about your experiment or report
                   </div>
                 )}
@@ -786,7 +788,7 @@ Or upload a PDF/DOC file with your data."
                 )}
                 <div ref={chatEndRef} />
               </div>
-              <div className="p-4 border-t border-gray-100">
+              <div className="p-3 lg:p-4 border-t border-gray-100">
                 <div className="flex gap-2">
                   <Input
                     value={chatInput}
@@ -805,8 +807,8 @@ Or upload a PDF/DOC file with your data."
 
           {/* History Panel */}
           {showHistory && (
-            <div className="w-72 bg-white border-l border-gray-100 flex flex-col">
-              <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4">
+            <div className="w-full lg:w-72 bg-white border-t lg:border-t-0 lg:border-l border-gray-100 flex flex-col shrink-0 max-h-[50vh] lg:max-h-none">
+              <div className="min-h-[3.5rem] py-2 border-b border-gray-100 flex items-center justify-between px-3 lg:px-4">
                 <span className="font-medium text-gray-900 text-sm">Report History</span>
                 <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-4 h-4" />

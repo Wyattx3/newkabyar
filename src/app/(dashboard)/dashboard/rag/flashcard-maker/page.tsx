@@ -249,7 +249,7 @@ export default function FlashcardMakerPage() {
             <Layers className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Flashcard Maker</h1>
+            <h1 className="text-base lg:text-lg font-semibold text-gray-900">Flashcard Maker</h1>
             <p className="text-xs text-gray-500">Create and study flashcards</p>
           </div>
         </div>
@@ -264,10 +264,10 @@ export default function FlashcardMakerPage() {
       <div className="flex-1 overflow-y-auto">
         {showInput ? (
           /* Input Mode */
-          <div className="max-w-xl mx-auto py-8">
+          <div className="max-w-xl mx-auto py-4 lg:py-8">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               {/* Header */}
-              <div className="p-5 border-b border-gray-100">
+              <div className="p-3 lg:p-5 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <BookOpen className="w-5 h-5 text-blue-600" />
                   <div>
@@ -278,7 +278,7 @@ export default function FlashcardMakerPage() {
               </div>
 
               {/* Content */}
-              <div className="p-5 space-y-4">
+              <div className="p-3 lg:p-5 space-y-4">
                 <ContentInput
                   value={text}
                   onChange={setText}
@@ -313,7 +313,7 @@ export default function FlashcardMakerPage() {
               </div>
 
               {/* Generate Button */}
-              <div className="p-5 pt-0">
+              <div className="p-3 lg:p-5 pt-0">
                 <Button
                   onClick={handleGenerate}
                   disabled={isLoading || text.trim().length < 50}
@@ -337,8 +337,8 @@ export default function FlashcardMakerPage() {
           <div className="max-w-2xl mx-auto py-4">
             {/* Stats Bar */}
             <div className="bg-white rounded-xl border border-gray-200 p-3 mb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3 lg:gap-4 flex-wrap">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
                     <span className="text-xs text-gray-600">{stats.mastered} mastered</span>
@@ -438,11 +438,11 @@ export default function FlashcardMakerPage() {
                     >
                       {/* Front */}
                       <div
-                        className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 min-h-[240px] flex flex-col items-center justify-center"
+                        className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 lg:p-8 min-h-[240px] flex flex-col items-center justify-center"
                         style={{ backfaceVisibility: "hidden" }}
                       >
                         <span className="text-xs font-medium text-blue-600 mb-3">QUESTION</span>
-                        <p className="text-lg text-gray-900 text-center leading-relaxed">
+                        <p className="text-base lg:text-lg text-gray-900 text-center leading-relaxed">
                           {card?.front || "No card"}
                         </p>
                         <span className="text-xs text-gray-400 mt-4">Click to reveal answer</span>
@@ -450,14 +450,14 @@ export default function FlashcardMakerPage() {
 
                       {/* Back */}
                       <div
-                        className="absolute inset-0 bg-blue-600 rounded-2xl shadow-sm p-8 min-h-[240px] flex flex-col items-center justify-center"
+                        className="absolute inset-0 bg-blue-600 rounded-2xl shadow-sm p-4 lg:p-8 min-h-[240px] flex flex-col items-center justify-center"
                         style={{
                           backfaceVisibility: "hidden",
                           transform: "rotateY(180deg)",
                         }}
                       >
                         <span className="text-xs font-medium text-blue-200 mb-3">ANSWER</span>
-                        <p className="text-lg text-white text-center leading-relaxed">
+                        <p className="text-base lg:text-lg text-white text-center leading-relaxed">
                           {card?.back || "No answer"}
                         </p>
                         {card?.hint && (
@@ -469,14 +469,14 @@ export default function FlashcardMakerPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 rounded-2xl p-8 text-center text-gray-500">
+                  <div className="bg-gray-50 rounded-2xl p-4 lg:p-8 text-center text-gray-500">
                     No cards match the current filter
                   </div>
                 )}
 
                 {/* Difficulty Rating */}
                 {filteredCards.length > 0 && (
-                  <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
                     <span className="text-xs text-gray-500 mr-2">Rate difficulty:</span>
                     <button
                       onClick={() => markCard("easy")}
@@ -560,7 +560,7 @@ export default function FlashcardMakerPage() {
             )}
 
             {/* Action Bar */}
-            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100 flex-wrap">
               <button
                 onClick={() => setShowInput(true)}
                 className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"

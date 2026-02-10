@@ -444,11 +444,11 @@ ${getQuizContext()}`
   return (
     <div className={`h-full flex flex-col transition-all duration-700 ${mounted ? "opacity-100" : "opacity-0"}`}>
       {/* Floating Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 lg:mb-6 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="w-7 h-7 text-blue-600" />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Quiz Generator</h1>
+            <h1 className="text-base lg:text-lg font-bold text-gray-900">Quiz Generator</h1>
             <p className="text-xs text-gray-500">Transform content into quizzes</p>
           </div>
         </div>
@@ -465,7 +465,7 @@ ${getQuizContext()}`
       <div className="flex-1 overflow-hidden">
         {step === "input" && (
           <div className="h-full flex flex-col">
-            <div className="h-[380px] bg-white rounded-xl border border-gray-200 p-5 flex flex-col">
+            <div className="h-auto lg:h-[380px] bg-white rounded-xl border border-gray-200 p-3 lg:p-5 flex flex-col">
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-5 h-5 text-blue-600" />
                 <h2 className="font-medium text-gray-900">Source Content</h2>
@@ -496,10 +496,10 @@ ${getQuizContext()}`
         )}
 
         {step === "config" && (
-          <div className="h-full">
-            <div className="grid md:grid-cols-3 gap-4 h-full">
+          <div className="h-full overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4 md:h-full">
               {/* Questions Count */}
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 p-6 flex flex-col">
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 p-3 lg:p-6 flex flex-col">
                 <Target className="w-8 h-8 text-blue-600 mb-4" />
                 <h3 className="font-semibold text-gray-900 mb-2">Questions</h3>
                 <p className="text-xs text-gray-500 mb-4">How many questions?</p>
@@ -545,7 +545,7 @@ ${getQuizContext()}`
               </div>
 
               {/* Difficulty */}
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 p-6 flex flex-col">
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 p-3 lg:p-6 flex flex-col">
                 <Zap className="w-8 h-8 text-amber-600 mb-4" />
                 <h3 className="font-semibold text-gray-900 mb-2">Challenge Level</h3>
                 <p className="text-xs text-gray-500 mb-4">Choose quiz difficulty</p>
@@ -578,7 +578,7 @@ ${getQuizContext()}`
               </div>
 
               {/* Model & Generate */}
-              <div className="bg-blue-600 rounded-3xl shadow-xl shadow-blue-500/30 p-6 flex flex-col text-white">
+              <div className="bg-blue-600 rounded-3xl shadow-xl shadow-blue-500/30 p-3 lg:p-6 flex flex-col text-white">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-4">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
@@ -654,7 +654,7 @@ ${getQuizContext()}`
               </div>
 
               {/* Question Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 p-5">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 p-3 lg:p-5">
                 <div className="flex items-start gap-3 mb-4">
                   <span className="w-7 h-7 text-blue-600 flex items-center justify-center font-bold text-base shrink-0">
                     {currentQ + 1}.
@@ -694,12 +694,12 @@ ${getQuizContext()}`
                 )}
 
                 {currentQuestion.type === "truefalse" && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 lg:gap-4">
                     {["True", "False"].map((opt) => (
                       <button
                         key={opt}
                         onClick={() => selectAnswer(opt)}
-                        className={`p-6 rounded-2xl font-bold text-lg transition-all border-2 ${
+                        className={`p-4 lg:p-6 rounded-2xl font-bold text-base lg:text-lg transition-all border-2 ${
                           answers[currentQ] === opt
                             ? opt === "True" ? "border-green-500 bg-green-50 text-green-700" : "border-red-500 bg-red-50 text-red-700"
                             : "border-gray-100 hover:border-gray-200"
@@ -752,12 +752,12 @@ ${getQuizContext()}`
         )}
 
         {step === "results" && quiz && (
-          <div className="h-full flex gap-4">
+          <div className="h-full flex flex-col lg:flex-row gap-3 lg:gap-4">
             {/* Results Panel */}
             <div className="flex-1 overflow-y-auto px-1">
               {/* Score Card - Facebook Style */}
               <div className="bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden">
-                <div className="p-6 text-center border-b border-gray-100">
+                <div className="p-3 lg:p-6 text-center border-b border-gray-100">
                   {/* Custom SVG Circle Progress */}
                   <div className="relative w-24 h-24 mx-auto mb-4">
                     <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
@@ -771,7 +771,7 @@ ${getQuizContext()}`
                         className="transition-all duration-1000"
                       />
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-gray-900">
+                    <span className="absolute inset-0 flex items-center justify-center text-xl lg:text-2xl font-bold text-gray-900">
                       {score}%
                     </span>
                   </div>
@@ -885,7 +885,7 @@ ${getQuizContext()}`
             </div>
 
             {/* Chat Panel */}
-            <div className="w-80 flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="w-full lg:w-80 flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden max-h-[400px] lg:max-h-none">
               {/* Chat Header */}
               <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-blue-600" />

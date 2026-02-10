@@ -527,24 +527,24 @@ export default function MultiInputSolverPage({ initialData }: { initialData?: In
   if (!mounted) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* INITIAL STATE - Fit View */}
       {!hasResult ? (
-        <div className="h-full flex overflow-hidden">
+        <div className="h-full flex flex-col lg:flex-row overflow-hidden">
           {/* Main Input Area */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             {/* Header */}
-            <div className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
+            <div className="min-h-[3.5rem] py-2 bg-white border-b border-gray-100 flex items-center justify-between px-3 lg:px-6 flex-wrap gap-2 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                   <ScanSearch className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-gray-900">Problem Solver</h1>
+                  <h1 className="font-bold text-gray-900 text-base lg:text-lg">Problem Solver</h1>
                   <p className="text-xs text-gray-500">Upload image, type, or paste from PDF</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {/* Input Mode Tabs */}
                 {INPUT_MODES.map(mode => (
                   <button
@@ -596,7 +596,7 @@ export default function MultiInputSolverPage({ initialData }: { initialData?: In
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <div className="relative bg-gray-900 rounded-xl overflow-hidden max-h-full">
-                        <img src={image} alt="Problem" className="max-h-[calc(100vh-220px)] object-contain" />
+                        <img src={image} alt="Problem" className="max-h-[calc(100dvh-220px)] w-full object-contain" />
                         <button
                           onClick={(e) => { e.stopPropagation(); setImage(null); }}
                           className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white"
@@ -618,7 +618,7 @@ export default function MultiInputSolverPage({ initialData }: { initialData?: In
 
               {/* Text Mode */}
               {inputMode === "text" && (
-                <div className="flex-1 p-6 overflow-hidden">
+                <div className="flex-1 p-3 lg:p-6 overflow-hidden">
                   <Textarea
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
@@ -656,7 +656,7 @@ Solve for x: 2x + 5 = 13"
 
               {/* URL Mode */}
               {inputMode === "url" && (
-                <div className="flex-1 flex flex-col items-center justify-center p-6">
+                <div className="flex-1 flex flex-col items-center justify-center p-3 lg:p-6">
                   <div className="w-full max-w-md">
                     <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl mb-4">
                       <Globe className="w-5 h-5 text-gray-400" />
@@ -673,8 +673,8 @@ Solve for x: 2x + 5 = 13"
               )}
 
               {/* Bottom Actions */}
-              <div className="px-4 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0">
-                <div className="flex items-center gap-2">
+              <div className="px-3 lg:px-4 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between gap-2 lg:gap-3 shrink-0 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Subject Selector */}
                   <div className="relative">
                     <button
@@ -743,8 +743,8 @@ Solve for x: 2x + 5 = 13"
 
           {/* Right - History Panel */}
           {showHistory && (
-            <div className="w-72 bg-white border-l border-gray-100 flex flex-col">
-              <div className="h-14 border-b border-gray-100 flex items-center justify-between px-4 shrink-0">
+            <div className="w-full lg:w-72 bg-white border-b lg:border-b-0 lg:border-l border-gray-100 flex flex-col max-h-[40vh] lg:max-h-none">
+              <div className="min-h-[3.5rem] py-2 border-b border-gray-100 flex items-center justify-between px-4 shrink-0">
                 <span className="font-medium text-gray-900 text-sm">Recent Solutions</span>
                 <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-4 h-4" />
@@ -772,9 +772,9 @@ Solve for x: 2x + 5 = 13"
         </div>
       ) : (
         /* RESULTS STATE - 3-Column Fit View Layout */
-        <div className="h-full flex bg-white overflow-hidden">
+        <div className="h-full flex flex-col lg:flex-row bg-white overflow-hidden">
           {/* LEFT SIDEBAR - Info */}
-          <div className="w-60 bg-white border-r border-gray-200 flex flex-col shrink-0 overflow-hidden">
+          <div className="w-full lg:w-60 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex flex-col shrink-0 overflow-hidden max-h-[35vh] lg:max-h-none">
             {/* Answer Card */}
             <div className="p-3 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2 mb-2">
@@ -847,7 +847,7 @@ Solve for x: 2x + 5 = 13"
 
             {/* Actions */}
             <div className="p-2 border-t border-gray-100 shrink-0">
-              <div className="grid grid-cols-4 gap-1">
+              <div className="grid grid-cols-4 gap-1 lg:gap-1">
                 <button onClick={() => setBookmarked(!bookmarked)} className={cn("flex flex-col items-center gap-0.5 p-1 rounded-lg", bookmarked ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100 text-gray-500")}>
                   {bookmarked ? <BookmarkCheck className="w-3 h-3" /> : <Bookmark className="w-3 h-3" />}
                   <span className="text-[8px]">Save</span>
@@ -869,9 +869,9 @@ Solve for x: 2x + 5 = 13"
           </div>
 
           {/* CENTER - Steps */}
-          <div className="flex-1 bg-white flex flex-col overflow-hidden">
+          <div className="flex-1 bg-white flex flex-col overflow-hidden min-h-0">
             {/* Header */}
-            <div className="h-10 border-b border-gray-100 flex items-center justify-between px-3 shrink-0">
+            <div className="min-h-[2.5rem] py-1 border-b border-gray-100 flex items-center justify-between px-3 shrink-0 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <button onClick={reset} className="p-1 hover:bg-gray-100 rounded-lg">
                   <RotateCcw className="w-3 h-3 text-gray-500" />
@@ -888,7 +888,7 @@ Solve for x: 2x + 5 = 13"
             </div>
 
             {/* Steps */}
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="flex-1 overflow-y-auto p-2 lg:p-2">
               <div className="space-y-2">
                 {solution.steps.map((step, i) => (
                   <div
@@ -936,7 +936,7 @@ Solve for x: 2x + 5 = 13"
           </div>
 
           {/* RIGHT SIDEBAR - Chat & Practice */}
-          <div className="w-64 bg-white border-l border-gray-200 flex flex-col shrink-0 overflow-hidden">
+          <div className="w-full lg:w-64 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col shrink-0 overflow-hidden max-h-[35vh] lg:max-h-none">
             {/* Practice Problems */}
             <div className="p-2 border-b border-gray-100 shrink-0">
               <div className="flex items-center justify-between mb-1">

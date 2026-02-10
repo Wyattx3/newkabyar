@@ -134,16 +134,16 @@ export default function DevilsAdvocatePage({ initialData }: { initialData?: Init
   // Custom markdown components for better styling
   const markdownComponents: Components = {
     h1: ({ node, ...props }) => (
-      <h1 className="text-2xl font-bold text-gray-900 mt-8 mb-5 pb-3 border-b-2 border-gray-200" {...props} />
+      <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mt-8 mb-5 pb-3 border-b-2 border-gray-200" {...props} />
     ),
     h2: ({ node, ...props }) => (
-      <h2 className="text-xl font-semibold text-gray-900 mt-7 mb-4 flex items-center gap-3 group" {...props}>
+      <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mt-7 mb-4 flex items-center gap-3 group" {...props}>
         <div className="w-1.5 h-7 bg-gradient-to-b from-red-500 to-red-400 rounded-full shadow-sm" />
         <span className="flex-1">{props.children}</span>
       </h2>
     ),
     h3: ({ node, ...props }) => (
-      <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3 pl-2 border-l-3 border-red-300" {...props} />
+      <h3 className="text-base lg:text-lg font-semibold text-gray-800 mt-6 mb-3 pl-2 border-l-3 border-red-300" {...props} />
     ),
     p: ({ node, ...props }) => (
       <p className="text-[15px] text-gray-700 leading-[1.8] mb-4 first:mt-0" {...props} />
@@ -227,11 +227,11 @@ export default function DevilsAdvocatePage({ initialData }: { initialData?: Init
   return (
     <div className={`h-full flex flex-col transition-all duration-700 ${mounted ? "opacity-100" : "opacity-0"}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 lg:mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <Scale className="w-7 h-7 text-rose-600" />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Devil's Advocate</h1>
+            <h1 className="text-base lg:text-lg font-bold text-gray-900">Devil's Advocate</h1>
             <p className="text-xs text-gray-500">Challenge your arguments</p>
           </div>
         </div>
@@ -244,10 +244,10 @@ export default function DevilsAdvocatePage({ initialData }: { initialData?: Init
       </div>
 
       {/* Main - VS Layout */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 lg:gap-4">
         {/* Left - Your Argument */}
-        <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+        <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-0">
+          <div className="px-3 lg:px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
             <Shield className="w-4 h-4 text-blue-600" />
             <span className="font-medium text-blue-900 text-sm">Your Argument</span>
           </div>
@@ -257,18 +257,18 @@ export default function DevilsAdvocatePage({ initialData }: { initialData?: Init
             placeholder="Present your argument, thesis, or position that you want challenged...
 
 Example: 'Remote work is better than office work because it offers more flexibility, reduces commute stress, and allows for better work-life balance.'"
-            className="flex-1 resize-none border-0 focus:ring-0 p-4 text-gray-800"
+            className="flex-1 resize-none border-0 focus:ring-0 p-3 lg:p-4 text-gray-800"
           />
-          <div className="p-4 border-t border-gray-100 space-y-3">
+          <div className="p-3 lg:p-4 border-t border-gray-100 space-y-3">
             {/* Intensity Selector */}
             <div>
               <label className="text-xs font-medium text-gray-500 mb-2 block">Critique Intensity</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {intensities.map((i) => (
                   <button
                     key={i.value}
                     onClick={() => setIntensity(i.value)}
-                    className={`p-3 rounded-xl text-center transition-all border-2 ${
+                    className={`p-2 sm:p-3 rounded-xl text-center transition-all border-2 ${
                       intensity === i.value
                         ? `${i.color} border-current`
                         : "bg-gray-50 text-gray-600 border-transparent hover:bg-gray-100"
@@ -294,14 +294,14 @@ Example: 'Remote work is better than office work because it offers more flexibil
         </div>
 
         {/* VS Divider */}
-        <div className="flex flex-col items-center justify-center">
-          <Zap className="w-8 h-8 text-amber-500" />
-          <span className="text-xs font-bold text-gray-400 mt-2">VS</span>
+        <div className="flex lg:flex-col items-center justify-center py-1 lg:py-0">
+          <Zap className="w-6 h-6 lg:w-8 lg:h-8 text-amber-500" />
+          <span className="text-xs font-bold text-gray-400 ml-2 lg:ml-0 lg:mt-2">VS</span>
         </div>
 
         {/* Right - Counter Argument */}
-        <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
+        <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-0">
+          <div className="px-3 lg:px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sword className="w-4 h-4 text-red-600" />
               <span className="font-medium text-red-900 text-sm">Counter Arguments</span>
@@ -312,7 +312,7 @@ Example: 'Remote work is better than office work because it offers more flexibil
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-gray-50/30">
+          <div className="flex-1 overflow-y-auto p-3 lg:p-6 bg-gradient-to-b from-white to-gray-50/30">
             {counterArgument ? (
               <div className="max-w-none prose prose-sm prose-headings:scroll-mt-6">
                 <ReactMarkdown 

@@ -327,7 +327,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
             <FileUser className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Resume/CV Tailor</h1>
+            <h1 className="text-base lg:text-lg font-semibold text-gray-900">Resume/CV Tailor</h1>
             <p className="text-xs text-gray-500">Match your resume to job requirements</p>
           </div>
         </div>
@@ -365,7 +365,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
               className="h-full flex flex-col"
             >
               {/* Input Grid */}
-              <div className="flex-1 grid lg:grid-cols-2 gap-4 min-h-0">
+              <div className="flex-1 grid lg:grid-cols-2 gap-3 lg:gap-4 min-h-0">
                 {/* Resume Input */}
                 <div className="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between shrink-0">
@@ -426,10 +426,10 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
               </div>
 
               {/* Bottom Controls */}
-              <div className="mt-4 bg-white rounded-xl border border-gray-200 p-4 shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
+              <div className="mt-3 lg:mt-4 bg-white rounded-xl border border-gray-200 p-3 lg:p-4 shrink-0">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-1 flex-wrap">
                       {focusOptions.map((f) => (
                         <button
                           key={f.value}
@@ -451,7 +451,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                   <Button
                     onClick={handleAnalyze}
                     disabled={isLoading || resume.trim().length < 100 || jobDescription.trim().length < 50}
-                    className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                    className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium w-full sm:w-auto"
                   >
                     {isLoading ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing...</>
@@ -471,22 +471,22 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
               className="h-full flex flex-col"
             >
               {/* Scores Header */}
-              <div className="grid grid-cols-4 gap-3 mb-4 shrink-0">
-                <div className={`rounded-xl border p-4 ${getScoreBg(result.overallScore)}`}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 lg:mb-4 shrink-0">
+                <div className={`rounded-xl border p-3 lg:p-4 ${getScoreBg(result.overallScore)}`}>
                   <p className="text-xs text-gray-500 mb-1">Overall Match</p>
-                  <p className={`text-3xl font-bold ${getScoreColor(result.overallScore)}`}>{result.overallScore}%</p>
+                  <p className={`text-2xl lg:text-3xl font-bold ${getScoreColor(result.overallScore)}`}>{result.overallScore}%</p>
                 </div>
-                <div className={`rounded-xl border p-4 ${getScoreBg(result.atsScore)}`}>
+                <div className={`rounded-xl border p-3 lg:p-4 ${getScoreBg(result.atsScore)}`}>
                   <p className="text-xs text-gray-500 mb-1">ATS Score</p>
-                  <p className={`text-3xl font-bold ${getScoreColor(result.atsScore)}`}>{result.atsScore}%</p>
+                  <p className={`text-2xl lg:text-3xl font-bold ${getScoreColor(result.atsScore)}`}>{result.atsScore}%</p>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="rounded-xl border border-gray-200 bg-white p-3 lg:p-4">
                   <p className="text-xs text-gray-500 mb-1">Keywords Matched</p>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-2xl lg:text-3xl font-bold text-blue-600">
                     {result.keywordMatches.filter(k => k.found).length}/{result.keywordMatches.length}
                   </p>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between">
+                <div className="rounded-xl border border-gray-200 bg-white p-3 lg:p-4 flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Actions</p>
                     <div className="flex items-center gap-2">
@@ -510,7 +510,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
               </div>
 
               {/* Feature Tabs */}
-              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl mb-4 shrink-0">
+              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl mb-3 lg:mb-4 shrink-0 overflow-x-auto">
                 {[
                   { id: "analysis", label: "Analysis", icon: BarChart3 },
                   { id: "improve", label: "Improvements", icon: TrendingUp },
@@ -539,9 +539,9 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
               {/* Tab Content */}
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {activeTab === "analysis" && (
-                  <div className="grid lg:grid-cols-[1fr_320px] gap-4">
+                  <div className="grid lg:grid-cols-[1fr_320px] gap-3 lg:gap-4">
                     {/* Main Analysis */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 lg:space-y-4">
                       {/* Summary */}
                       <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <h3 className="text-sm font-medium text-gray-900 mb-2">Summary</h3>
@@ -549,7 +549,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                       </div>
 
                       {/* Experience & Education Check */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                         <div className={`rounded-xl border p-4 ${
                           result.experience?.matches !== false
                             ? "bg-green-50 border-green-200" 
@@ -604,7 +604,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                       </div>
 
                       {/* Keywords */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                         <div className="bg-green-50 rounded-xl border border-green-100 p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <Check className="w-4 h-4 text-green-600" />
@@ -657,7 +657,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                     </div>
 
                     {/* Sidebar */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 lg:space-y-4">
                       {/* Skills to Add */}
                       <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <div className="flex items-center gap-2 mb-3">
@@ -720,7 +720,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                 )}
 
                 {activeTab === "improve" && (
-                  <div className="space-y-4">
+                  <div className="space-y-3 lg:space-y-4">
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
                       <h3 className="text-sm font-medium text-gray-900 mb-4">Bullet Point Improvements</h3>
                       {result.bulletImprovements && result.bulletImprovements.length > 0 ? (
@@ -760,7 +760,7 @@ ${result.atsWarnings.map(w => `⚠ ${w}`).join("\n")}`;
                     {/* Skills Improvement Section */}
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
                       <h3 className="text-sm font-medium text-gray-900 mb-4">Skills to Highlight</h3>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {result.skillsToAdd.map((skill, i) => (
                           <div key={i} className="p-3 bg-green-50 rounded-lg flex items-center justify-between">
                             <div className="flex items-center gap-2">

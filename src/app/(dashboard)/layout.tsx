@@ -53,10 +53,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="h-screen bg-dots flex overflow-hidden">
+    <div className="h-[100dvh] bg-dots flex overflow-hidden">
       <Sidebar />
-      <main className="flex-1 lg:ml-[56px] h-screen flex flex-col transition-all duration-300">
-        <div className="flex-1 p-4 lg:p-5 pt-16 lg:pt-5 overflow-y-auto">
+      <main className="flex-1 min-w-0 lg:ml-[56px] h-[100dvh] flex flex-col transition-all duration-300">
+        <div className="flex-1 min-w-0 p-3 lg:p-5 pt-14 lg:pt-5 overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </main>

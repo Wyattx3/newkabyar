@@ -545,15 +545,15 @@ export default function MindMapPage() {
     )}>
       {/* Header - Hide when mindmap is shown */}
       {!hasResult && (
-      <div className="bg-white border-b border-gray-100 px-6 py-4 shrink-0">
-        <div className="flex items-center gap-4">
+      <div className="bg-white border-b border-gray-100 px-3 lg:px-6 py-3 lg:py-4 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 lg:gap-4">
           {/* Logo & Title */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
               <Network className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-base font-semibold text-gray-900">Mind Map</h1>
+              <h1 className="text-sm lg:text-base font-semibold text-gray-900">Mind Map</h1>
               <p className="text-xs text-gray-500">Visualize any concept</p>
             </div>
           </div>
@@ -583,7 +583,7 @@ export default function MindMapPage() {
           </div>
 
           {/* Input */}
-          <div className="flex-1 max-w-xl">
+          <div className="flex-1 min-w-0 w-full lg:w-auto max-w-xl">
             {inputMode === "topic" ? (
               <Input
                 placeholder="Enter a topic to visualize..."
@@ -668,7 +668,7 @@ export default function MindMapPage() {
 
         {/* Quick Topics */}
         {inputMode === "topic" && (
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-2 mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-gray-100">
             <span className="text-xs text-gray-400">Try:</span>
             {quickTopics.map((t) => (
               <button
@@ -684,7 +684,7 @@ export default function MindMapPage() {
 
         {/* Content Textarea for Document mode */}
         {inputMode === "content" && !uploadedFile && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-gray-100">
             <Textarea
               placeholder="Or paste your content here..."
               value={content}
@@ -697,18 +697,18 @@ export default function MindMapPage() {
       )}
 
       {/* Canvas Area */}
-      <div className="flex-1 relative overflow-hidden bg-gray-50">
+      <div className="flex-1 relative overflow-auto bg-gray-50">
         {hasResult ? (
           <>
             {/* Floating Input Bar - Top Center */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow-lg border border-gray-100">
+            <div className="absolute top-3 lg:top-4 left-2 right-2 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 z-10 flex flex-wrap items-center gap-2 px-2 lg:px-3 py-2 bg-white rounded-xl shadow-lg border border-gray-100">
               <Network className="w-4 h-4 text-blue-600 shrink-0" />
               <Input
                 placeholder="Enter a new topic..."
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                className="w-56 h-8 text-sm border-0 bg-transparent focus-visible:ring-0 px-0"
+                className="w-full sm:w-56 h-8 text-sm border-0 bg-transparent focus-visible:ring-0 px-0 min-w-0 flex-1"
               />
               <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
                 {["shallow", "medium", "deep"].map((d) => (
@@ -735,7 +735,7 @@ export default function MindMapPage() {
             </div>
 
             {/* Floating Toolbar - Right */}
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+            <div className="absolute top-16 lg:top-4 right-2 lg:right-4 z-10 flex flex-wrap items-center gap-1 lg:gap-2">
               {/* Zoom Controls */}
               <div className="flex items-center bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                 <button
@@ -774,7 +774,7 @@ export default function MindMapPage() {
             </div>
 
             {/* Floating Toolbar - Bottom */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 p-1.5 bg-white rounded-xl shadow-lg border border-gray-100">
+            <div className="absolute bottom-12 lg:bottom-4 left-2 right-2 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 z-10 flex flex-wrap items-center justify-center gap-1 p-1 lg:p-1.5 bg-white rounded-xl shadow-lg border border-gray-100">
               {/* Theme Picker */}
               <div className="relative">
                 <button
@@ -836,7 +836,7 @@ export default function MindMapPage() {
             </div>
 
             {/* Drag Hint */}
-            <div className="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur rounded-lg text-xs text-gray-500">
+            <div className="hidden lg:flex absolute bottom-4 right-4 z-10 items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur rounded-lg text-xs text-gray-500">
               <Hand className="w-3.5 h-3.5" />
               Drag to pan • Scroll to zoom • Click node to chat
             </div>
@@ -880,7 +880,7 @@ export default function MindMapPage() {
 
             {/* Chat Panel - Premium Design */}
             {showChat && (
-              <div className="fixed top-20 right-6 w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in slide-in-from-right-5 duration-300">
+              <div className="fixed top-16 lg:top-20 right-2 left-2 lg:left-auto lg:right-6 lg:w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in slide-in-from-right-5 duration-300">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-500">
                   <div className="flex items-center gap-3">
@@ -901,7 +901,7 @@ export default function MindMapPage() {
                 </div>
                 
                 {/* Chat Messages */}
-                <div className="h-72 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+                <div className="h-56 lg:h-72 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 bg-gray-50/50">
                   {chatHistory.length === 0 && (
                     <div className="text-center py-8">
                       <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -942,7 +942,7 @@ export default function MindMapPage() {
                 </div>
                 
                 {/* Input Area */}
-                <div className="p-4 bg-white border-t border-gray-100">
+                <div className="p-3 lg:p-4 bg-white border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 relative">
                       <Input

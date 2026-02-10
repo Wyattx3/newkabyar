@@ -525,13 +525,13 @@ export default function YoutubeSummarizerPage() {
 
       {/* Search Bar */}
       <div className="bg-white rounded-xl border border-gray-200 p-3 mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             placeholder="Paste YouTube video URL..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSummarize()}
-            className="flex-1 h-10 rounded-lg border-gray-200 focus:border-blue-500 text-sm bg-gray-50"
+            className="flex-1 min-w-0 h-10 rounded-lg border-gray-200 focus:border-blue-500 text-sm bg-gray-50"
           />
           <div className="flex bg-gray-100 rounded-lg p-0.5">
             {["brief", "detailed"].map((t) => (
@@ -556,14 +556,14 @@ export default function YoutubeSummarizerPage() {
       {/* Content - Side by Side Layout */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {summary ? (
-          <div className="h-full grid lg:grid-cols-2 gap-4">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
             {/* Left Panel - Summary Content */}
             <div className="overflow-y-auto space-y-3 pr-1">
               {/* Video Card */}
-              <div className="bg-white rounded-xl border border-gray-200 p-4">
-                <div className="flex gap-4">
-                  <div className="w-44 shrink-0">
-                    <div className="aspect-video rounded-lg overflow-hidden bg-black">
+              <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
+                <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
+                  <div className="w-full sm:w-44 shrink-0">
+                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
                       {videoId && (
                         <iframe src={`https://www.youtube.com/embed/${videoId}`} className="w-full h-full" allowFullScreen />
                       )}
@@ -598,7 +598,7 @@ export default function YoutubeSummarizerPage() {
               </div>
 
               {/* Summary Card */}
-              <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="w-4 h-4 text-blue-600" />
                   <span className="font-medium text-gray-900 text-sm">Summary</span>
@@ -610,7 +610,7 @@ export default function YoutubeSummarizerPage() {
 
               {/* Key Moments */}
               {summary.keyMoments?.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Play className="w-4 h-4 text-blue-600" />
                     <span className="font-medium text-gray-900 text-sm">Key Moments</span>
@@ -629,9 +629,9 @@ export default function YoutubeSummarizerPage() {
               )}
 
               {/* Topics & Takeaways */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {summary.topics?.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Hash className="w-4 h-4 text-blue-600" />
                       <span className="font-medium text-gray-900 text-sm">Topics</span>
@@ -644,7 +644,7 @@ export default function YoutubeSummarizerPage() {
                   </div>
                 )}
                 {summary.takeaways?.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Lightbulb className="w-4 h-4 text-blue-600" />
                       <span className="font-medium text-gray-900 text-sm">Takeaways</span>
@@ -666,7 +666,7 @@ export default function YoutubeSummarizerPage() {
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
               {/* Feature Tabs */}
               <div className="border-b border-gray-100 p-2">
-                <div className="flex gap-1">
+                <div className="flex gap-1 overflow-x-auto flex-nowrap">
                   {[
                     { id: 'translate', icon: Languages, label: 'Translate' },
                     { id: 'chat', icon: MessageCircle, label: 'Ask AI' },
@@ -682,7 +682,7 @@ export default function YoutubeSummarizerPage() {
                         if (f.id === 'mindmap' && !mermaidCode) handleGenerateMindmap();
                         if (f.id === 'audio' && !audioUrl) handleGenerateAudio();
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all shrink-0 ${
                         activeFeature === f.id
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-50 hover:bg-gray-100 text-gray-600'
@@ -696,7 +696,7 @@ export default function YoutubeSummarizerPage() {
               </div>
 
               {/* Feature Content */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-3 lg:p-4">
                 {/* Translate */}
                 {activeFeature === 'translate' && (
                   <div className="space-y-4">
@@ -984,7 +984,7 @@ export default function YoutubeSummarizerPage() {
                 {activeFeature === 'audio' && (
                   <div className="space-y-4">
                     {/* Voice & Style Options */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">Voice</label>
                         <select
@@ -1113,7 +1113,7 @@ export default function YoutubeSummarizerPage() {
               <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
                 <Youtube className="w-8 h-8 text-blue-600" />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Summarize Any Video</h2>
+              <h2 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Summarize Any Video</h2>
               <p className="text-sm text-gray-500 mb-4">Get key moments, flashcards, mind maps, and more</p>
               <div className="flex flex-wrap justify-center gap-2">
                 {["Lectures", "Tutorials", "Podcasts"].map((type) => (

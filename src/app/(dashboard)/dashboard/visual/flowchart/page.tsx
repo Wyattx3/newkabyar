@@ -722,14 +722,14 @@ ${mermaidCode}`
     )}>
       {/* INITIAL STATE - Centered Minimalist Input */}
       {!hasResult ? (
-        <div className="h-full flex items-center justify-center bg-white p-6">
+        <div className="h-full flex items-center justify-center bg-white p-3 lg:p-6">
           <div className="w-full max-w-xl">
             {/* Title */}
-            <div className="text-center mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
-                <GitBranch className="w-7 h-7 text-blue-600" />
+            <div className="text-center mb-6 lg:mb-8">
+              <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-3 lg:mb-4">
+                <GitBranch className="w-6 h-6 lg:w-7 lg:h-7 text-blue-600" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Text to Flowchart</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-1">Text to Flowchart</h1>
               <p className="text-gray-500 text-sm">Describe any process to visualize it</p>
             </div>
 
@@ -737,7 +737,7 @@ ${mermaidCode}`
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               {/* File Upload Badge */}
               {uploadedFile && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border-b border-blue-100">
+                <div className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-blue-50 border-b border-blue-100">
                   <File className="w-4 h-4 text-blue-600" />
                   <span className="text-sm text-blue-700 font-medium truncate flex-1">{uploadedFile.name}</span>
                   <button onClick={clearFile} className="p-1 hover:bg-blue-100 rounded-full">
@@ -750,13 +750,13 @@ ${mermaidCode}`
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe your process here...&#10;&#10;Example: User submits form → validate data → if valid save to database → send confirmation email → else show error message&#10;&#10;Or upload a PDF/DOC file below"
-                className="min-h-[120px] resize-none border-0 focus:ring-0 text-sm p-4"
+                className="min-h-[100px] lg:min-h-[120px] resize-none border-0 focus:ring-0 text-sm p-3 lg:p-4"
               />
               
               {/* Bottom Bar */}
-              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-100">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-3 lg:px-4 py-2 lg:py-3 bg-gray-50 border-t border-gray-100">
                 {/* Left side - File upload & Direction */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 lg:gap-3">
                   {/* File Upload */}
                   <input
                     ref={fileInputRef}
@@ -811,7 +811,7 @@ ${mermaidCode}`
             </div>
 
             {/* Quick Examples */}
-            <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3 lg:mt-4">
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex}
@@ -824,7 +824,7 @@ ${mermaidCode}`
             </div>
 
             {/* Credits */}
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-4 lg:mt-6">
               <span className="px-3 py-1.5 bg-gray-50 text-gray-500 text-xs rounded-full flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-blue-500" />Uses 4 credits
               </span>
@@ -859,14 +859,14 @@ ${mermaidCode}`
         >
         {/* Floating Input Bar - Only when has result */}
         {hasResult && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-2 flex items-center gap-2 max-w-2xl">
-            <GitBranch className="w-4 h-4 text-blue-600 ml-2 shrink-0" />
+          <div className="absolute top-3 lg:top-4 left-2 right-2 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-2 flex flex-wrap items-center gap-2 lg:max-w-2xl">
+            <GitBranch className="w-4 h-4 text-blue-600 ml-1 lg:ml-2 shrink-0" />
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
               placeholder="Describe a process..."
-              className="flex-1 h-9 min-w-[240px] border-0 bg-transparent focus:ring-0 text-sm focus:outline-none"
+              className="flex-1 h-9 min-w-0 sm:min-w-[180px] lg:min-w-[240px] border-0 bg-transparent focus:ring-0 text-sm focus:outline-none"
             />
             
             {/* Direction buttons */}
@@ -903,7 +903,7 @@ ${mermaidCode}`
         )}
 
         {/* Left Toolbar */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-white rounded-2xl shadow-lg border border-gray-100 p-1.5 flex flex-col gap-0.5">
+        <div className="absolute left-1 lg:left-3 top-1/2 -translate-y-1/2 z-20 bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 p-1 lg:p-1.5 flex flex-col gap-0.5">
           <Button variant="ghost" size="sm" onClick={() => setZoom(prev => Math.min(prev + 0.2, 3))} className="h-8 w-8 p-0" title="Zoom In">
             <ZoomIn className="w-4 h-4" />
           </Button>
@@ -928,7 +928,7 @@ ${mermaidCode}`
         </div>
 
         {/* Right Toolbar */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-white rounded-2xl shadow-lg border border-gray-100 p-1.5 flex flex-col gap-0.5">
+        <div className="absolute right-1 lg:right-3 top-1/2 -translate-y-1/2 z-20 bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 p-1 lg:p-1.5 flex flex-col gap-0.5">
           <Button variant="ghost" size="sm" onClick={copyCode} className="h-8 w-8 p-0" title="Copy Code" disabled={!hasResult}>
             {copied ? <Check className="w-4 h-4 text-green-600" /> : <Code2 className="w-4 h-4" />}
           </Button>
@@ -1016,7 +1016,7 @@ ${mermaidCode}`
 
         {/* Stats Panel */}
         {showStats && hasResult && (
-          <div className="absolute top-3 right-3 z-20 bg-white rounded-xl shadow-lg border border-gray-100 p-3 w-36">
+          <div className="absolute top-14 lg:top-3 right-10 lg:right-3 z-20 bg-white rounded-xl shadow-lg border border-gray-100 p-3 w-36">
             <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1.5">
               <BarChart3 className="w-3.5 h-3.5" />Statistics
             </p>
@@ -1050,8 +1050,8 @@ ${mermaidCode}`
 
         {/* Chat Panel - Left Side */}
         {showChat && (
-          <div className="absolute top-3 left-14 w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-in slide-in-from-left-5 duration-200">
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500">
+          <div className="absolute top-14 left-2 right-2 lg:top-3 lg:left-14 lg:right-auto lg:w-[320px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-30 animate-in slide-in-from-left-5 duration-200">
+            <div className="flex items-center justify-between px-3 lg:px-4 py-2.5 lg:py-3 bg-gradient-to-r from-blue-600 to-blue-500">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-white" />
                 <span className="text-sm font-medium text-white truncate max-w-[180px]">{selectedNode}</span>
@@ -1061,7 +1061,7 @@ ${mermaidCode}`
               </button>
             </div>
             
-            <div className="h-56 overflow-y-auto p-3 space-y-2.5 bg-gray-50/50">
+            <div className="h-48 lg:h-56 overflow-y-auto p-3 space-y-2.5 bg-gray-50/50">
               {chatHistory.length === 0 && (
                 <div className="text-center py-6">
                   <Sparkles className="w-8 h-8 text-blue-400 mx-auto mb-2" />

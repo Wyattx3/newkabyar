@@ -308,7 +308,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
             <TrendingUp className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Past Paper Analyzer</h1>
+            <h1 className="text-base lg:text-lg font-semibold text-gray-900">Past Paper Analyzer</h1>
             <p className="text-xs text-gray-500">Predict exam topics from trends</p>
           </div>
         </div>
@@ -327,7 +327,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-full grid lg:grid-cols-[1fr_280px] gap-4"
+              className="h-full grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3 lg:gap-4"
             >
               {/* Papers List */}
               <div className="bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden">
@@ -465,8 +465,8 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
               </div>
 
               {/* Controls Sidebar */}
-              <div className="flex flex-col gap-3">
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex flex-col gap-3 lg:gap-3">
+                <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                   <label className="text-xs font-medium text-gray-500 mb-2 block">Subject (Optional)</label>
                   <input
                     type="text"
@@ -477,7 +477,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                   />
                 </div>
 
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                   <ModelSelector value={selectedModel} onChange={setSelectedModel} />
                 </div>
 
@@ -493,7 +493,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                   )}
                 </Button>
 
-                <div className="bg-blue-50 rounded-xl border border-blue-100 p-4">
+                <div className="bg-blue-50 rounded-xl border border-blue-100 p-3 lg:p-4">
                   <p className="text-xs text-blue-700 font-medium mb-2">Tips for best results:</p>
                   <ul className="text-xs text-blue-600 space-y-1">
                     <li>• Add 3+ years of papers</li>
@@ -503,7 +503,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                 </div>
 
                 {/* Papers Stats */}
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                   <p className="text-xs text-gray-500 mb-3">Analysis Ready</p>
                   <div className="space-y-2">
                     {papers.map((p, i) => (
@@ -540,21 +540,21 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
               className="h-full flex flex-col"
             >
               {/* Stats Header */}
-              <div className="grid grid-cols-5 gap-3 mb-4 shrink-0">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3 mb-4 shrink-0">
                 <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-                  <p className="text-2xl font-bold text-blue-600">{result.topicFrequency.length}</p>
+                  <p className="text-xl lg:text-2xl font-bold text-blue-600">{result.topicFrequency.length}</p>
                   <p className="text-xs text-gray-500">Topics</p>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-                  <p className="text-2xl font-bold text-green-600">{result.predictions.highProbability.length}</p>
+                  <p className="text-xl lg:text-2xl font-bold text-green-600">{result.predictions.highProbability.length}</p>
                   <p className="text-xs text-gray-500">High Prob</p>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-                  <p className="text-2xl font-bold text-amber-600">{result.predictions.mediumProbability.length}</p>
+                  <p className="text-xl lg:text-2xl font-bold text-amber-600">{result.predictions.mediumProbability.length}</p>
                   <p className="text-xs text-gray-500">Medium Prob</p>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-                  <p className="text-2xl font-bold text-purple-600">{result.studyRecommendations.length}</p>
+                  <p className="text-xl lg:text-2xl font-bold text-purple-600">{result.studyRecommendations.length}</p>
                   <p className="text-xs text-gray-500">Study Tips</p>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-3 flex items-center justify-center gap-2">
@@ -576,8 +576,8 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
               </div>
 
               {/* Feature Toolbar */}
-              <div className="flex items-center justify-between mb-4 shrink-0">
-                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+              <div className="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-2">
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl flex-wrap">
                   {[
                     { id: "overview", label: "Overview", icon: PieChart },
                     { id: "topics", label: "Topics", icon: BarChart3 },
@@ -587,7 +587,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex items-center gap-1.5 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-1.5 py-2 px-2 lg:px-4 rounded-lg text-xs lg:text-sm font-medium transition-colors ${
                         activeTab === tab.id
                           ? "bg-white text-gray-900 shadow-sm"
                           : "text-gray-500 hover:text-gray-700"
@@ -598,7 +598,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={generatePracticeQuestions}
                     disabled={generatingQuestions}
@@ -635,16 +635,16 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
               {/* Tab Content */}
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {activeTab === "overview" && (
-                  <div className="grid lg:grid-cols-[1fr_320px] gap-4">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3 lg:gap-4">
+                    <div className="space-y-3 lg:space-y-4">
                       {/* Summary */}
-                      <div className="bg-white rounded-xl border border-gray-200 p-4">
+                      <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                         <h3 className="text-sm font-medium text-gray-900 mb-2">Analysis Summary</h3>
                         <p className="text-sm text-gray-600">{result.summary}</p>
                       </div>
 
                       {/* Topic Chart */}
-                      <div className="bg-white rounded-xl border border-gray-200 p-4">
+                      <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                         <h3 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
                           <BarChart3 className="w-4 h-4 text-blue-600" />
                           Topic Frequency
@@ -674,9 +674,9 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     </div>
 
                     {/* Sidebar */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 lg:space-y-4">
                       {/* High Probability */}
-                      <div className="bg-green-50 rounded-xl border border-green-100 p-4">
+                      <div className="bg-green-50 rounded-xl border border-green-100 p-3 lg:p-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Target className="w-4 h-4 text-green-600" />
                           <span className="text-sm font-medium text-green-800">Likely to Appear</span>
@@ -694,7 +694,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                       </div>
 
                       {/* Patterns */}
-                      <div className="bg-white rounded-xl border border-gray-200 p-4">
+                      <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Lightbulb className="w-4 h-4 text-amber-500" />
                           <span className="text-sm font-medium text-gray-900">Patterns</span>
@@ -711,7 +711,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
 
                       {/* Practice Questions */}
                       {practiceQuestions.length > 0 && (
-                        <div className="bg-purple-50 rounded-xl border border-purple-100 p-4">
+                        <div className="bg-purple-50 rounded-xl border border-purple-100 p-3 lg:p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <Sparkles className="w-4 h-4 text-purple-600" />
                             <span className="text-sm font-medium text-purple-800">Practice Questions</span>
@@ -734,8 +734,8 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                 )}
 
                 {activeTab === "topics" && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                       <h3 className="text-sm font-medium text-gray-900">All Topics ({result.topicFrequency.length})</h3>
                       <div className="flex items-center gap-2 text-xs text-gray-500">
                         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Increasing</span>
@@ -743,7 +743,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400" /> Stable</span>
                       </div>
                     </div>
-                    <div className={viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-3" : "space-y-2"}>
+                    <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" : "space-y-2"}>
                       {result.topicFrequency.map((t, i) => (
                         <div key={i} className={`p-3 rounded-lg border ${
                           t.trend === "increasing" ? "bg-green-50 border-green-200" :
@@ -771,8 +771,8 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                 )}
 
                 {activeTab === "predictions" && (
-                  <div className="grid lg:grid-cols-2 gap-4">
-                    <div className="bg-green-50 rounded-xl border border-green-100 p-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
+                    <div className="bg-green-50 rounded-xl border border-green-100 p-3 lg:p-4">
                       <h3 className="text-sm font-medium text-green-800 mb-4 flex items-center gap-2">
                         <Target className="w-4 h-4" />
                         High Probability ({result.predictions.highProbability.length})
@@ -796,7 +796,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                       </div>
                     </div>
 
-                    <div className="bg-amber-50 rounded-xl border border-amber-100 p-4">
+                    <div className="bg-amber-50 rounded-xl border border-amber-100 p-3 lg:p-4">
                       <h3 className="text-sm font-medium text-amber-800 mb-4 flex items-center gap-2">
                         <Target className="w-4 h-4" />
                         Medium Probability ({result.predictions.mediumProbability.length})
@@ -819,7 +819,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                 {activeTab === "study" && (
                   <div className="space-y-4">
                     {/* Filter */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Filter className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-600">Filter:</span>
                       {["all", "high", "medium", "low"].map((p) => (
@@ -838,11 +838,11 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     </div>
 
                     {/* Recommendations */}
-                    <div className="grid lg:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                       {filteredRecommendations.map((r, i) => {
                         const colors = getPriorityColor(r.priority);
                         return (
-                          <div key={i} className={`p-4 rounded-xl border ${colors.bg} ${colors.border}`}>
+                          <div key={i} className={`p-3 lg:p-4 rounded-xl border ${colors.bg} ${colors.border}`}>
                             <div className="flex items-start gap-3">
                               <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors.text} bg-white`}>
                                 {r.priority}
@@ -864,14 +864,14 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     </div>
 
                     {/* Study Schedule */}
-                    <div className="bg-blue-50 rounded-xl border border-blue-100 p-4">
+                    <div className="bg-blue-50 rounded-xl border border-blue-100 p-3 lg:p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-blue-600" />
                           <span className="text-sm font-medium text-blue-800">Suggested Study Schedule</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="p-3 bg-white rounded-lg text-center">
                           <p className="text-xs text-gray-500 mb-1">Week 1-2</p>
                           <p className="text-sm font-medium text-gray-900">High Priority Topics</p>
@@ -900,7 +900,7 @@ ${result.patterns.map(p => `• ${p}`).join("\n")}`;
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
-                    className="fixed bottom-4 right-4 w-96 max-h-[60vh] bg-white rounded-2xl shadow-2xl border border-purple-200 overflow-hidden z-50"
+                    className="fixed bottom-4 left-4 right-4 sm:left-auto sm:w-96 max-h-[60vh] bg-white rounded-2xl shadow-2xl border border-purple-200 overflow-hidden z-50"
                   >
                     <div className="px-4 py-3 bg-purple-50 border-b border-purple-100 flex items-center justify-between">
                       <div className="flex items-center gap-2">

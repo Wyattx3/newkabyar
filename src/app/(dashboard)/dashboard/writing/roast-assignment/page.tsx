@@ -306,17 +306,17 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
   if (!mounted) return null;
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {!result ? (
         /* INPUT STATE - Centered Card Design */
-        <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-3 lg:p-6 overflow-hidden">
           <div className="w-full max-w-2xl flex flex-col h-full max-h-[600px]">
             {/* Header */}
             <div className="text-center mb-4 shrink-0">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-orange-50 mb-3">
                 <Flame className="w-6 h-6 text-orange-500" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Roast My Assignment</h1>
+              <h1 className="text-lg lg:text-xl font-bold text-gray-900">Roast My Assignment</h1>
               <p className="text-sm text-gray-500">Get brutally honest feedback</p>
             </div>
 
@@ -399,7 +399,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
                     <ModelSelector value={selectedModel} onChange={setSelectedModel} />
                   </div>
                 </div>
-                <Button onClick={handleRoast} disabled={isLoading || text.length < 100} className="h-9 px-6 rounded-xl bg-orange-500 hover:bg-orange-600">
+                <Button onClick={handleRoast} disabled={isLoading || text.length < 100} className="h-9 px-4 lg:px-6 rounded-xl bg-orange-500 hover:bg-orange-600">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Flame className="w-4 h-4 mr-1.5" />Roast</>}
                 </Button>
               </div>
@@ -415,7 +415,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
         /* RESULTS STATE - Horizontal Split Layout */
         <div className="h-full flex flex-col overflow-hidden">
           {/* Top Bar */}
-          <div className="h-12 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0">
+          <div className="min-h-[3rem] py-2 bg-white border-b border-gray-100 flex items-center justify-between px-3 lg:px-4 shrink-0 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <button onClick={reset} className="p-1.5 hover:bg-gray-100 rounded-lg">
                 <RefreshCw className="w-4 h-4 text-gray-500" />
@@ -446,11 +446,11 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
           </div>
 
           {/* Main Content - Horizontal Split */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
             {/* Left Panel - Feedback */}
-            <div className="flex-1 flex flex-col overflow-hidden border-r border-gray-100">
+            <div className="flex-1 flex flex-col overflow-hidden border-b lg:border-b-0 lg:border-r border-gray-100">
               {/* Tabs */}
-              <div className="h-10 border-b border-gray-100 flex items-center px-4 gap-1 shrink-0">
+              <div className="min-h-[2.5rem] py-1.5 border-b border-gray-100 flex items-center px-3 lg:px-4 gap-1 shrink-0 flex-wrap">
                 <button
                   onClick={() => setShowImproved(false)}
                   className={cn("px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5", !showImproved ? "bg-orange-50 text-orange-600" : "text-gray-500 hover:bg-gray-50")}
@@ -472,11 +472,11 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-3 lg:p-4">
                 {!showImproved ? (
-                  <div className={cn("space-y-4", focusMode && "max-w-xl mx-auto")}>
+                  <div className={cn("space-y-3 lg:space-y-4", focusMode && "max-w-xl mx-auto")}>
                     {/* Rubric Summary */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-4">
+                    <div className="bg-white border border-gray-200 rounded-xl p-3 lg:p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Gauge className="w-4 h-4 text-gray-600" />
@@ -503,7 +503,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
                     </div>
 
                     {/* Strengths */}
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+                    <div className="bg-green-50 border border-green-100 rounded-xl p-3 lg:p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <ThumbsUp className="w-4 h-4 text-green-600" />
                         <h3 className="font-semibold text-green-800 text-sm">Strengths</h3>
@@ -519,7 +519,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
                     </div>
 
                     {/* Weaknesses */}
-                    <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+                    <div className="bg-red-50 border border-red-100 rounded-xl p-3 lg:p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <ThumbsDown className="w-4 h-4 text-red-600" />
                         <h3 className="font-semibold text-red-800 text-sm">Issues</h3>
@@ -548,7 +548,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
                     </div>
 
                     {/* Quick Fixes */}
-                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 lg:p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Zap className="w-4 h-4 text-amber-600" />
                         <h3 className="font-semibold text-amber-800 text-sm">Quick Fixes</h3>
@@ -564,8 +564,8 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
                   </div>
                 ) : (
                   /* Improved Version */
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-3 lg:space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
                         <Lightbulb className="w-4 h-4 text-blue-600" />
                         <h3 className="font-semibold text-gray-900 text-sm">AI-Improved Version</h3>
@@ -575,7 +575,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
                       </Button>
                     </div>
                     {improvedVersion ? (
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 lg:p-4">
                         <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{improvedVersion}</p>
                       </div>
                     ) : (
@@ -587,7 +587,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
 
                     {/* Comparison */}
                     {improvedVersion && (
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-red-50 border border-red-100 rounded-xl p-3">
                           <p className="text-[10px] font-medium text-red-600 mb-2 flex items-center gap-1"><X className="w-3 h-3" />Original</p>
                           <p className="text-[11px] text-gray-600 line-clamp-6">{text}</p>
@@ -604,7 +604,7 @@ export default function RoastAssignmentPage({ initialData }: { initialData?: Ini
             </div>
 
             {/* Right Panel - Chat */}
-            <div className="w-72 bg-white flex flex-col shrink-0 overflow-hidden">
+            <div className="w-full lg:w-72 bg-white flex flex-col shrink-0 overflow-hidden border-t lg:border-t-0 max-h-[40vh] lg:max-h-none">
               <div className="h-10 border-b border-gray-100 flex items-center px-3 gap-2 shrink-0">
                 <div className="w-6 h-6 rounded-lg bg-orange-500 flex items-center justify-center">
                   <MessageSquare className="w-3 h-3 text-white" />

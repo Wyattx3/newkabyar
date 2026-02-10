@@ -232,7 +232,7 @@ export default function LibraryPage() {
   }));
 
   return (
-    <div className="-m-4 lg:-m-5 -mt-16 lg:-mt-5 h-[calc(100vh)] flex flex-col bg-[#fafafa] overflow-hidden">
+    <div className="-m-4 lg:-m-5 -mt-16 lg:-mt-5 h-full flex flex-col bg-[#fafafa] overflow-hidden">
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200/80">
         <div className="px-6 py-4">

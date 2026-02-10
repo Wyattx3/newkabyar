@@ -104,10 +104,10 @@ interface AssignmentResult {
 // Markdown components with syntax highlighting
 const markdownComponents = {
   h1: ({ children, ...props }: React.ComponentPropsWithoutRef<"h1">) => (
-    <h1 className="text-xl font-bold text-gray-900 mt-5 mb-3 pb-2 border-b border-gray-100" {...props}>{children}</h1>
+    <h1 className="text-lg lg:text-xl font-bold text-gray-900 mt-5 mb-3 pb-2 border-b border-gray-100" {...props}>{children}</h1>
   ),
   h2: ({ children, ...props }: React.ComponentPropsWithoutRef<"h2">) => (
-    <h2 className="text-lg font-bold text-gray-800 mt-4 mb-2" {...props}>{children}</h2>
+    <h2 className="text-base lg:text-lg font-bold text-gray-800 mt-4 mb-2" {...props}>{children}</h2>
   ),
   h3: ({ children, ...props }: React.ComponentPropsWithoutRef<"h3">) => (
     <h3 className="text-base font-semibold text-gray-700 mt-3 mb-1.5" {...props}>{children}</h3>
@@ -425,17 +425,17 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
 
   if (!mounted) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center bg-white">
         <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-100 bg-white px-5 py-3">
-        <div className="flex items-center justify-between">
+      <div className="flex-shrink-0 border-b border-gray-100 bg-white px-3 lg:px-5 py-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
               <BrainCircuit className="w-4 h-4 text-blue-600" />
@@ -487,9 +487,9 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left - Input */}
-        <div className="w-[380px] flex-shrink-0 border-r border-gray-100 flex flex-col">
+        <div className="w-full lg:w-[380px] flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col max-h-[50vh] lg:max-h-none">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-50">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assignment</span>
             <div className="flex items-center gap-2">
@@ -657,7 +657,7 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
           {result ? (
             <>
               {/* Result Header */}
-              <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-white">
+              <div className="flex-shrink-0 flex items-center justify-between px-3 lg:px-5 py-3 border-b border-gray-100 bg-white flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
                     <CheckCircle2 className="w-4 h-4 text-blue-600" />
@@ -695,9 +695,9 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
               </div>
 
               {/* Task List + Content */}
-              <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
                 {/* Task sidebar */}
-                <div className="w-[220px] flex-shrink-0 border-r border-gray-100 bg-white overflow-y-auto">
+                <div className="w-full sm:w-[220px] flex-shrink-0 border-b sm:border-b-0 sm:border-r border-gray-100 bg-white overflow-y-auto max-h-[30vh] sm:max-h-none">
                   <div className="p-3">
                     <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">
                       Tasks
@@ -751,11 +751,11 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
                   <div className="p-3 border-t border-gray-50">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-blue-600">{result.totalTasks}</div>
+                        <div className="text-base lg:text-lg font-bold text-blue-600">{result.totalTasks}</div>
                         <div className="text-[10px] text-gray-400">Tasks</div>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-green-600">{result.completedTasks}</div>
+                        <div className="text-base lg:text-lg font-bold text-green-600">{result.completedTasks}</div>
                         <div className="text-[10px] text-gray-400">Done</div>
                       </div>
                     </div>
@@ -769,9 +769,9 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
                       const task = result.tasks.find((t) => t.id === expandedTask);
                       if (!task || !task.result) return null;
                       return (
-                        <div className="p-6">
+                        <div className="p-3 lg:p-6">
                           {/* Task header card */}
-                          <div className="flex items-center justify-between mb-5">
+                          <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
                             <div className="flex items-center gap-3">
                               <div className={cn(
                                 "w-9 h-9 rounded-xl flex items-center justify-center border",
@@ -826,7 +826,7 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
                           )}
 
                           {/* Result content */}
-                          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                          <div className="bg-white rounded-2xl border border-gray-200 p-3 lg:p-6 shadow-sm">
                             <div className="prose prose-sm max-w-none">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -862,7 +862,7 @@ export default function AssignmentWorkerPage({ initialData }: { initialData?: In
                   Paste any assignment and AI will break it into tasks, then complete each one autonomously
                 </p>
 
-                <div className="mt-6 grid grid-cols-2 gap-2 max-w-[280px] mx-auto">
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-[280px] mx-auto">
                   {[
                     { icon: <FileText className="w-3.5 h-3.5" />, label: "Essays & Writing" },
                     { icon: <Calculator className="w-3.5 h-3.5" />, label: "Math & Science" },

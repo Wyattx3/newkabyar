@@ -468,7 +468,7 @@ export default function PDFPodcastPage() {
       <div className="flex-1 min-h-0 overflow-hidden">
         {hasResults ? (
           /* ===== 3 COLUMN LAYOUT ===== */
-          <div className="h-full grid grid-cols-3 gap-3">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-3">
             {/* Column 1: Script & Source */}
             <div className="flex flex-col min-h-0 bg-white rounded-xl border border-gray-200 overflow-hidden">
               {/* Header */}
@@ -553,7 +553,7 @@ export default function PDFPodcastPage() {
               </div>
 
               {/* Subtitles */}
-              <div ref={subtitlesRef} className="flex-1 overflow-y-auto p-4">
+              <div ref={subtitlesRef} className="flex-1 overflow-y-auto p-3 lg:p-4">
                 {isLive ? (
                   <div className="space-y-4">
                     {allDialogues.slice(0, currentLineIndex + 1).map((line, i) => {
@@ -639,8 +639,8 @@ export default function PDFPodcastPage() {
               </div>
 
               {/* Speakers */}
-              <div className="flex-1 flex flex-col items-center justify-center p-4">
-                <div className="flex items-center gap-6">
+              <div className="flex-1 flex flex-col items-center justify-center p-3 lg:p-4">
+                <div className="flex items-center gap-3 lg:gap-6">
                   {/* Host */}
                   <div className="text-center">
                     <div
@@ -735,7 +735,7 @@ export default function PDFPodcastPage() {
               )}
 
               {/* Controls */}
-              <div className="p-4 border-t border-gray-100 shrink-0">
+              <div className="p-3 lg:p-4 border-t border-gray-100 shrink-0">
                 {!isLive ? (
                   <button
                     onClick={startLivePodcast}
@@ -785,7 +785,7 @@ export default function PDFPodcastPage() {
           </div>
         ) : (
           /* ===== INPUT VIEW ===== */
-          <div className="h-full grid lg:grid-cols-[1fr_280px] gap-3">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-3">
             {/* Left: Content Input */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col min-h-0">
               {/* File Upload Bar */}
@@ -837,7 +837,7 @@ export default function PDFPodcastPage() {
               </div>
 
               {/* Textarea */}
-              <div className="flex-1 p-4 min-h-0">
+              <div className="flex-1 p-3 lg:p-4 min-h-0">
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -850,7 +850,7 @@ You can upload multiple files and they will be combined into one podcast."
             </div>
 
             {/* Right: Options Panel */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col">
+            <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4 flex flex-col">
               <div className="text-center mb-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-2">
                   <Radio className="w-6 h-6 text-blue-600" />

@@ -548,14 +548,14 @@ export default function TimelinePage() {
     )}>
       {/* Header - Only show when no result */}
       {!hasResult && (
-        <div className="bg-white rounded-2xl p-6 mb-4 border border-gray-100 shadow-sm">
-          <div className="flex items-start justify-between mb-5">
+        <div className="bg-white rounded-2xl p-3 lg:p-6 mb-4 border border-gray-100 shadow-sm">
+          <div className="flex items-start justify-between mb-5 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Interactive Timeline</h1>
+                <h1 className="text-lg lg:text-xl font-bold text-gray-900">Interactive Timeline</h1>
                 <p className="text-gray-500 text-sm">Visualize historical events beautifully</p>
               </div>
             </div>
@@ -572,21 +572,21 @@ export default function TimelinePage() {
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
               placeholder="Enter a historical topic (e.g., World War II, Renaissance)"
-              className="h-14 pl-12 pr-40 rounded-xl bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+              className="h-14 pl-12 pr-14 lg:pr-40 rounded-xl bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2">
               <Button
                 onClick={handleGenerate}
                 disabled={isLoading || topic.trim().length < 3}
-                className="h-10 px-6 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
+                className="h-10 px-3 lg:px-6 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
               >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4 mr-2" />Generate</>}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Wand2 className="w-4 h-4 lg:mr-2" /><span className="hidden lg:inline">Generate</span></>}
               </Button>
             </div>
           </div>
 
           {/* Event Count - Simple Buttons */}
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2 lg:gap-3 mb-4 flex-wrap">
             <span className="text-sm text-gray-600">Events:</span>
             <div className="flex items-center bg-gray-100 rounded-xl p-1">
               {EVENT_COUNTS.map((count) => (
@@ -594,7 +594,7 @@ export default function TimelinePage() {
                   key={count}
                   onClick={() => setEventCount(count)}
                   className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                    "px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-all",
                     eventCount === count 
                       ? "bg-white text-blue-600 shadow-sm" 
                       : "text-gray-600 hover:text-gray-900"
@@ -621,7 +621,7 @@ export default function TimelinePage() {
           </div>
 
           {/* Model Selector */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             <span className="text-xs text-gray-500">Model:</span>
             <ModelSelector value={selectedModel} onChange={setSelectedModel} />
           </div>
@@ -646,14 +646,14 @@ export default function TimelinePage() {
         {hasResult ? (
           <>
             {/* Floating Input Bar */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-2 flex items-center gap-2">
-              <History className="w-4 h-4 text-gray-400 ml-2" />
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-2 flex items-center gap-2 flex-wrap max-w-[95vw] lg:max-w-none">
+              <History className="w-4 h-4 text-gray-400 ml-2 hidden sm:block" />
               <Input
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
                 placeholder="Enter a topic..."
-                className="w-56 h-9 border-0 bg-transparent focus:ring-0 text-sm"
+                className="w-36 sm:w-56 h-9 border-0 bg-transparent focus:ring-0 text-sm"
               />
               <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
                 {[5, 8, 10, 12].map((count) => (
@@ -680,28 +680,28 @@ export default function TimelinePage() {
             </div>
 
             {/* Left Toolbar */}
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-2 flex flex-col gap-1">
+            <div className="absolute left-2 lg:left-4 bottom-14 lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-1.5 lg:p-2 flex flex-row lg:flex-col gap-1">
               <Button variant="ghost" size="sm" onClick={() => setZoom(prev => Math.min(prev + 0.2, 3))} className="h-9 w-9 p-0" title="Zoom In">
                 <ZoomIn className="w-4 h-4" />
               </Button>
-              <span className="text-[10px] text-gray-500 text-center py-1">{Math.round(zoom * 100)}%</span>
+              <span className="text-[10px] text-gray-500 text-center py-1 hidden lg:block">{Math.round(zoom * 100)}%</span>
               <Button variant="ghost" size="sm" onClick={() => setZoom(prev => Math.max(prev - 0.2, 0.25))} className="h-9 w-9 p-0" title="Zoom Out">
                 <ZoomOut className="w-4 h-4" />
               </Button>
-              <div className="h-px bg-gray-100 my-1" />
+              <div className="w-px lg:w-auto h-auto lg:h-px bg-gray-100 mx-1 lg:mx-0 lg:my-1" />
               <Button variant="ghost" size="sm" onClick={resetView} className="h-9 w-9 p-0" title="Reset View">
                 <RotateCcw className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={fitToView} className="h-9 w-9 p-0" title="Fit to View">
                 <Focus className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={toggleFullscreen} className="h-9 w-9 p-0" title="Fullscreen">
+              <Button variant="ghost" size="sm" onClick={toggleFullscreen} className="h-9 w-9 p-0 hidden sm:flex" title="Fullscreen">
                 {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
               </Button>
             </div>
 
             {/* Right Toolbar */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-2 flex flex-col gap-1">
+            <div className="absolute right-2 lg:right-4 bottom-14 lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2 z-20 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-1.5 lg:p-2 flex flex-row lg:flex-col gap-1">
               <Button variant="ghost" size="sm" onClick={copyCode} className="h-9 w-9 p-0" title="Copy Code">
                 {copied ? <Check className="w-4 h-4 text-green-600" /> : <Code2 className="w-4 h-4" />}
               </Button>
@@ -711,14 +711,14 @@ export default function TimelinePage() {
               <Button variant="ghost" size="sm" onClick={exportPNG} className="h-9 w-9 p-0" title="Export PNG">
                 <Image className="w-4 h-4" />
               </Button>
-              <div className="h-px bg-gray-100 my-1" />
-              <Button variant="ghost" size="sm" onClick={handlePrint} className="h-9 w-9 p-0" title="Print">
+              <div className="w-px lg:w-auto h-auto lg:h-px bg-gray-100 mx-1 lg:mx-0 lg:my-1" />
+              <Button variant="ghost" size="sm" onClick={handlePrint} className="h-9 w-9 p-0 hidden sm:flex" title="Print">
                 <Printer className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={getQuickFacts} className="h-9 w-9 p-0" title="Quick Facts">
                 <Lightbulb className="w-4 h-4" />
               </Button>
-              <div className="h-px bg-gray-100 my-1" />
+              <div className="w-px lg:w-auto h-auto lg:h-px bg-gray-100 mx-1 lg:mx-0 lg:my-1" />
               <div className="relative">
                 <Button variant="ghost" size="sm" onClick={() => setShowThemes(!showThemes)} className="h-9 w-9 p-0" title="Themes">
                   <Palette className="w-4 h-4" />
@@ -758,7 +758,7 @@ export default function TimelinePage() {
             {/* Timeline Container */}
             <div 
               ref={svgContainerRef}
-              className="absolute inset-0 flex items-center justify-center bg-white timeline-container"
+              className="absolute inset-0 flex items-center justify-center bg-white timeline-container overflow-x-auto"
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                 transformOrigin: "center center",
@@ -768,15 +768,15 @@ export default function TimelinePage() {
 
             {/* Quick Facts Panel */}
             {showQuickFacts && (
-              <div className="fixed top-20 right-6 w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in slide-in-from-right-5 duration-300">
-                <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-amber-500 to-amber-400">
+              <div className="fixed top-20 right-3 lg:right-6 w-[calc(100vw-1.5rem)] sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in slide-in-from-right-5 duration-300">
+                <div className="flex items-center justify-between px-3 lg:px-5 py-3 lg:py-4 bg-gradient-to-r from-amber-500 to-amber-400">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                       <Lightbulb className="w-4 h-4 text-white" />
                     </div>
                     <div>
                       <span className="text-sm font-semibold text-white">Quick Facts</span>
-                      <span className="text-[10px] text-amber-100 block">{topic}</span>
+                      <span className="text-[10px] text-amber-100 block truncate max-w-[150px] sm:max-w-[200px]">{topic}</span>
                     </div>
                   </div>
                   <button onClick={() => setShowQuickFacts(false)} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full">
@@ -807,8 +807,8 @@ export default function TimelinePage() {
 
             {/* Chat Panel */}
             {showChat && (
-              <div className="fixed top-20 left-6 w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in slide-in-from-left-5 duration-300">
-                <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-500">
+              <div className="fixed top-20 left-3 lg:left-6 w-[calc(100vw-1.5rem)] sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in slide-in-from-left-5 duration-300">
+                <div className="flex items-center justify-between px-3 lg:px-5 py-3 lg:py-4 bg-gradient-to-r from-blue-600 to-blue-500">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                       <MessageCircle className="w-4 h-4 text-white" />
@@ -856,14 +856,14 @@ export default function TimelinePage() {
                   )}
                 </div>
                 
-                <div className="p-4 bg-white border-t border-gray-100">
+                <div className="p-3 lg:p-4 bg-white border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <Input
                       placeholder="Ask about this event..."
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleChatSubmit()}
-                      className="h-10 pl-4 pr-4 text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-100"
+                      className="h-10 pl-3 lg:pl-4 pr-3 lg:pr-4 text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-100"
                     />
                     <Button
                       onClick={handleChatSubmit}
@@ -902,7 +902,7 @@ export default function TimelinePage() {
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
                   <Calendar className="w-8 h-8 text-gray-400" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Create a Timeline</h2>
+                <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-2">Create a Timeline</h2>
                 <p className="text-gray-500">Enter any historical topic to generate an interactive timeline</p>
               </div>
             )}

@@ -416,13 +416,13 @@ export default function LectureOrganizerPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between py-2 shrink-0">
+      <div className="flex items-center justify-between py-2 shrink-0 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
             <BookOpen className="w-3.5 h-3.5 text-blue-600" />
           </div>
           <h1 className="text-sm font-semibold text-gray-900">Lecture Notes</h1>
-          <span className="text-[10px] text-gray-400">{savedNotes.length} notes</span>
+          <span className="text-[10px] text-gray-400 hidden sm:inline">{savedNotes.length} notes</span>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => setView("create")} size="sm" className="h-7 text-xs bg-blue-600 hover:bg-blue-700">
@@ -435,9 +435,9 @@ export default function LectureOrganizerPage() {
       </div>
 
       {/* Main Layout */}
-      <div className="flex-1 min-h-0 grid grid-cols-[220px_1fr] gap-2 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-[220px_1fr] gap-2 overflow-hidden">
         {/* Sidebar */}
-        <div className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden shrink-0 lg:shrink lg:max-h-none max-h-[40vh]">
           {/* Search */}
           <div className="p-2 border-b border-gray-100">
             <div className="relative">
@@ -541,10 +541,10 @@ export default function LectureOrganizerPage() {
         <div className="flex flex-col min-h-0">
           {view === "create" ? (
             /* Create Note View */
-            <div className="h-full grid grid-cols-[1fr_260px] gap-3">
+            <div className="h-full flex flex-col lg:grid lg:grid-cols-[1fr_260px] gap-3">
               {/* Input */}
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
-                <div className="p-3 border-b border-gray-100 flex items-center gap-2">
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col min-h-[200px] lg:min-h-0">
+                <div className="p-3 border-b border-gray-100 flex items-center gap-2 flex-wrap">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -571,7 +571,7 @@ export default function LectureOrganizerPage() {
               </div>
 
               {/* Options */}
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto">
                 <div className="bg-white rounded-xl border border-gray-200 p-3">
                   <label className="text-[10px] font-medium text-gray-500 mb-1.5 block">Subject</label>
                   <Input
@@ -584,7 +584,7 @@ export default function LectureOrganizerPage() {
 
                 <div className="bg-white rounded-xl border border-gray-200 p-3">
                   <label className="text-[10px] font-medium text-gray-500 mb-1.5 block">Style</label>
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {["detailed", "summary", "bullet"].map((s) => (
                       <button
                         key={s}
@@ -623,13 +623,13 @@ export default function LectureOrganizerPage() {
             </div>
           ) : view === "note" && selectedNote ? (
             /* Note View */
-            <div className="h-full grid grid-cols-[1fr_280px] gap-3">
+            <div className="h-full flex flex-col lg:grid lg:grid-cols-[1fr_280px] gap-3 overflow-y-auto lg:overflow-hidden">
               {/* Note Content */}
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col min-h-[50vh] lg:min-h-0">
                 {/* Note Header */}
-                <div className="p-3 border-b border-gray-100">
+                <div className="p-2 lg:p-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => { setView("library"); setSelectedNote(null); }} className="p-1 hover:bg-gray-100 rounded">
+                    <button onClick={() => { setView("library"); setSelectedNote(null); }} className="p-1 hover:bg-gray-100 rounded shrink-0">
                       <ChevronLeft className="w-4 h-4 text-gray-400" />
                     </button>
                     {editingTitle ? (
@@ -693,7 +693,7 @@ export default function LectureOrganizerPage() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto p-3 lg:p-4">
                   {activeTab === "overview" && (
                     <div className="space-y-4">
                       <p className="text-sm text-gray-700 leading-relaxed">{selectedNote.overview}</p>
@@ -766,7 +766,7 @@ export default function LectureOrganizerPage() {
                         </>
                       ) : (
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
                             <span className="text-xs font-medium text-gray-600">Quiz Mode</span>
                             <button onClick={() => { setQuizMode(false); setQuizAnswers({}); }} className="text-xs text-blue-600">
                               Exit Quiz
@@ -791,7 +791,7 @@ export default function LectureOrganizerPage() {
 
                   {activeTab === "flashcards" && selectedNote.flashcards && (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <span className="text-xs text-gray-500">
                           Card {currentFlashcard + 1} of {selectedNote.flashcards.length}
                         </span>
@@ -812,7 +812,7 @@ export default function LectureOrganizerPage() {
                         <div className="absolute top-2 right-2 text-[10px] text-blue-400 font-medium">
                           {isFlipped ? "ANSWER" : "QUESTION"}
                         </div>
-                        <div className="flex-1 flex items-center justify-center p-6 text-center">
+                        <div className="flex-1 flex items-center justify-center p-3 lg:p-6 text-center">
                           <p className="text-gray-800 font-medium">
                             {isFlipped
                               ? selectedNote.flashcards[currentFlashcard]?.back
@@ -845,7 +845,7 @@ export default function LectureOrganizerPage() {
               </div>
 
               {/* Right Panel - Features */}
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto">
                 {/* Quick Actions */}
                 <div className="bg-white rounded-xl border border-gray-200 p-3">
                   <span className="text-[10px] font-medium text-gray-500 mb-2 block">ACTIONS</span>
@@ -933,7 +933,7 @@ export default function LectureOrganizerPage() {
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         onClick={() => {
                           if (audioRef.current) {
@@ -1070,7 +1070,7 @@ export default function LectureOrganizerPage() {
             /* Library View */
             <div className="h-full bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
               {/* Library Header */}
-              <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+              <div className="p-2 lg:p-3 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="font-medium text-gray-900 text-sm">
                   {selectedFolderId === "starred"
                     ? "Starred Notes"
@@ -1082,7 +1082,7 @@ export default function LectureOrganizerPage() {
               </div>
 
               {/* Notes List */}
-              <div className="flex-1 overflow-y-auto p-3">
+              <div className="flex-1 overflow-y-auto p-2 lg:p-3">
                 {filteredNotes.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center">
                     <FileText className="w-10 h-10 text-gray-300 mb-2" />
@@ -1139,7 +1139,7 @@ export default function LectureOrganizerPage() {
 
       {/* Chat Overlay */}
       {showChat && selectedNote && (
-        <div className="fixed bottom-4 right-4 w-80 bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden z-50">
+        <div className="fixed bottom-4 right-3 left-3 sm:left-auto sm:w-80 bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden z-50">
           <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-blue-50">
             <span className="text-xs font-medium text-blue-700">Ask about this note</span>
             <button onClick={() => setShowChat(false)} className="p-0.5 hover:bg-blue-100 rounded">

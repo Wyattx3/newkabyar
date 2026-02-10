@@ -342,18 +342,18 @@ export default function PDFQAPage() {
   return (
     <div className={`h-full flex flex-col transition-all duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <FileSearch className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 shrink-0" />
-          <div className="min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">PDF Q&A Sniper</h1>
-            <p className="text-[10px] sm:text-xs text-gray-500">Multi-source document analysis</p>
+      <div className="flex items-center justify-between mb-2 lg:mb-4 flex-wrap gap-2">
+        <div className="flex items-center gap-2 lg:gap-3">
+          <FileSearch className="w-5 h-5 lg:w-7 lg:h-7 text-blue-600" />
+          <div>
+            <h1 className="text-sm lg:text-lg font-bold text-gray-900">PDF Q&A Sniper</h1>
+            <p className="text-[10px] lg:text-xs text-gray-500 hidden sm:block">Multi-source document analysis</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/rag" className="text-[10px] sm:text-xs text-blue-600 hover:underline shrink-0">RAG Tools</Link>
-          <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-blue-50 text-blue-600 text-[10px] sm:text-xs rounded-full flex items-center gap-1 sm:gap-1.5 font-medium shrink-0">
-            <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />4 credits
+          <Link href="/dashboard/rag" className="text-xs text-blue-600 hover:underline hidden sm:inline">RAG Tools</Link>
+          <span className="px-2 py-0.5 lg:px-2.5 lg:py-1 bg-blue-50 text-blue-600 text-[10px] lg:text-xs rounded-full flex items-center gap-1 lg:gap-1.5 font-medium">
+            <Sparkles className="w-3 h-3" />4 credits
           </span>
         </div>
       </div>
@@ -380,7 +380,7 @@ export default function PDFQAPage() {
               onClick={() => fileInputRef.current?.click()}
               className="w-full max-w-xl cursor-pointer"
             >
-              <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl border-2 border-dashed p-8 sm:p-16 text-center transition-all duration-300 ${
+              <div className={`relative overflow-hidden rounded-3xl border-2 border-dashed p-8 lg:p-16 text-center transition-all duration-300 ${
                 dragActive 
                   ? "border-blue-500 bg-blue-50 scale-[1.02]" 
                   : "border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
@@ -390,15 +390,15 @@ export default function PDFQAPage() {
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   {isProcessing ? (
-                    <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 mx-auto mb-4 sm:mb-6 animate-spin" />
+                    <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-6 animate-spin" />
                   ) : (
-                  <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600 mx-auto mb-4 sm:mb-6" />
+                  <Upload className="w-12 h-12 text-blue-600 mx-auto mb-6" />
                   )}
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 sm:mb-2">Add Your Sources</h2>
-                  <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">Upload multiple documents to analyze together</p>
-                  <div className="flex items-center justify-center gap-2 sm:gap-3">
-                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 text-blue-700 rounded-xl text-xs sm:text-sm font-medium">PDF</span>
-                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 text-blue-700 rounded-xl text-xs sm:text-sm font-medium">TXT</span>
+                  <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Add Your Sources</h2>
+                  <p className="text-gray-500 mb-6">Upload multiple documents to analyze together</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium">PDF</span>
+                    <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium">TXT</span>
                   </div>
                 </motion.div>
               </div>
@@ -417,39 +417,39 @@ export default function PDFQAPage() {
           </div>
         ) : (
           /* NotebookLM Style Layout */
-          <div className="h-full flex flex-col lg:flex-row gap-3 sm:gap-4">
+          <div className="h-full flex flex-col lg:flex-row gap-2 lg:gap-4">
             {/* Source Panel - Left */}
             <AnimatePresence>
               {showSources && (
                 <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "100%", opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="h-auto lg:h-full lg:w-[340px] flex-shrink-0 lg:flex-shrink"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0 lg:h-full lg:w-[300px]"
                 >
-                  <div className="h-full bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col max-h-[220px] lg:max-h-none lg:h-full">
                     {/* Source Header */}
-                    <div className="p-3 sm:p-4 border-b border-gray-100 bg-gray-50">
-                      <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
-                          <span className="text-xs sm:text-sm font-semibold text-gray-800">Sources</span>
-                          <span className="text-[10px] sm:text-xs text-gray-400">({sources.length})</span>
+                    <div className="p-2 lg:p-4 border-b border-gray-100 bg-gray-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-600" />
+                          <span className="text-xs lg:text-sm font-semibold text-gray-800">Sources</span>
+                          <span className="text-[10px] lg:text-xs text-gray-400">({sources.length})</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={clearAllSources}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1 lg:p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                             title="Clear all"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
                           </button>
                           <button
                             onClick={() => setShowSources(false)}
-                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-1 lg:p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                           >
-                            <X className="w-3.5 h-3.5 text-gray-400" />
+                            <X className="w-3 h-3 lg:w-3.5 lg:h-3.5 text-gray-400" />
                 </button>
               </div>
             </div>
@@ -458,12 +458,12 @@ export default function PDFQAPage() {
                         <button
                         onClick={() => addFileInputRef.current?.click()}
                         disabled={isProcessing}
-                        className="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 p-2 lg:p-3 border-2 border-dashed border-gray-200 rounded-xl text-xs lg:text-sm text-gray-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition-colors disabled:opacity-50"
                       >
                         {isProcessing ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 animate-spin" />
                         ) : (
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                         )}
                         Add source
                       </button>
@@ -481,7 +481,7 @@ export default function PDFQAPage() {
                     </div>
 
                     {/* Source List */}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                    <div className="flex-1 overflow-y-auto p-2 lg:p-3 space-y-1.5 lg:space-y-2">
                       {sources.map((source) => (
                         <motion.div
                           key={source.id}
@@ -489,7 +489,7 @@ export default function PDFQAPage() {
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
                           onClick={() => setSelectedSourceId(selectedSourceId === source.id ? null : source.id)}
-                          className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          className={`p-2 lg:p-3 rounded-xl border cursor-pointer transition-all ${
                             selectedSourceId === source.id
                               ? "border-blue-200 bg-blue-50"
                               : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
@@ -540,14 +540,14 @@ export default function PDFQAPage() {
                     </div>
 
                     {/* Footer Stats */}
-                    <div className="p-4 border-t border-gray-100 bg-gray-50">
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="p-2 lg:p-4 border-t border-gray-100 bg-gray-50">
+                      <div className="flex items-center justify-between text-[10px] lg:text-xs text-gray-500">
                         <span>{sources.length} source{sources.length !== 1 ? "s" : ""}</span>
-                        <span>{(totalChars / 1000).toFixed(1)}k total characters</span>
+                        <span>{(totalChars / 1000).toFixed(1)}k</span>
                       </div>
                       
                       {/* Model Selector */}
-                      <div className="mt-3">
+                      <div className="mt-2 lg:mt-3">
                         <ModelSelector value={selectedModel} onChange={setSelectedModel} />
                       </div>
                     </div>
@@ -557,10 +557,10 @@ export default function PDFQAPage() {
             </AnimatePresence>
 
             {/* Chat Panel - Right */}
-            <div className="flex-1 h-full flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               {/* Chat Header */}
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="px-2 lg:px-5 py-2 lg:py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-1 lg:gap-2">
+                <div className="flex items-center gap-2 lg:gap-3">
                   {!showSources && (
                     <button
                       onClick={() => setShowSources(true)}
@@ -587,19 +587,19 @@ export default function PDFQAPage() {
               </div>
 
               {/* Messages */}
-              <div ref={chatRef} className="flex-1 overflow-y-auto p-5">
+              <div ref={chatRef} className="flex-1 overflow-y-auto p-3 lg:p-5">
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
-                    <div className="text-center max-w-md">
-                      <MessageSquare className="w-12 h-12 text-blue-600 mx-auto mb-6" />
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Start a conversation</h3>
-                      <p className="text-gray-500 text-sm mb-6">
+                    <div className="text-center max-w-md px-2">
+                      <MessageSquare className="w-8 h-8 lg:w-12 lg:h-12 text-blue-600 mx-auto mb-3 lg:mb-6" />
+                      <h3 className="text-sm lg:text-lg font-semibold text-gray-800 mb-1 lg:mb-2">Start a conversation</h3>
+                      <p className="text-gray-500 text-xs lg:text-sm mb-3 lg:mb-6">
                         Ask anything about your {sources.length} source{sources.length !== 1 ? "s" : ""}. 
-                        I'll analyze and provide detailed answers.
+                        I{"'"}ll analyze and provide detailed answers.
                       </p>
                       
                       {/* Suggested Questions */}
-                      <div className="space-y-2">
+                      <div className="space-y-1.5 lg:space-y-2">
                         {suggestedQuestions.map((sq, idx) => (
                           <motion.button
                             key={idx}
@@ -608,10 +608,10 @@ export default function PDFQAPage() {
                             transition={{ delay: idx * 0.1 }}
                             disabled={isLoading}
                             onClick={() => askQuestion(sq.text)}
-                            className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-xl text-left transition-colors group disabled:opacity-50"
+                            className="w-full flex items-center gap-2 lg:gap-3 p-2 lg:p-3 bg-gray-50 hover:bg-blue-50 rounded-xl text-left transition-colors group disabled:opacity-50"
                           >
-                            <sq.icon className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                            <span className="text-sm text-gray-600 group-hover:text-blue-700">{sq.text}</span>
+                            <sq.icon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-gray-400 group-hover:text-blue-500" />
+                            <span className="text-xs lg:text-sm text-gray-600 group-hover:text-blue-700">{sq.text}</span>
                           </motion.button>
                         ))}
                     </div>
@@ -629,8 +629,8 @@ export default function PDFQAPage() {
                       {msg.role === "user" ? (
                           /* User Message */
                           <>
-                            <div className="bg-blue-600 text-white rounded-2xl rounded-tr-md px-5 py-3 shadow-sm max-w-[75%]">
-                              <p className="text-sm leading-relaxed">{msg.content}</p>
+                            <div className="bg-blue-600 text-white rounded-2xl rounded-tr-md px-3 lg:px-5 py-3 shadow-sm max-w-[85%] lg:max-w-[75%]">
+                              <p className="text-sm leading-relaxed break-words">{msg.content}</p>
                             </div>
                             <span className="text-xs font-semibold text-gray-500 flex-shrink-0 mt-1">You</span>
                           </>
@@ -681,7 +681,7 @@ export default function PDFQAPage() {
                                     exit={{ opacity: 0, height: 0 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="bg-white rounded-xl border border-gray-200 p-4 mb-2">
+                                    <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4 mb-2">
                                       <div className="flex items-start gap-3">
                                         <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
                                           {ref.id}
@@ -716,7 +716,7 @@ export default function PDFQAPage() {
                                 <span className="text-sm font-medium text-gray-700">Answer</span>
                               </div>
                               
-                              <div className="text-gray-800 leading-relaxed text-[15px] whitespace-pre-wrap">
+                              <div className="text-gray-800 leading-relaxed text-[15px] whitespace-pre-wrap break-words">
                                 {msg.content}
                               </div>
                               
@@ -806,30 +806,30 @@ export default function PDFQAPage() {
               </div>
 
               {/* Input Area */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                <div className="flex gap-3">
+              <div className="p-2 lg:p-4 border-t border-gray-100 bg-gray-50/50">
+                <div className="flex gap-2">
                   <div className="flex-1 relative">
                 <Input
                       placeholder={`Ask about your ${sources.length} source${sources.length !== 1 ? "s" : ""}...`}
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && askQuestion()}
-                      className="h-12 pl-4 pr-4 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 bg-white shadow-sm"
+                      className="h-10 lg:h-12 pl-3 lg:pl-4 pr-3 lg:pr-4 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 bg-white shadow-sm text-sm"
                 />
                   </div>
                 <Button
                     onClick={() => askQuestion()}
                     disabled={isLoading || !question.trim() || sources.length === 0}
-                    className="h-12 w-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                    className="h-10 w-10 lg:h-12 lg:w-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                   >
                     {isLoading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 animate-spin" />
                     ) : (
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 lg:w-5 lg:h-5" />
                     )}
                 </Button>
                 </div>
-                <p className="text-xs text-center text-gray-400 mt-2">
+                <p className="text-[10px] lg:text-xs text-center text-gray-400 mt-1 lg:mt-2">
                   AI analyzes all {sources.length} source{sources.length !== 1 ? "s" : ""} together
                 </p>
               </div>

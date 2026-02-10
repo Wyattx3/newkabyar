@@ -203,15 +203,19 @@ export function Sidebar() {
     <TooltipProvider>
       {/* Mobile Toggle */}
       <button
-        className="fixed top-5 left-5 z-50 lg:hidden w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center border border-gray-100"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="fixed top-3 left-3 z-[60] lg:hidden w-10 h-10 rounded-xl bg-white shadow-lg flex items-center justify-center border border-gray-100"
+        onClick={() => {
+          const next = !isMobileOpen;
+          setIsMobileOpen(next);
+          setIsExpanded(next);
+        }}
       >
         {isMobileOpen ? <X className="h-5 w-5 text-gray-700" /> : <Menu className="h-5 w-5 text-gray-700" />}
       </button>
 
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileOpen(false)} />
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden" onClick={() => { setIsMobileOpen(false); setIsExpanded(false); }} />
       )}
 
       {/* Desktop Overlay when expanded */}

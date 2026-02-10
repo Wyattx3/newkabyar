@@ -216,25 +216,25 @@ export function ToolShell({
       />
       
       {/* Header */}
-      <div className="flex items-start justify-between mb-5 shrink-0">
-        <div className="flex items-center gap-4">
-          <IconComponent className={`w-7 h-7 ${tool.color === 'blue' ? 'text-blue-600' : tool.color === 'emerald' ? 'text-emerald-600' : tool.color === 'purple' ? 'text-purple-600' : tool.color === 'amber' ? 'text-amber-600' : 'text-rose-600'}`} />
-          <div>
+      <div className="flex items-start justify-between mb-3 lg:mb-5 shrink-0 gap-2">
+        <div className="flex items-center gap-2 lg:gap-4 min-w-0">
+          <IconComponent className={`w-6 h-6 lg:w-7 lg:h-7 shrink-0 ${tool.color === 'blue' ? 'text-blue-600' : tool.color === 'emerald' ? 'text-emerald-600' : tool.color === 'purple' ? 'text-purple-600' : tool.color === 'amber' ? 'text-amber-600' : 'text-rose-600'}`} />
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-gray-900">{tool.name}</h1>
+              <h1 className="text-base lg:text-lg font-bold text-gray-900 truncate">{tool.name}</h1>
               <Link
                 href={`/dashboard/${tool.category}`}
-                className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-500 transition-colors"
+                className="hidden sm:flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-500 transition-colors shrink-0"
               >
                 <CategoryIcon className="w-3 h-3" />
                 {category.name}
               </Link>
             </div>
-            <p className="text-sm text-gray-500">{tool.shortDescription}</p>
+            <p className="text-xs lg:text-sm text-gray-500 truncate">{tool.shortDescription}</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {onHistorySelect && (
             <HistoryPanel pageType={tool.slug} onSelectItem={onHistorySelect} />
           )}
@@ -253,9 +253,9 @@ export function ToolShell({
           {children}
         </div>
       ) : inputPanel && outputPanel ? (
-        <div className="flex-1 grid lg:grid-cols-[360px_1fr] gap-4 min-h-0">
+        <div className="flex-1 grid lg:grid-cols-[320px_1fr] gap-3 lg:gap-4 min-h-0">
           {/* Input Panel */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[200px] lg:min-h-0">
             <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2">
                 <PenTool className="w-3.5 h-3.5 text-blue-600" />

@@ -196,28 +196,28 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
 
   if (!mounted) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center bg-white">
         <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-100 bg-white px-5 py-3">
-        <div className="flex items-center justify-between">
+      <div className="flex-shrink-0 border-b border-gray-100 bg-white px-3 lg:px-5 py-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
               <Video className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <h1 className="text-sm font-semibold text-gray-900">Video Explainer</h1>
-              <p className="text-xs text-gray-400">Animated explainer with voice narration</p>
+              <p className="text-xs text-gray-400 hidden sm:block">Animated explainer with voice narration</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Style Selector */}
             <div className="relative">
               <button
@@ -265,9 +265,9 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left - Input Section */}
-        <div className="w-[380px] flex-shrink-0 border-r border-gray-100 flex flex-col">
+        <div className="w-full lg:w-[380px] flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-50">
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Topic
@@ -298,13 +298,13 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Enter any topic you want to explain... e.g. 'How does photosynthesis work?', 'Blockchain technology explained', 'The water cycle'"
-              className="h-full border-0 resize-none focus-visible:ring-0 rounded-none text-sm text-gray-700 placeholder:text-gray-300 transition-none p-4"
+              className="h-full border-0 resize-none focus-visible:ring-0 rounded-none text-sm text-gray-700 placeholder:text-gray-300 transition-none p-3 lg:p-4"
               style={{ transition: "none" }}
             />
           </div>
 
           {/* Features info */}
-          <div className="px-4 py-3 border-t border-gray-50 space-y-2">
+          <div className="px-3 lg:px-4 py-3 border-t border-gray-50 space-y-2 hidden lg:block">
             <div className="text-xs text-gray-400 mb-2">Includes</div>
             <div className="flex flex-wrap gap-1.5">
               {[
@@ -324,7 +324,7 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
             </div>
           </div>
 
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-3 lg:p-4 border-t border-gray-100">
             <Button
               onClick={handleGenerate}
               disabled={isLoading || !topic.trim()}
@@ -349,8 +349,8 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
         <div className="flex-1 flex flex-col bg-gray-50/30">
           {videoData ? (
             <>
-              <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-100 bg-white">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between px-3 lg:px-5 py-2.5 border-b border-gray-100 bg-white flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Play className="w-3.5 h-3.5 text-blue-500" />
                   <span className="text-xs font-medium text-gray-600">
                     {videoData.title}
@@ -376,7 +376,7 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
                 </Button>
               </div>
 
-              <div className="flex-1 flex items-center justify-center p-6">
+              <div className="flex-1 flex items-center justify-center p-3 lg:p-6">
                 <div className="w-full max-w-[840px]">
                   <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200 bg-white">
                     <RemotionPlayer data={videoData} />

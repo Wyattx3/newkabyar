@@ -255,13 +255,13 @@ export default function ResearchGapPage() {
   return (
     <div className={`h-full flex flex-col transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 shrink-0">
+      <div className="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
             <Radar className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Research Gap Finder</h1>
+            <h1 className="text-base lg:text-lg font-semibold text-gray-900">Research Gap Finder</h1>
             <p className="text-xs text-gray-500">Discover unexplored research opportunities</p>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function ResearchGapPage() {
                   </div>
 
                   {/* Options Row */}
-                  <div className="flex items-center justify-center gap-3 mt-3">
+                  <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
                     <input
                       type="text"
                       value={field}
@@ -342,7 +342,7 @@ export default function ResearchGapPage() {
 
               {/* Bottom Section - History & Features */}
               <div className="shrink-0 pb-4">
-                <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-6 items-start max-w-5xl mx-auto">
+                <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-3 lg:gap-6 items-start max-w-5xl mx-auto">
                   {/* Recent Searches */}
                   <div>
                     {searchHistory.length > 0 && (
@@ -398,11 +398,11 @@ export default function ResearchGapPage() {
               className="h-full flex flex-col"
             >
               {/* Topic Header with Feature Toolbar */}
-              <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 shrink-0">
+              <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4 mb-3 shrink-0">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
-                      <h2 className="text-base font-semibold text-gray-900 truncate">{result.topic}</h2>
+                      <h2 className="text-base font-semibold text-gray-900 truncate break-words">{result.topic}</h2>
                       {result.existingResearch.mainThemes && (
                         <div className="hidden md:flex gap-1">
                           {result.existingResearch.mainThemes.slice(0, 2).map((theme, i) => (
@@ -433,8 +433,8 @@ export default function ResearchGapPage() {
                 </div>
 
                 {/* Feature Toolbar */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setShowMatrix(!showMatrix)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors ${
@@ -475,7 +475,7 @@ export default function ResearchGapPage() {
 
               {/* Priority Matrix Panel */}
               {showMatrix && (
-                <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 shrink-0">
+                <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4 mb-3 shrink-0">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <BarChart3 className="w-4 h-4 text-blue-600" />
@@ -527,7 +527,7 @@ export default function ResearchGapPage() {
 
               {/* Compare Panel */}
               {showCompare && savedGaps.length >= 2 && (
-                <div className="bg-white rounded-xl border border-gray-200 p-4 mb-3 shrink-0">
+                <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4 mb-3 shrink-0">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Shuffle className="w-4 h-4 text-purple-600" />
@@ -537,7 +537,7 @@ export default function ResearchGapPage() {
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {savedGaps.slice(0, 2).map((gapIndex) => {
                       const gap = result.gaps[gapIndex];
                       if (!gap) return null;
@@ -613,7 +613,7 @@ export default function ResearchGapPage() {
               )}
 
               {/* Main Content - Side by Side */}
-              <div className="flex-1 grid lg:grid-cols-[1fr_380px] gap-3 min-h-0">
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-3 min-h-0">
                 {/* Left Panel - Gaps List */}
                 <div className="bg-white rounded-xl border border-gray-200 flex flex-col min-h-0 overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 shrink-0">
@@ -674,10 +674,10 @@ export default function ResearchGapPage() {
                 <div className="flex flex-col gap-3 min-h-0 overflow-y-auto">
                   {/* Selected Gap Details */}
                   {selectedGap !== null && result.gaps[selectedGap] && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                       <div className={`w-full h-1 rounded-full ${importanceConfig[result.gaps[selectedGap].importance]?.color || "bg-gray-300"} mb-3`} />
                       <h3 className="font-semibold text-gray-900 mb-2">{result.gaps[selectedGap].title}</h3>
-                      <p className="text-sm text-gray-600 mb-4">{result.gaps[selectedGap].description}</p>
+                      <p className="text-sm text-gray-600 mb-4 break-words">{result.gaps[selectedGap].description}</p>
                       
                       {result.gaps[selectedGap].potentialQuestions && result.gaps[selectedGap].potentialQuestions.length > 0 && (
                         <div className="mb-4">
@@ -752,17 +752,17 @@ export default function ResearchGapPage() {
                   )}
 
                   {/* Summary */}
-                  <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <BookOpen className="w-4 h-4 text-gray-600" />
                       <span className="text-sm font-medium text-gray-900">Research Summary</span>
                     </div>
-                    <p className="text-sm text-gray-600">{result.existingResearch.summary}</p>
+                    <p className="text-sm text-gray-600 break-words">{result.existingResearch.summary}</p>
                   </div>
 
                   {/* Emerging Trends */}
                   {result.emergingTrends && result.emergingTrends.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <TrendingUp className="w-4 h-4 text-green-600" />
                         <span className="text-sm font-medium text-gray-900">Emerging Trends</span>
@@ -780,7 +780,7 @@ export default function ResearchGapPage() {
 
                   {/* Recommendations */}
                   {result.recommendations && result.recommendations.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Lightbulb className="w-4 h-4 text-amber-600" />
                         <span className="text-sm font-medium text-gray-900">Recommendations</span>
@@ -798,7 +798,7 @@ export default function ResearchGapPage() {
 
                   {/* Related Topics */}
                   {result.relatedTopics && result.relatedTopics.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                       <p className="text-sm font-medium text-gray-900 mb-2">Related Topics</p>
                       <div className="flex flex-wrap gap-2">
                         {result.relatedTopics.map((t, i) => (
@@ -816,7 +816,7 @@ export default function ResearchGapPage() {
 
                   {/* Saved Gaps Quick Access */}
                   {savedGaps.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-3 lg:p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="text-sm font-medium text-gray-900">Saved Gaps ({savedGaps.length})</span>
@@ -845,26 +845,26 @@ export default function ResearchGapPage() {
                   )}
 
                   {/* Quick Stats Card */}
-                  <div className="bg-blue-50 rounded-xl border border-blue-100 p-4">
+                  <div className="bg-blue-50 rounded-xl border border-blue-100 p-3 lg:p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkles className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-blue-800">Analysis Stats</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2 lg:gap-3">
                       <div className="text-center p-2 bg-white rounded-lg">
-                        <p className="text-lg font-bold text-red-600">{result.gaps.filter(g => g.importance === "high").length}</p>
+                        <p className="text-base lg:text-lg font-bold text-red-600">{result.gaps.filter(g => g.importance === "high").length}</p>
                         <p className="text-[10px] text-gray-500">High Priority</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg">
-                        <p className="text-lg font-bold text-amber-600">{result.gaps.filter(g => g.importance === "medium").length}</p>
+                        <p className="text-base lg:text-lg font-bold text-amber-600">{result.gaps.filter(g => g.importance === "medium").length}</p>
                         <p className="text-[10px] text-gray-500">Medium</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg">
-                        <p className="text-lg font-bold text-green-600">{result.gaps.filter(g => g.importance === "low").length}</p>
+                        <p className="text-base lg:text-lg font-bold text-green-600">{result.gaps.filter(g => g.importance === "low").length}</p>
                         <p className="text-[10px] text-gray-500">Low Priority</p>
                       </div>
                       <div className="text-center p-2 bg-white rounded-lg">
-                        <p className="text-lg font-bold text-purple-600">{result.gaps.reduce((acc, g) => acc + (g.potentialQuestions?.length || 0), 0)}</p>
+                        <p className="text-base lg:text-lg font-bold text-purple-600">{result.gaps.reduce((acc, g) => acc + (g.potentialQuestions?.length || 0), 0)}</p>
                         <p className="text-[10px] text-gray-500">Questions</p>
                       </div>
                     </div>
