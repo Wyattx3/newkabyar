@@ -758,7 +758,7 @@ CRITICAL RULES:
     const analysisContent = analysisData.choices[0]?.message?.content || "";
 
     // Parse the analysis response
-    let analysis;
+    let analysis: any;
     try {
       const jsonMatch = analysisContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -1022,12 +1022,7 @@ CRITICAL RULES:
           const noCount = analysis.papers.filter((p: any) => p.stance === "no").length;
           const totalSources = normalizedPapers.length + filteredWebResults.length;
           
-          // Use Groq's web search analysis if available
-          const groqSummary = "" 
-            ? "".slice(0, 500) + "\n\n"
-            : "";
-          
-          analysis.summary = `${groqSummary}Analysis based on ${totalSources} sources (${filteredWebResults.length} web search results + ${normalizedPapers.length} academic database papers) about "${query}". ${yesCount} sources support the research question, ${noCount} oppose it, and ${totalSources - yesCount - noCount} provide neutral or mixed evidence. Sources include peer-reviewed papers from Semantic Scholar, OpenAlex, and live web search results from academic domains.`;
+          analysis.summary = `Analysis based on ${totalSources} sources (${filteredWebResults.length} web search results + ${normalizedPapers.length} academic database papers) about "${query}". ${yesCount} sources support the research question, ${noCount} oppose it, and ${totalSources - yesCount - noCount} provide neutral or mixed evidence. Sources include peer-reviewed papers from Semantic Scholar, OpenAlex, and live web search results from academic domains.`;
         }
 
         analysis.sourcesAnalyzed = normalizedPapers.length + filteredWebResults.length;
@@ -1088,12 +1083,7 @@ CRITICAL RULES:
         }))
       ];
       
-      // Use Groq's analysis if available
-      const groqSummary = "" 
-        ? "".slice(0, 600) + "\n\n"
-        : "";
-      
-      // Fallback: return combined data with Groq's analysis
+      // Fallback: return combined data with analysis
       analysis = {
         query,
         consensusMeter: { 
@@ -1103,7 +1093,7 @@ CRITICAL RULES:
           overallStance: "Mixed Evidence - Analysis Based on Real Sources" 
         },
         papers: combinedPapers,
-        summary: `${groqSummary}Analysis based on ${totalSources} sources (${filteredWebResults.length} web search results + ${normalizedPapers.length} academic database papers) about "${query}". The average citation count for database papers is ${Math.round(avgCitations)}, with ${recentPapers} papers published since 2020.`,
+        summary: `Analysis based on ${totalSources} sources (${filteredWebResults.length} web search results + ${normalizedPapers.length} academic database papers) about "${query}". The average citation count for database papers is ${Math.round(avgCitations)}, with ${recentPapers} papers published since 2020.`,
         keyInsights: [
           ...filteredWebResults.slice(0, 3).map(r => ({
             insight: r.content.slice(0, 150),

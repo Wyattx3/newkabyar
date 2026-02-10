@@ -154,8 +154,11 @@ async function transcribeWithWhisper(videoId: string): Promise<YouTubeVideo> {
   });
   
   const chunks: Uint8Array[] = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
+  const reader = stream.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
   }
   
   const audioBuffer = Buffer.concat(chunks);
@@ -263,8 +266,8 @@ export async function getTranscript(videoIdOrUrl: string, useWhisperFallback: bo
     const videoInfo = await youtube.getInfo(videoId);
     const transcriptInfo = await videoInfo.getTranscript();
     
-    if (transcriptInfo?.transcript?.content?.body?.initial_segments?.length > 0) {
-      const segments = transcriptInfo.transcript.content.body.initial_segments;
+    if ((transcriptInfo?.transcript?.content?.body?.initial_segments?.length ?? 0) > 0) {
+      const segments = transcriptInfo.transcript.content!.body!.initial_segments;
       const transcript: TranscriptSegment[] = segments.map((seg: any) => ({
         text: seg.snippet?.text || '',
         start: parseFloat(seg.start_ms || '0') / 1000,

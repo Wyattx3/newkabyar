@@ -546,15 +546,16 @@ export default function MindMapPage() {
       {/* Header - Hide when mindmap is shown */}
       {!hasResult && (
       <div className="bg-white border-b border-gray-100 px-3 lg:px-6 py-3 lg:py-4 shrink-0">
+        {/* Row 1: Title + Mode Toggle */}
         <div className="flex flex-wrap items-center gap-2 lg:gap-4">
           {/* Logo & Title */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <Network className="w-5 h-5 text-blue-600" />
+            <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Network className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
             </div>
             <div>
               <h1 className="text-sm lg:text-base font-semibold text-gray-900">Mind Map</h1>
-              <p className="text-xs text-gray-500">Visualize any concept</p>
+              <p className="text-xs text-gray-500 hidden sm:block">Visualize any concept</p>
             </div>
           </div>
 
@@ -582,18 +583,39 @@ export default function MindMapPage() {
             </button>
           </div>
 
-          {/* Input */}
-          <div className="flex-1 min-w-0 w-full lg:w-auto max-w-xl">
+          {/* Depth */}
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            {["shallow", "medium", "deep"].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDepth(d)}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all capitalize",
+                  depth === d ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+
+          {/* Model */}
+          <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+        </div>
+
+        {/* Row 2: Input + Generate (full width) */}
+        <div className="flex items-center gap-2 mt-3">
+          <div className="flex-1 min-w-0">
             {inputMode === "topic" ? (
               <Input
                 placeholder="Enter a topic to visualize..."
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                className="h-10 bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500"
+                className="bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500"
               />
             ) : uploadedFile ? (
-              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-blue-50 rounded-lg">
                 <FileText className="w-4 h-4 text-blue-600" />
                 <span className="text-sm text-gray-700 truncate flex-1">{uploadedFile}</span>
                 <button onClick={clearFile} className="p-1 hover:bg-blue-100 rounded">
@@ -604,7 +626,7 @@ export default function MindMapPage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="w-full h-10 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
+                className="w-full h-12 lg:h-10 flex items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
               >
                 {isUploading ? (
                   <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
@@ -625,30 +647,11 @@ export default function MindMapPage() {
             />
           </div>
 
-          {/* Depth */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            {["shallow", "medium", "deep"].map((d) => (
-              <button
-                key={d}
-                onClick={() => setDepth(d)}
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all capitalize",
-                  depth === d ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-
-          {/* Model */}
-          <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-
           {/* Generate */}
           <Button
             onClick={handleGenerate}
             disabled={isLoading || (inputMode === "topic" ? topic.trim().length < 3 : content.trim().length < 50)}
-            className="h-10 px-5 bg-blue-600 hover:bg-blue-700 rounded-lg"
+            className="h-12 lg:h-10 px-5 bg-blue-600 hover:bg-blue-700 rounded-lg shrink-0"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -661,7 +664,7 @@ export default function MindMapPage() {
           </Button>
 
           {/* Credits */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">
+          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full shrink-0">
             <Sparkles className="w-3 h-3" />4
           </div>
         </div>

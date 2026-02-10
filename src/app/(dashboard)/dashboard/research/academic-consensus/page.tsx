@@ -468,7 +468,7 @@ Papers (${result.papers?.length || 0}): ${topPapers}`.slice(0, 2000);
           ],
           feature: "answer",
           model: selectedModel,
-          language: aiLanguage.language || "en",
+          language: aiLanguage || "en",
         }),
       });
 

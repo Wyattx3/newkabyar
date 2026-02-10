@@ -69,10 +69,13 @@ export async function POST(request: NextRequest) {
       format: 'mp4',
     });
 
-    // Collect chunks
+    // Collect chunks using reader
     const chunks: Uint8Array[] = [];
-    for await (const chunk of stream) {
-      chunks.push(chunk);
+    const reader = stream.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
     }
     
     const audioBuffer = Buffer.concat(chunks);

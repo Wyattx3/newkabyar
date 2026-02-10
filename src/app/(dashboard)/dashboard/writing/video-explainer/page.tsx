@@ -53,7 +53,7 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
   const [videoData, setVideoData] = useState<ExplainerData | null>((initialData?.outputData as unknown as ExplainerData) || null);
 
   const { toast } = useToast();
-  const { language } = useAILanguage();
+  const language = useAILanguage();
   const { saveProject } = useAutoSaveProject("video-explainer");
 
   useEffect(() => {
@@ -259,7 +259,7 @@ export default function VideoExplainerPage({ initialData }: { initialData?: Init
               )}
             </div>
 
-            <ModelSelector model={selectedModel} setModel={setSelectedModel} />
+            <ModelSelector value={selectedModel} onChange={setSelectedModel} />
           </div>
         </div>
       </div>

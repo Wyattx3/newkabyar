@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+// Import from lib directly to avoid test file loading issue on Vercel
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require("pdf-parse");
+const pdf = require("pdf-parse/lib/pdf-parse.js");
 
 export const runtime = "nodejs";
 

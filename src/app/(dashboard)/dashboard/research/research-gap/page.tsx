@@ -107,7 +107,7 @@ export default function ResearchGapPage() {
           topic,
           field: field || undefined,
           model: selectedModel,
-          language: aiLanguage?.language || "en",
+          language: aiLanguage || "en",
         }),
       });
 
@@ -202,7 +202,7 @@ export default function ResearchGapPage() {
           topic: `Generate a research proposal outline for: ${gap.title}. Description: ${gap.description}. Questions: ${gap.potentialQuestions?.join(", ")}`,
           field: field || undefined,
           model: selectedModel,
-          language: aiLanguage?.language || "en",
+          language: aiLanguage || "en",
         }),
       });
       

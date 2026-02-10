@@ -5,10 +5,12 @@ import { auth } from "@/lib/auth";
 import { checkCredits, deductCredits } from "@/lib/credits";
 import type { ModelTier } from "@/lib/ai-providers";
 
-const grokClient = new OpenAI({
-  apiKey: process.env.GROK_API_KEY?.trim(),
-  baseURL: "https://api.x.ai/v1",
-});
+function getGrokClient() {
+  return new OpenAI({
+    apiKey: process.env.GROK_API_KEY?.trim() || "dummy",
+    baseURL: "https://api.x.ai/v1",
+  });
+}
 
 interface ChartData {
   type: "bar" | "line" | "pie" | "doughnut";
@@ -96,7 +98,7 @@ export async function POST(req: NextRequest) {
   const config = styleConfig[style] || styleConfig.professional;
 
   try {
-    const contentResponse = await grokClient.chat.completions.create({
+    const contentResponse = await getGrokClient().chat.completions.create({
       model: selectedModel,
       messages: [
         {
