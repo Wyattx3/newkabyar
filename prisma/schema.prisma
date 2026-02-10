@@ -21,7 +21,8 @@ model User {
   dailyCredits     Int       @default(50)
   dailyCreditsUsed Int       @default(0)
   creditsResetAt   DateTime  @default(now())
-  plan             String    @default("free") // free, pro
+  plan             String    @default("free") // free, plus, pro
+  planExpiresAt    DateTime?
   // Profile fields
   dateOfBirth      String?
   school           String?
@@ -42,6 +43,7 @@ model User {
   conversations    Conversation[]
   documents        Document[]
   projects         Project[]
+  payments         Payment[]
 }
 
 model Account {
@@ -119,6 +121,29 @@ model Project {
 
   @@index([userId])
   @@index([slug])
+}
+
+// ========================================
+// Payment Models
+// ========================================
+
+model Payment {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan              String   // "plus" or "pro"
+  amount            Int      // in MMK
+  merchantOrderId   String   @unique
+  transactionId     String?
+  transactionStatus String   @default("PENDING") // PENDING, SUCCESS, ERROR, CANCELLED, TIMEOUT, DECLINED
+  providerName      String?
+  methodName        String?
+  customerName      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([merchantOrderId])
 }
 
 // ========================================

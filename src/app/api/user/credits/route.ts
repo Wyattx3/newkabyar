@@ -35,8 +35,39 @@ function getDailyCreditsForPlan(plan: string): number {
   }
 }
 
+// Check if user's paid plan has expired and downgrade to free
+async function checkPlanExpiry(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true, planExpiresAt: true },
+  });
+
+  if (!user) return;
+
+  // If user has a paid plan and it's expired, downgrade to free
+  if (user.plan !== "free" && user.planExpiresAt) {
+    const now = new Date();
+    if (now > new Date(user.planExpiresAt)) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          plan: "free",
+          planExpiresAt: null,
+          dailyCredits: DAILY_FREE_CREDITS,
+          dailyCreditsUsed: 0,
+          creditsResetAt: now,
+        },
+      });
+      console.log(`[Credits API] Plan expired for user ${userId}, downgraded to free`);
+    }
+  }
+}
+
 // Check and reset credits if 24 hours have passed
 async function checkAndResetCredits(userId: string) {
+  // First check plan expiry
+  await checkPlanExpiry(userId);
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { creditsResetAt: true, dailyCredits: true, dailyCreditsUsed: true, plan: true },

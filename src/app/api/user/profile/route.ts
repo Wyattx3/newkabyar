@@ -156,6 +156,7 @@ export async function GET() {
         dailyCreditsUsed: true,
         creditsResetAt: true,
         plan: true,
+        planExpiresAt: true,
         dateOfBirth: true,
         school: true,
         major: true,
@@ -198,8 +199,10 @@ export async function GET() {
     // Get daily credits based on user plan
     const getDailyCreditsForPlan = (plan: string): number => {
       switch (plan) {
-        case "unlimited": return 999999;
-        case "pro": return 3500;
+        case "unlimited":
+        case "pro": return 999999;
+        case "plus":
+        case "student": return 500;
         default: return 50;
       }
     };

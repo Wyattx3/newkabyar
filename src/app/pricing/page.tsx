@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { SessionProvider, useSession } from "next-auth/react";
 import {
   Check,
@@ -14,6 +16,8 @@ import {
   Clock,
   Users,
   MessageSquare,
+  Loader2,
+  X,
 } from "lucide-react";
 
 const plans = [
@@ -25,7 +29,6 @@ const plans = [
     icon: Zap,
     color: "gray",
     cta: "Start Free",
-    ctaLink: "/register",
     planId: "free",
     popular: false,
     credits: "50 credits/day",
@@ -44,13 +47,13 @@ const plans = [
   },
   {
     name: "Plus",
-    price: "4.99",
+    price: "7,500",
+    currency: "MMK",
     period: "/mo",
     desc: "Unlock Kay AI 2.0 for smarter results",
     icon: Rocket,
     color: "blue",
     cta: "Get Plus Plan",
-    ctaLink: "/register?plan=plus",
     planId: "plus",
     popular: true,
     credits: "500 credits/day",
@@ -71,13 +74,13 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "9.99",
+    price: "15,000",
+    currency: "MMK",
     period: "/mo",
     desc: "Unlimited access to everything",
     icon: Crown,
     color: "gray",
     cta: "Get Pro Plan",
-    ctaLink: "/register?plan=pro",
     planId: "pro",
     popular: false,
     credits: "Unlimited",
@@ -96,6 +99,17 @@ const plans = [
   },
 ];
 
+const PROVIDERS = [
+  { name: "KBZ Pay", method: "QR", icon: "💳" },
+  { name: "KBZ Pay", method: "PWA", icon: "📱" },
+  { name: "AYA Pay", method: "QR", icon: "💳" },
+  { name: "AYA Pay", method: "PIN", icon: "🔢" },
+  { name: "Wave Pay", method: "PIN", icon: "🌊" },
+  { name: "CB Pay", method: "QR", icon: "🏦" },
+  { name: "Onepay", method: "PIN", icon: "1️⃣" },
+  { name: "MPU", method: "OTP", icon: "💳" },
+];
+
 const faqs = [
   {
     q: "What are credits?",
@@ -103,19 +117,19 @@ const faqs = [
   },
   {
     q: "What's the difference between Kay AI 1.0 and 2.0?",
-    a: "Kay AI 1.0 is our fast, reliable model available on all plans. Kay AI 2.0 is our most powerful model with superior accuracy and reasoning — available on Plus ($4.99) and Pro ($9.99) plans.",
+    a: "Kay AI 1.0 is our fast, reliable model available on all plans. Kay AI 2.0 is our most powerful model with superior accuracy and reasoning — available on Plus (7,500 MMK) and Pro (15,000 MMK) plans.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes, you can cancel your subscription at any time. Your plan will remain active until the end of your billing period.",
+    a: "Yes, your plan remains active until the end of your 30-day billing period. You won't be charged again.",
   },
   {
-    q: "Do unused credits roll over?",
-    a: "Credits reset daily and do not roll over. Pro plan has unlimited credits so this doesn't apply.",
+    q: "Which payment methods are supported?",
+    a: "We accept KBZ Pay, AYA Pay, Wave Pay, CB Pay, Onepay, MPU, and more through our payment partner Dinger.",
   },
   {
     q: "Can I upgrade or downgrade?",
-    a: "Yes, you can change your plan at any time. When upgrading, you'll get immediate access to new features. Downgrades take effect at the next billing cycle.",
+    a: "Yes, you can change your plan at any time. When upgrading, you'll get immediate access to new features.",
   },
 ];
 
@@ -129,14 +143,90 @@ export default function PricingPage() {
 
 function PricingContent() {
   const { data: session } = useSession();
+  const router = useRouter();
   const isLoggedIn = !!session?.user;
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<typeof PROVIDERS[0] | null>(null);
+  const [phone, setPhone] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState("");
 
-  const getCtaLink = (plan: typeof plans[0]) => {
-    if (isLoggedIn) {
-      if (plan.planId === "free") return "/dashboard";
-      return `/dashboard/settings`;
+  const handleGetPlan = (planId: string) => {
+    if (planId === "free") {
+      if (isLoggedIn) {
+        router.push("/dashboard");
+      } else {
+        router.push("/register");
+      }
+      return;
     }
-    return plan.ctaLink;
+
+    if (!isLoggedIn) {
+      router.push(`/register?plan=${planId}`);
+      return;
+    }
+
+    // Open payment modal
+    setSelectedPlan(planId);
+    setSelectedProvider(null);
+    setPhone("");
+    setError("");
+    setShowPaymentModal(true);
+  };
+
+  const handlePay = async () => {
+    if (!selectedPlan || !selectedProvider || !phone) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (phone.length < 9) {
+      setError("Please enter a valid phone number");
+      return;
+    }
+
+    setIsProcessing(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/payment/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          providerName: selectedProvider.name,
+          methodName: selectedProvider.method,
+          customerPhone: phone,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Payment failed");
+        setIsProcessing(false);
+        return;
+      }
+
+      // If redirect URL (form-based payment)
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
+      // If QR code, redirect to success page to poll
+      if (data.qrCode || data.merchantOrderId) {
+        router.push(`/dashboard/payment/success?merchantOrderId=${data.merchantOrderId}&state=PENDING`);
+        return;
+      }
+
+      // Fallback - go to success page
+      router.push(`/dashboard/payment/success?merchantOrderId=${data.merchantOrderId}`);
+    } catch {
+      setError("Network error. Please try again.");
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -152,7 +242,6 @@ function PricingContent() {
               <Link href="/" className="text-gray-500 hover:text-gray-900 transition">Home</Link>
               <Link href="/tools" className="text-gray-500 hover:text-gray-900 transition">Tools</Link>
               <Link href="/pricing" className="font-medium text-gray-900">Pricing</Link>
-              <Link href="/blog" className="text-gray-500 hover:text-gray-900 transition">Blog</Link>
             </nav>
             <div className="flex items-center gap-2">
               {isLoggedIn ? (
@@ -215,26 +304,28 @@ function PricingContent() {
                     </div>
                   )}
 
-                  {/* Plan header */}
                   <div className="flex items-center gap-2.5 mb-4">
                     <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center ${isPopular ? "bg-blue-600" : "bg-gray-100"}`}>
                       <PlanIcon className={`w-4 h-4 ${isPopular ? "text-white" : "text-gray-500"}`} />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-sm sm:text-base">{plan.name}</h3>
-                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base">{plan.name}</h3>
                   </div>
 
-                  {/* Price */}
                   <div className="mb-4">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl sm:text-4xl font-black text-gray-900">${plan.price}</span>
+                      {plan.currency ? (
+                        <>
+                          <span className="text-2xl sm:text-3xl font-black text-gray-900">{plan.price}</span>
+                          <span className="text-xs text-gray-400">{plan.currency}</span>
+                        </>
+                      ) : (
+                        <span className="text-3xl sm:text-4xl font-black text-gray-900">${plan.price}</span>
+                      )}
                       {plan.period && <span className="text-sm text-gray-400">{plan.period}</span>}
                     </div>
                     <p className="text-xs text-gray-400 mt-1">{plan.desc}</p>
                   </div>
 
-                  {/* Credits badge */}
                   <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium mb-5 ${
                     isPopular ? "bg-blue-100 text-blue-700" : "bg-gray-50 text-gray-600"
                   }`}>
@@ -242,9 +333,8 @@ function PricingContent() {
                     {plan.credits}
                   </div>
 
-                  {/* CTA */}
-                  <Link
-                    href={getCtaLink(plan)}
+                  <button
+                    onClick={() => handleGetPlan(plan.planId)}
                     className={`flex items-center justify-center gap-2 w-full py-2.5 sm:py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-6 ${
                       isPopular
                         ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20"
@@ -253,9 +343,8 @@ function PricingContent() {
                   >
                     {isLoggedIn && plan.planId === "free" ? "Go to Dashboard" : plan.cta}
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  </button>
 
-                  {/* Features */}
                   <div className="space-y-2.5">
                     {plan.features.map((f) => (
                       <div key={f} className="flex items-start gap-2.5">
@@ -270,7 +359,7 @@ function PricingContent() {
                     {plan.excluded.map((f) => (
                       <div key={f} className="flex items-start gap-2.5 opacity-40">
                         <div className="w-4 h-4 rounded-full bg-gray-50 flex items-center justify-center shrink-0 mt-0.5">
-                          <span className="text-[9px] text-gray-300">—</span>
+                          <span className="text-[9px] text-gray-300">&mdash;</span>
                         </div>
                         <span className="text-xs sm:text-[13px] text-gray-400 line-through">{f}</span>
                       </div>
@@ -288,7 +377,7 @@ function PricingContent() {
         <div className="max-w-3xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {[
-              { icon: Shield, label: "Secure Payments", sub: "SSL encrypted" },
+              { icon: Shield, label: "Secure Payments", sub: "Dinger encrypted" },
               { icon: Clock, label: "Cancel Anytime", sub: "No lock-in" },
               { icon: Users, label: "10,000+ Students", sub: "Trust Kabyar" },
               { icon: MessageSquare, label: "24/7 Support", sub: "We're here to help" },
@@ -313,13 +402,8 @@ function PricingContent() {
       {/* FAQ */}
       <section className="py-14 sm:py-20 px-4 sm:px-6 bg-gray-50">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-3">
-            Questions?
-          </h2>
-          <p className="text-sm text-gray-400 text-center mb-10 sm:mb-12">
-            Everything you need to know about our plans.
-          </p>
-
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-3">Questions?</h2>
+          <p className="text-sm text-gray-400 text-center mb-10 sm:mb-12">Everything you need to know about our plans.</p>
           <div className="space-y-3 sm:space-y-4">
             {faqs.map((faq) => (
               <div key={faq.q} className="rounded-xl bg-white border border-gray-100 p-4 sm:p-5">
@@ -334,12 +418,8 @@ function PricingContent() {
       {/* Final CTA */}
       <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            Start Studying Smarter
-          </h2>
-          <p className="text-sm sm:text-base text-gray-400 mb-8">
-            No credit card required. Free plan available forever.
-          </p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Start Studying Smarter</h2>
+          <p className="text-sm sm:text-base text-gray-400 mb-8">No credit card required. Free plan available forever.</p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link
               href={isLoggedIn ? "/dashboard" : "/register"}
@@ -369,6 +449,97 @@ function PricingContent() {
           <p className="text-xs sm:text-sm">&copy; 2026 Kabyar</p>
         </div>
       </footer>
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">
+                  {selectedPlan === "pro" ? "Pro Plan" : "Plus Plan"}
+                </h3>
+                <p className="text-xs text-gray-400">
+                  {selectedPlan === "pro" ? "15,000" : "7,500"} MMK / month
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Payment Provider Selection */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-2 block">Payment Method</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PROVIDERS.map((p) => (
+                    <button
+                      key={`${p.name}-${p.method}`}
+                      onClick={() => setSelectedProvider(p)}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-all text-xs ${
+                        selectedProvider?.name === p.name && selectedProvider?.method === p.method
+                          ? "border-blue-600 bg-blue-50 text-blue-700"
+                          : "border-gray-200 hover:border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <span className="text-base">{p.icon}</span>
+                      <div>
+                        <p className="font-medium leading-tight">{p.name}</p>
+                        <p className="text-[10px] text-gray-400">{p.method}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 mb-1.5 block">Phone Number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="09xxxxxxxxx"
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+              )}
+
+              {/* Pay Button */}
+              <button
+                onClick={handlePay}
+                disabled={isProcessing || !selectedProvider || !phone}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Pay {selectedPlan === "pro" ? "15,000" : "7,500"} MMK
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+
+              <p className="text-[10px] text-gray-400 text-center">
+                Secured by Dinger Payment Gateway
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

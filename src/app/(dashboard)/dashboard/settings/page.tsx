@@ -55,6 +55,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [userPlan, setUserPlan] = useState("free");
+  const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
   const [credits, setCredits] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -82,6 +83,7 @@ export default function SettingsPage() {
             if (user.studyGoal) setStudyGoal(user.studyGoal);
             if (user.hobbies) setHobbies(user.hobbies);
             if (user.plan) setUserPlan(user.plan);
+            if (user.planExpiresAt) setPlanExpiresAt(user.planExpiresAt);
           }
         }
       } catch (e) { console.error("Failed to load:", e); }
@@ -210,11 +212,18 @@ export default function SettingsPage() {
                   <Crown className={`w-4 h-4 ${userPlan === "free" ? "text-gray-500" : "text-white"}`} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-900">{plan.name} Plan</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${userPlan === "free" ? "bg-gray-100 text-gray-500" : "bg-blue-50 text-blue-600"}`}>
-                      {userPlan === "free" ? "FREE" : "ACTIVE"}
-                    </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-900">{plan.name} Plan</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${userPlan === "free" ? "bg-gray-100 text-gray-500" : "bg-blue-50 text-blue-600"}`}>
+                        {userPlan === "free" ? "FREE" : "ACTIVE"}
+                      </span>
+                    </div>
+                    {planExpiresAt && userPlan !== "free" && (
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        Expires {new Date(planExpiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
