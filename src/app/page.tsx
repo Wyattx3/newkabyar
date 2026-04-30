@@ -521,15 +521,11 @@ export default function HomePage() {
                 className="text-center"
               >
                 <div className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight mb-2 text-white">
-                  {s.decimals ? (
-                    <>
-                      <AnimatedCounter value={Math.floor(s.value)} />
-                      .{Math.round((s.value % 1) * 10)}
-                      {s.suffix}
-                    </>
-                  ) : (
-                    <AnimatedCounter value={s.value} suffix={s.suffix} />
-                  )}
+                  <AnimatedCounter
+                    value={s.value}
+                    suffix={s.suffix}
+                    decimals={s.decimals ? 1 : 0}
+                  />
                 </div>
                 <p className="text-xs sm:text-sm text-gray-400 font-mono uppercase tracking-widest leading-snug">{s.label}</p>
               </motion.div>
@@ -804,7 +800,7 @@ function SectionHeader({
       <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-gray-900 leading-[1.05] mb-4">
         {title}
       </h2>
-      <p className="text-base sm:text-lg text-gray-500 leading-relaxed max-w-2xl">{sub}</p>
+      <p className={`text-base sm:text-lg text-gray-500 leading-relaxed max-w-2xl ${align === "center" ? "mx-auto" : ""}`}>{sub}</p>
     </motion.div>
   );
 }

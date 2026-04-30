@@ -8,20 +8,27 @@ export function AnimatedCounter({
   suffix = "",
   prefix = "",
   duration = 2,
+  decimals = 0,
   className = "",
 }: {
   value: number;
   suffix?: string;
   prefix?: string;
   duration?: number;
+  decimals?: number;
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const mv = useMotionValue(0);
   const rounded = useTransform(mv, (v) => {
-    const n = Math.round(v);
-    return n.toLocaleString();
+    if (decimals > 0) {
+      return v.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    }
+    return Math.round(v).toLocaleString();
   });
 
   useEffect(() => {
