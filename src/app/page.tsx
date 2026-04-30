@@ -356,7 +356,7 @@ export default function HomePage() {
           className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 text-gray-400"
         >
           <span className="text-[10px] font-mono uppercase tracking-widest">scroll</span>
-          <span className="block w-px h-10 bg-gradient-to-b from-blue-600 to-transparent animate-pulse" aria-hidden />
+          <span className="block w-px h-10 bg-blue-600 animate-pulse" aria-hidden />
         </motion.div>
       </section>
 
@@ -423,7 +423,7 @@ export default function HomePage() {
       </section>
 
       {/* === Live demo === */}
-      <section id="demo" className="py-20 sm:py-32 px-4 sm:px-6 bg-gradient-to-b from-white to-blue-50/30">
+      <section id="demo" className="py-20 sm:py-32 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <SectionHeader
             tag="Live demo"
@@ -567,7 +567,7 @@ export default function HomePage() {
       </section>
 
       {/* === Testimonials dual marquee === */}
-      <section id="testimonials" className="py-20 sm:py-28 bg-gradient-to-b from-blue-50/30 to-white overflow-hidden">
+      <section id="testimonials" className="py-20 sm:py-28 bg-white overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-10 sm:mb-14">
           <SectionHeader
             tag="Reception"
@@ -726,7 +726,7 @@ export default function HomePage() {
 
       {/* === Footer === */}
       <footer className="py-16 px-4 sm:px-6 bg-gray-950 text-gray-400 relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-600 to-transparent" aria-hidden />
+        <div className="absolute inset-x-0 top-0 h-px bg-blue-600/40" aria-hidden />
 
         <div className="max-w-6xl mx-auto relative">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12 mb-12">

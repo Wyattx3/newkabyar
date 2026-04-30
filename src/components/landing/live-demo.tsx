@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ShieldCheck, Wand2, FileText, ScanSearch, Sparkles, type LucideIcon } from "lucide-react";
 
 type Demo = {
@@ -55,14 +55,13 @@ const DEMOS: Demo[] = [
 const TYPE_SPEED = 14; // ms per char
 const HOLD = 2200; // ms after type completes
 
-export function LiveDemo() {
-  const [idx, setIdx] = useState(0);
+type Phase = "prompt" | "thinking" | "output" | "hold";
+
+function DemoPanel({ demo, onComplete }: { demo: Demo; onComplete: () => void }) {
   const [typed, setTyped] = useState("");
-  const [phase, setPhase] = useState<"prompt" | "thinking" | "output" | "hold">("prompt");
+  const [phase, setPhase] = useState<Phase>("prompt");
+  const Icon = demo.icon;
 
-  const demo = DEMOS[idx];
-
-  // Typewriter loop
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -93,16 +92,76 @@ export function LiveDemo() {
       setPhase("hold");
       await new Promise((r) => (timer = setTimeout(r, HOLD)));
       if (cancelled) return;
-      setIdx((p) => (p + 1) % DEMOS.length);
+      onComplete();
     }
     run();
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [demo, idx]);
+  }, [demo, onComplete]);
 
-  const Icon = demo.icon;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.25 }}
+    >
+      <div className="flex items-start gap-3 mb-4">
+        <span className="text-blue-600 select-none">&gt;</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-700 break-words">
+            {phase === "prompt" ? typed : demo.prompt}
+            {phase === "prompt" && <span className="caret" />}
+          </p>
+        </div>
+      </div>
+
+      {phase === "thinking" && (
+        <div className="flex items-center gap-2 text-gray-400 ml-5 mb-3">
+          <span className="inline-flex gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-dot" style={{ animationDelay: "0s" }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-dot" style={{ animationDelay: "0.15s" }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-dot" style={{ animationDelay: "0.3s" }} />
+          </span>
+          <span className="text-xs">thinking</span>
+        </div>
+      )}
+
+      {(phase === "output" || phase === "hold") && (
+        <div className="flex items-start gap-3">
+          <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+            <Icon className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-gray-900 font-sans break-words">
+              {phase === "output" ? typed : demo.output}
+              {phase === "output" && <span className="caret" />}
+            </p>
+            {phase === "hold" && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-3 text-[11px] sm:text-xs text-gray-400"
+              >
+                {demo.meta}
+              </motion.p>
+            )}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+export function LiveDemo() {
+  const [idx, setIdx] = useState(0);
+  const demo = DEMOS[idx];
+
+  const handleComplete = useCallback(() => {
+    setIdx((p) => (p + 1) % DEMOS.length);
+  }, []);
 
   return (
     <div className="relative">
@@ -153,57 +212,7 @@ export function LiveDemo() {
         {/* Console body */}
         <div className="px-4 sm:px-6 py-5 sm:py-7 min-h-[260px] sm:min-h-[300px] font-mono text-sm sm:text-[15px] leading-relaxed">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={demo.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <span className="text-blue-600 select-none">&gt;</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-gray-700 break-words">
-                    {phase === "prompt" ? typed : demo.prompt}
-                    {phase === "prompt" && <span className="caret" />}
-                  </p>
-                </div>
-              </div>
-
-              {phase === "thinking" && (
-                <div className="flex items-center gap-2 text-gray-400 ml-5 mb-3">
-                  <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-dot" style={{ animationDelay: "0s" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-dot" style={{ animationDelay: "0.15s" }} />
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-dot" style={{ animationDelay: "0.3s" }} />
-                  </span>
-                  <span className="text-xs">thinking</span>
-                </div>
-              )}
-
-              {(phase === "output" || phase === "hold") && (
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-sans break-words">
-                      {phase === "output" ? typed : demo.output}
-                      {phase === "output" && <span className="caret" />}
-                    </p>
-                    {phase === "hold" && (
-                      <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="mt-3 text-[11px] sm:text-xs text-gray-400"
-                      >
-                        {demo.meta}
-                      </motion.p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </motion.div>
+            <DemoPanel key={demo.id} demo={demo} onComplete={handleComplete} />
           </AnimatePresence>
         </div>
       </div>

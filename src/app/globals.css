@@ -210,17 +210,6 @@
 }
 .animate-float-y { animation: float-y 4s ease-in-out infinite; }
 
-/* Shimmer (for skeleton-like accents) */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(37,99,235,0.18), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2.4s linear infinite;
-}
-
 /* Tilt-on-hover utility (CSS-only) */
 .tilt-on-hover {
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
@@ -235,7 +224,7 @@
   .animate-blob-1, .animate-blob-2, .animate-blob-3,
   .animate-grid-pan, .animate-node-pulse, .animate-ping-slow,
   .animate-dot, .animate-marquee-left, .animate-marquee-right,
-  .animate-float-y, .animate-shimmer {
+  .animate-float-y {
     animation: none !important;
   }
   .caret { animation: none; background: transparent; }
